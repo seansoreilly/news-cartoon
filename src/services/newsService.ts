@@ -14,11 +14,10 @@ const RETRY_DELAY_MS = 1000;
 
 class NewsService {
   private cache: CacheStore = {};
-  private apiKey: string;
-  private baseUrl = 'https://gnews.io/api/v4';
+  private baseUrl = 'http://localhost:3000/api/news';
 
   constructor() {
-    this.apiKey = import.meta.env.REACT_APP_GNEWS_API_KEY || '';
+    // API key is now handled server-side via backend proxy
   }
 
   async fetchNewsByLocation(
@@ -35,7 +34,6 @@ class NewsService {
         async () => {
           const params = new URLSearchParams({
             q: location,
-            token: this.apiKey,
             max: limit.toString(),
             sortby: 'publishedAt',
           });
@@ -76,7 +74,6 @@ class NewsService {
         async () => {
           const params = new URLSearchParams({
             q: keyword,
-            token: this.apiKey,
             max: limit.toString(),
             sortby: 'publishedAt',
           });
@@ -182,12 +179,25 @@ class NewsService {
 
     return (data.articles as Array<Record<string, unknown>>).map((article) => {
       const source = article.source as Record<string, unknown> | undefined;
+
+      // Handle nested source.name structure from XML parsing
+      let sourceName = 'Unknown';
+      if (source?.name) {
+        // Check if source.name is an object with _ property (from XML parsing)
+        if (typeof source.name === 'object' && source.name !== null) {
+          const nameObj = source.name as Record<string, unknown>;
+          sourceName = String(nameObj._ || nameObj.name || 'Unknown');
+        } else {
+          sourceName = String(source.name);
+        }
+      }
+
       return {
         title: String(article.title || ''),
         description: article.description ? String(article.description) : undefined,
         url: String(article.url || ''),
         source: {
-          name: source?.name ? String(source.name) : 'Unknown',
+          name: sourceName,
           url: source?.url ? String(source.url) : undefined,
         },
         publishedAt: String(article.publishedAt || new Date().toISOString()),
