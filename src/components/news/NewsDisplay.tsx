@@ -11,7 +11,46 @@ interface NewsCardProps {
   onSelect: () => void;
 }
 
+const decodeHtmlEntities = (text: string): string => {
+  const div = document.createElement('div');
+  div.innerHTML = text;
+  return div.textContent || div.innerText || '';
+};
+
+const stripHtmlTags = (html: string): string => {
+  return html.replace(/<[^>]*>/g, '');
+};
+
+const cleanDescription = (description: string): string => {
+  // First strip HTML tags, then decode entities
+  const stripped = stripHtmlTags(description);
+  return decodeHtmlEntities(stripped).trim();
+};
+
+const isTitleDuplicate = (title: string, description: string): boolean => {
+  // Normalize both strings: lowercase, remove extra spaces
+  const normalizeStr = (str: string) => str.toLowerCase().replace(/\s+/g, ' ').trim();
+
+  const normalizedTitle = normalizeStr(title);
+  const normalizedDesc = normalizeStr(description);
+
+  // Check if description contains most of the title (accounting for variations)
+  const titleWords = normalizedTitle.split(' ').filter(w => w.length > 3);
+  const descWords = normalizedDesc.split(' ');
+
+  // If more than 70% of title words appear in description, it's likely a duplicate
+  const matchedWords = titleWords.filter(w => normalizedDesc.includes(w)).length;
+  return matchedWords / titleWords.length > 0.7;
+};
+
 const NewsCard: React.FC<NewsCardProps> = ({ article, selected, onSelect }) => {
+  const cleanedDescription = article.description ? cleanDescription(article.description) : undefined;
+
+  // Filter out descriptions that are just duplicates of the title
+  const shouldShowDescription = cleanedDescription &&
+    cleanedDescription.length > 10 &&
+    !isTitleDuplicate(article.title, cleanedDescription);
+
   return (
     <div
       onClick={onSelect}
@@ -33,14 +72,23 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, selected, onSelect }) => {
           <h3 className="font-semibold text-gray-800 line-clamp-2 text-base">
             {article.title}
           </h3>
-          {article.description && (
+          {shouldShowDescription && (
             <p className="text-sm text-gray-600 mt-2 line-clamp-2">
-              {article.description}
+              {cleanedDescription}
             </p>
           )}
-          {article.source?.name && (
-            <p className="text-xs text-gray-500 mt-2">Source: {article.source.name}</p>
-          )}
+          <div className="flex items-center justify-between mt-2 gap-2">
+            <p className="text-xs text-gray-500">Source: {article.source?.name}</p>
+            <a
+              href={article.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-xs text-blue-600 hover:text-blue-800 hover:underline font-medium whitespace-nowrap"
+            >
+              Read →
+            </a>
+          </div>
         </div>
       </div>
     </div>
