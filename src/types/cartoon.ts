@@ -2,6 +2,7 @@ export interface CartoonConcept {
   title: string;
   premise: string;
   why_funny: string;
+  location: string;
 }
 
 export interface CartoonData {
