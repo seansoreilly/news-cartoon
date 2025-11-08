@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@layer components {
+  .gradient-primary {
+    background: linear-gradient(to right, #8b5cf6, #ec4899);
+  }
+
+  .container-app {
+    @apply max-w-[900px] mx-auto px-4;
+  }
+
+  .btn-primary {
+    @apply px-6 py-2 rounded-lg font-medium transition-all duration-200;
+    background: linear-gradient(to right, #8b5cf6, #ec4899);
+    @apply text-white hover:opacity-90 hover:shadow-lg active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-2 rounded-lg font-medium transition-all duration-200;
+    @apply bg-gray-200 text-gray-900 hover:bg-gray-300 active:scale-95;
+  }
+}
+
+* {
+  @apply box-border;
+}
+
+html,
+body,
+#root {
+  @apply h-full w-full;
+}
+
+body {
+  @apply m-0 p-0;
+}
