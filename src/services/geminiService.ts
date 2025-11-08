@@ -661,6 +661,85 @@ If you have news context above, incorporate specific details from that story to 
     ];
   }
 
+  async generateHumorScore(title: string, description?: string): Promise<number> {
+    const prompt = `Rate this news article's potential for a funny editorial cartoon on a scale of 1-100.
+
+Title: ${title}
+${description ? `Description: ${description}` : ''}
+
+Consider:
+- Absurdity, irony, or contradiction
+- Visual comedy potential
+- Political/social satire opportunities
+- Exaggeration possibilities
+
+Respond with ONLY a number between 1 and 100, nothing else.`;
+
+    try {
+      const response = await this.callGeminiApi(prompt);
+      const scoreText = response.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+      const score = parseInt(scoreText || '0', 10);
+      return isNaN(score) ? 50 : Math.min(100, Math.max(1, score));
+    } catch (error) {
+      console.error('[generateHumorScore] Error:', error);
+      return 50; // Default to middle score on error
+    }
+  }
+
+  async batchAnalyzeArticles(articles: Array<{ title: string; description?: string; content?: string }>): Promise<Array<{ summary: string; humorScore: number }>> {
+    console.log(`[batchAnalyzeArticles] Analyzing ${articles.length} articles...`);
+
+    const prompt = `You are an expert editorial cartoonist analyzing news articles for their cartoon potential.
+
+Analyze these ${articles.length} news articles and for each one provide:
+1. A 1-2 paragraph summary highlighting the key satirical angle and comedic elements
+2. A humor score from 1-100 based on cartoon potential (absurdity, irony, visual comedy, satire opportunities)
+
+Articles:
+${articles.map((article, idx) => `
+Article ${idx + 1}:
+Title: ${article.title}
+Description: ${article.description || 'No description'}
+${article.content ? `Content: ${article.content.substring(0, 500)}...` : ''}
+`).join('\n---\n')}
+
+Respond ONLY with a valid JSON array in this exact format:
+[
+  {"summary": "Brief satirical summary", "humorScore": 75},
+  {"summary": "Brief satirical summary", "humorScore": 82},
+  ...
+]
+
+Make sure the array has exactly ${articles.length} entries, one for each article in order.`;
+
+    try {
+      const response = await this.callGeminiApi(prompt);
+      const responseText = response.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+
+      console.log('[batchAnalyzeArticles] Response preview:', responseText.substring(0, 200));
+
+      // Extract JSON from response
+      const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) {
+        console.error('[batchAnalyzeArticles] No JSON array found in response');
+        throw new Error('Invalid response format');
+      }
+
+      const results = JSON.parse(jsonMatch[0]) as Array<{ summary: string; humorScore: number }>;
+
+      if (results.length !== articles.length) {
+        console.warn(`[batchAnalyzeArticles] Expected ${articles.length} results, got ${results.length}`);
+      }
+
+      console.log(`[batchAnalyzeArticles] ✅ Successfully analyzed ${results.length} articles`);
+      return results;
+    } catch (error) {
+      console.error('[batchAnalyzeArticles] Error:', error);
+      // Return fallback scores
+      return articles.map(() => ({ summary: '', humorScore: 50 }));
+    }
+  }
+
   private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }

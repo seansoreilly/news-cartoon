@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { parseStringPromise } from 'xml2js';
+import * as cheerio from 'cheerio';
 
 // Load environment variables
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -164,6 +165,111 @@ app.get('/api/news/search', async (req, res) => {
 });
 
 /**
+ * Extract article content from URL
+ * This endpoint scrapes the article page and extracts the main content
+ */
+app.get('/api/article/content', async (req, res) => {
+  try {
+    const { url } = req.query;
+
+    if (!url) {
+      console.warn('⚠️  Missing url parameter');
+      return res.status(400).json({ error: 'URL parameter is required' });
+    }
+
+    console.log(`📄 Fetching article content from: ${url}`);
+
+    // Fetch the article HTML with redirect following
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      },
+      redirect: 'follow', // Follow redirects (this is the default, but being explicit)
+    });
+
+    if (!response.ok) {
+      console.error(`❌ Failed to fetch article: ${response.status}`);
+      return res.status(response.status).json({ error: 'Failed to fetch article' });
+    }
+
+    const finalUrl = response.url; // Get the final URL after redirects
+    console.log(`📍 Final URL after redirects: ${finalUrl}`);
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    // Remove unwanted elements
+    $('script, style, nav, header, footer, iframe, .ad, .advertisement, .social-share, .related-articles').remove();
+
+    // Try to find the main article content using common selectors
+    let content = '';
+    const selectors = [
+      'article',
+      '[role="article"]',
+      '.article-content',
+      '.article-body',
+      '.post-content',
+      '.entry-content',
+      '.story-body',
+      'main',
+      '#main-content',
+      '.main-content'
+    ];
+
+    for (const selector of selectors) {
+      const element = $(selector);
+      if (element.length > 0) {
+        content = element.text().trim();
+        if (content.length > 200) {
+          console.log(`✅ Found content using selector: ${selector} (${content.length} chars)`);
+          break;
+        }
+      }
+    }
+
+    // Fallback: if no content found, get all paragraph text
+    if (!content || content.length < 200) {
+      const paragraphs = $('p')
+        .map((_, el) => $(el).text().trim())
+        .get()
+        .filter(text => text.length > 50); // Only paragraphs with substantial content
+
+      content = paragraphs.join('\n\n');
+      console.log(`✅ Extracted content from paragraphs (${content.length} chars)`);
+    }
+
+    // Clean up whitespace
+    content = content
+      .replace(/\s+/g, ' ')
+      .replace(/\n\s*\n/g, '\n\n')
+      .trim();
+
+    if (!content || content.length < 50) {
+      console.warn('⚠️  Extracted content too short or empty');
+      return res.status(404).json({
+        error: 'Could not extract article content',
+        content: ''
+      });
+    }
+
+    console.log(`✅ Successfully extracted ${content.length} characters`);
+
+    res.json({
+      content,
+      length: content.length,
+      url,
+      finalUrl
+    });
+  } catch (error) {
+    console.error('❌ Article extraction error:', error.message);
+    res.status(500).json({
+      error: 'Failed to extract article content',
+      details: error.message,
+    });
+  }
+});
+
+/**
  * Health check endpoint
  */
 app.get('/api/health', (req, res) => {
@@ -173,4 +279,5 @@ app.get('/api/health', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 News Cartoon API Proxy running on http://localhost:${PORT}`);
   console.log(`📰 News endpoint: http://localhost:${PORT}/api/news/search?q=your_query`);
+  console.log(`📄 Article content: http://localhost:${PORT}/api/article/content?url=article_url`);
 });

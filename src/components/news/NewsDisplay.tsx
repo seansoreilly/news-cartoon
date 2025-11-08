@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useNewsStore } from '../../store/newsStore';
 import { useLocationStore } from '../../store/locationStore';
 import { newsService } from '../../services/newsService';
+import { geminiService } from '../../services/geminiService';
 import { AppErrorHandler } from '../../utils/errorHandler';
 import type { NewsArticle, NewsData } from '../../types';
 
@@ -44,12 +45,13 @@ const isTitleDuplicate = (title: string, description: string): boolean => {
 };
 
 const NewsCard: React.FC<NewsCardProps> = ({ article, selected, onSelect }) => {
-  const cleanedDescription = article.description ? cleanDescription(article.description) : undefined;
+  // Clean HTML from summary
+  const cleanedSummary = article.summary ? cleanDescription(article.summary) : undefined;
 
-  // Filter out descriptions that are just duplicates of the title
-  const shouldShowDescription = cleanedDescription &&
-    cleanedDescription.length > 10 &&
-    !isTitleDuplicate(article.title, cleanedDescription);
+  // Filter out summaries that are just duplicates of the title
+  const shouldShowSummary = cleanedSummary &&
+    cleanedSummary.length > 10 &&
+    !isTitleDuplicate(article.title, cleanedSummary);
 
   return (
     <div
@@ -69,12 +71,29 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, selected, onSelect }) => {
           aria-label={`Select article: ${article.title}`}
         />
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-800 line-clamp-2 text-base">
-            {article.title}
-          </h3>
-          {shouldShowDescription && (
-            <p className="text-sm text-gray-600 mt-2 line-clamp-2">
-              {cleanedDescription}
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="font-semibold text-gray-800 line-clamp-2 text-base flex-1">
+              {article.title}
+            </h3>
+            <div className="flex-shrink-0">
+              {article.humorScore !== undefined ? (
+                <span className={`inline-block px-2 py-1 rounded-full text-xs font-bold ${
+                  article.humorScore >= 70 ? 'bg-green-200 text-green-800' :
+                  article.humorScore >= 40 ? 'bg-amber-200 text-amber-800' :
+                  'bg-gray-200 text-gray-700'
+                }`}>
+                  {article.humorScore}
+                </span>
+              ) : (
+                <div className="inline-flex items-center justify-center w-8 h-8">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                </div>
+              )}
+            </div>
+          </div>
+          {shouldShowSummary && (
+            <p className="text-sm text-gray-600 mt-2 line-clamp-4">
+              {cleanedSummary}
             </p>
           )}
           <div className="flex items-center justify-between mt-2 gap-2">
@@ -93,6 +112,32 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, selected, onSelect }) => {
       </div>
     </div>
   );
+};
+
+// Local humor scoring function (no API calls)
+const calculateHumorScore = (title: string, description?: string): number => {
+  const text = `${title} ${description || ''}`.toLowerCase();
+  let score = 30;
+
+  const keywords = {
+    absurd: ['bizarre', 'unusual', 'strange', 'weird', 'odd', 'unexpected', 'shocking', 'ridiculous'],
+    ironic: ['ironic', 'despite', 'however', 'contradicts', 'opposite', 'backfire', 'paradox'],
+    political: ['politician', 'government', 'minister', 'mayor', 'scandal', 'controversy', 'protest'],
+    visual: ['falls', 'crash', 'stuck', 'trapped', 'costume', 'animal', 'giant', 'huge'],
+    extreme: ['extreme', 'massive', 'record', 'unprecedented', 'worst', 'best', 'biggest']
+  };
+
+  Object.values(keywords).forEach(kws => {
+    const matches = kws.filter(kw => text.includes(kw));
+    score += Math.min(matches.length * 5, 15);
+  });
+
+  score += Math.min((text.match(/!/g) || []).length * 3, 9);
+  score += Math.min((text.match(/\?/g) || []).length * 4, 12);
+  if (text.length < 50) score -= 10;
+  if (text.length > 200) score += 5;
+
+  return Math.min(100, Math.max(1, Math.round(score)));
 };
 
 const NewsDisplay: React.FC = () => {
@@ -120,18 +165,54 @@ const NewsDisplay: React.FC = () => {
 
       try {
         const newsResponse = await newsService.fetchNewsByLocation(location.name);
+
+        // Set initial news data with local humor scores (instant feedback)
+        const articlesWithLocalScores = newsResponse.articles.map(article => ({
+          ...article,
+          summary: article.description,
+          humorScore: calculateHumorScore(article.title, article.description),
+        }));
+
         const newsData: NewsData = {
-          articles: newsResponse.articles,
+          articles: articlesWithLocalScores,
           topic: newsResponse.topic || 'General',
           date: new Date().toISOString(),
           location: newsResponse.location,
         };
         setNews(newsData);
+        setLoading(false);
+
+        // Then enhance with AI analysis in background
+        console.log('🤖 Starting AI batch analysis of articles...');
+        try {
+          const analysis = await geminiService.batchAnalyzeArticles(
+            newsResponse.articles.map(a => ({
+              title: a.title,
+              description: a.description,
+              content: a.content,
+            }))
+          );
+
+          // Update articles with AI-generated summaries and scores
+          setNews(prevNews => {
+            if (!prevNews) return prevNews;
+            const updatedArticles = prevNews.articles.map((article, idx) => ({
+              ...article,
+              summary: analysis[idx]?.summary || article.summary,
+              humorScore: analysis[idx]?.humorScore || article.humorScore,
+            }));
+            return { ...prevNews, articles: updatedArticles };
+          });
+
+          console.log('✅ AI analysis complete');
+        } catch (aiError) {
+          console.warn('⚠️ AI analysis failed, using local scores:', aiError);
+          // Keep the local scores if AI fails
+        }
       } catch (err) {
         const appError = AppErrorHandler.handleError(err);
         const userMessage = AppErrorHandler.getUserMessage(appError);
         setError(userMessage);
-      } finally {
         setLoading(false);
       }
     };
@@ -139,7 +220,7 @@ const NewsDisplay: React.FC = () => {
     fetchNews();
   }, [location?.name, setLoading, setError, setNews]);
 
-  const handleSelectArticle = (article: NewsArticle) => {
+  const handleSelectArticle = async (article: NewsArticle) => {
     const isSelected = selectedArticles.some(
       (a) => a.title === article.title && a.url === article.url
     );
@@ -147,7 +228,55 @@ const NewsDisplay: React.FC = () => {
     if (isSelected) {
       deselectArticle(article);
     } else {
-      selectArticle(article);
+      // Find the article in the store to check if we already have full content
+      const storedArticle = news?.articles.find(
+        a => a.title === article.title && a.url === article.url
+      );
+
+      // Only fetch if we haven't already tried and don't have meaningful content
+      const needsContent = !storedArticle?.contentFetched &&
+        (!storedArticle?.content || storedArticle.content === storedArticle.description);
+
+      if (needsContent) {
+        try {
+          console.log(`📄 Fetching full content for: ${article.title}`);
+          const fullContent = await newsService.fetchArticleContent(article.url);
+
+          // Update the article in the news store with full content and mark as fetched
+          setNews(prevNews => {
+            if (!prevNews) return prevNews;
+            const updatedArticles = prevNews.articles.map(a =>
+              (a.title === article.title && a.url === article.url)
+                ? { ...a, content: fullContent, contentFetched: true }
+                : a
+            );
+            return { ...prevNews, articles: updatedArticles };
+          });
+
+          // Select the article with full content
+          selectArticle({ ...article, content: fullContent, contentFetched: true });
+          console.log(`✅ Full content loaded (${fullContent.length} chars)`);
+        } catch (error) {
+          console.error('Failed to fetch article content:', error);
+
+          // Mark as fetched to prevent retrying, and select with available content
+          setNews(prevNews => {
+            if (!prevNews) return prevNews;
+            const updatedArticles = prevNews.articles.map(a =>
+              (a.title === article.title && a.url === article.url)
+                ? { ...a, contentFetched: true }
+                : a
+            );
+            return { ...prevNews, articles: updatedArticles };
+          });
+
+          selectArticle({ ...article, contentFetched: true });
+        }
+      } else {
+        // Use the stored article (with or without full content)
+        console.log(`✓ Using stored article for: ${article.title}`);
+        selectArticle(storedArticle || article);
+      }
     }
   };
 

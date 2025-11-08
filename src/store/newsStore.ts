@@ -6,7 +6,7 @@ interface NewsState {
   selectedArticles: NewsArticle[];
   isLoading: boolean;
   error: string | null;
-  setNews: (news: NewsData) => void;
+  setNews: (news: NewsData | ((prevNews: NewsData | null) => NewsData | null)) => void;
   setArticles: (articles: NewsArticle[]) => void;
   setTopic: (topic: string) => void;
   selectArticle: (article: NewsArticle) => void;
@@ -23,8 +23,15 @@ export const useNewsStore = create<NewsState>((set) => ({
   isLoading: false,
   error: null,
 
-  setNews: (news: NewsData) => {
-    set({ news, error: null });
+  setNews: (news: NewsData | ((prevNews: NewsData | null) => NewsData | null)) => {
+    if (typeof news === 'function') {
+      set((state) => {
+        const newNews = news(state.news);
+        return { news: newNews, error: null };
+      });
+    } else {
+      set({ news, error: null });
+    }
   },
 
   setArticles: (articles: NewsArticle[]) => {

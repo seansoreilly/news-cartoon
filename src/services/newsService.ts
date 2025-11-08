@@ -208,6 +208,34 @@ class NewsService {
     });
   }
 
+  async fetchArticleContent(articleUrl: string): Promise<string> {
+    if (!articleUrl || articleUrl.trim() === '') {
+      throw createNewsError('Article URL cannot be empty');
+    }
+
+    try {
+      const params = new URLSearchParams({ url: articleUrl });
+      const response = await fetch(`${this.baseUrl.replace('/news', '')}/article/content?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json() as { content: string; length: number; url: string };
+      return data.content || '';
+    } catch (error) {
+      throw createNewsError(
+        `Failed to fetch article content from: ${articleUrl}`,
+        { originalError: String(error) }
+      );
+    }
+  }
+
   private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }

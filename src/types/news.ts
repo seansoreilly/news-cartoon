@@ -12,6 +12,9 @@ export interface NewsArticle {
   content?: string;
   image?: string;
   author?: string;
+  summary?: string;
+  humorScore?: number;
+  contentFetched?: boolean; // Track if we've attempted to fetch full content
 }
 
 export interface NewsResponse {
