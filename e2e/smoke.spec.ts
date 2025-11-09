@@ -31,7 +31,7 @@ test.describe('Application Smoke Tests', () => {
   test('should display the application header', async ({ page }) => {
     // Check for main heading
     const heading = page.locator('h1');
-    await expect(heading).toContainText('Cartoon of the Day');
+    await expect(heading).toContainText('News Cartoon');
 
     // Check for subtitle
     const subtitle = page.locator('text=/AI-powered/i');

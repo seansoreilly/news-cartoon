@@ -40,7 +40,7 @@ describe('Accessibility Tests', () => {
       );
 
       const h1 = screen.getByRole('heading', { level: 1 });
-      expect(h1).toHaveTextContent('Cartoon of the Day');
+      expect(h1).toHaveTextContent('News Cartoon');
     });
 
     it('should have sufficient color contrast', () => {
@@ -209,7 +209,7 @@ describe('Accessibility Tests', () => {
         </Layout>
       );
 
-      const title = screen.getByText('Cartoon of the Day');
+      const title = screen.getByText('News Cartoon');
       expect(title).toHaveClass('text-4xl');
     });
 
@@ -254,7 +254,7 @@ describe('Accessibility Tests', () => {
         </Layout>
       );
 
-      const title = screen.getByText('Cartoon of the Day');
+      const title = screen.getByText('News Cartoon');
       expect(title).toHaveClass('text-white');
     });
 

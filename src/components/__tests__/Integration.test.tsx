@@ -31,7 +31,7 @@ describe('Component Integration Tests', () => {
       );
 
       expect(screen.getByTestId('test-child')).toBeInTheDocument();
-      expect(screen.getByText('Cartoon of the Day')).toBeInTheDocument();
+      expect(screen.getByText('News Cartoon')).toBeInTheDocument();
     });
 
     it('should display header and footer consistently', () => {
@@ -41,7 +41,7 @@ describe('Component Integration Tests', () => {
         </Layout>
       );
 
-      expect(screen.getByText('Cartoon of the Day')).toBeInTheDocument();
+      expect(screen.getByText('News Cartoon')).toBeInTheDocument();
 
       rerender(
         <Layout>
@@ -49,7 +49,7 @@ describe('Component Integration Tests', () => {
         </Layout>
       );
 
-      expect(screen.getByText('Cartoon of the Day')).toBeInTheDocument();
+      expect(screen.getByText('News Cartoon')).toBeInTheDocument();
     });
 
     it('should maintain layout structure across different children', () => {
