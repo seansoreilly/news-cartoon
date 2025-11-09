@@ -163,7 +163,7 @@ class GeminiService {
     const script = await this.generateComicScript(concept, articles, panelCount);
     console.log('Comic script generated:', script);
 
-    const prompt = this.buildImagePrompt(concept, script);
+    const prompt = this.buildImagePrompt(concept, script, panelCount);
     console.log('Image prompt length:', prompt.length, 'characters');
 
     try {
@@ -229,7 +229,7 @@ class GeminiService {
     this.imageCache.clear();
   }
 
-  private buildImagePrompt(concept: CartoonConcept, script: ComicScript): string {
+  private buildImagePrompt(concept: CartoonConcept, script: ComicScript, panelCount: number = 4): string {
     const script_section = `
 COMIC STRIP SCRIPT (follow this structure):
 ${script.panels.join('\n')}
@@ -237,12 +237,18 @@ ${script.panels.join('\n')}
 Follow this script precisely to ensure visual coherence and proper humor delivery.
 `;
 
+    const panelDescription = panelCount === 1
+      ? 'IMPORTANT: Create a SINGLE PANEL political cartoon. Do NOT create multiple panels.'
+      : `IMPORTANT: Create a ${panelCount}-panel comic strip laid out horizontally in a row.`;
+
     return `Create a newspaper comic strip cartoon image in the style of Mark Knight (Melbourne cartoonist):
 
 Title: "${concept.title}"
 Concept: ${concept.premise}
 Setting: ${concept.location}
 ${script_section}
+
+${panelDescription}
 
 TEXT RENDERING REQUIREMENTS (CRITICAL FOR SPELLING ACCURACY):
 - If any text appears in the cartoon (titles, captions, speech bubbles), spell it EXACTLY as written above
@@ -264,7 +270,6 @@ Art style requirements (inspired by Mark Knight):
 - Professional editorial cartoon aesthetics
 
 The cartoon should be:
-- Single panel or 2-3 panel strip
 - Easily readable and understandable at a glance
 - Visually appealing and humorous
 - Appropriate for all ages
