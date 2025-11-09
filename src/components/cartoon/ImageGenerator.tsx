@@ -141,15 +141,15 @@ const ImageGenerator: React.FC = React.memo(() => {
               aria-busy={localLoading}
             >
               {localLoading
-                ? '<� Generating Image...'
+                ? 'Generating Image...'
                 : timeRemaining > 0
-                  ? `� Wait ${timeRemaining}s`
-                  : '<� Generate Image'}
+                  ? `Wait ${timeRemaining}s`
+                  : 'Generate Image'}
             </button>
 
             {localError && (
               <div className="mt-4 bg-red-50 border-l-4 border-red-500 p-4 rounded">
-                <p className="text-red-800 font-medium">� {localError}</p>
+                <p className="text-red-800 font-medium">{localError}</p>
               </div>
             )}
           </div>
@@ -170,14 +170,14 @@ const ImageGenerator: React.FC = React.memo(() => {
                 onClick={handleDownload}
                 className="flex-1 min-w-[150px] bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
               >
-                 Download Image
+                Download Image
               </button>
 
               <button
                 onClick={handleRegenerateImage}
                 className="flex-1 min-w-[150px] bg-gray-200 text-gray-800 px-6 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors"
               >
-                = Generate New Image
+                Generate New Image
               </button>
             </div>
           </div>
