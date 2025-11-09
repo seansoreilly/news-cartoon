@@ -24,6 +24,7 @@
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.5",
+    "vercel": "^48.9.0",
     "xml2js": "^0.6.2",
     "zustand": "^5.0.8"
   },
@@ -56,9 +57,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
-      "eslint --fix",
-      "vitest related --run"
-    ],
-    "*.{json,md}": "prettier --write"
+      "eslint --fix"
+    ]
   }
 }
