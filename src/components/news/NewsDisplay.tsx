@@ -297,7 +297,7 @@ const NewsDisplay: React.FC = () => {
       <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-lg shadow-md mb-6">
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Latest News</h2>
         <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-          <p className="text-red-800 font-medium">� {error}</p>
+          <p className="text-red-800 font-medium">{error}</p>
         </div>
       </div>
     );
