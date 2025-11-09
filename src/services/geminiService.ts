@@ -89,13 +89,15 @@ class GeminiService {
 
   async generateComicScript(
     concept: CartoonConcept,
-    articles: NewsArticle[]
+    articles: NewsArticle[],
+    panelCount: number = 4
   ): Promise<ComicScript> {
     console.log('[generateComicScript] Starting comic script generation...');
     console.log('[generateComicScript] Concept title:', concept.title);
     console.log('[generateComicScript] Articles count:', articles.length);
+    console.log('[generateComicScript] Panel count requested:', panelCount);
 
-    const prompt = this.buildScriptPrompt(concept, articles);
+    const prompt = this.buildScriptPrompt(concept, articles, panelCount);
     console.log('[generateComicScript] Script prompt length:', prompt.length);
 
     try {
@@ -131,10 +133,11 @@ class GeminiService {
     }
   }
 
-  async generateCartoonImage(concept: CartoonConcept, articles: NewsArticle[]): Promise<CartoonImage> {
+  async generateCartoonImage(concept: CartoonConcept, articles: NewsArticle[], panelCount: number = 4): Promise<CartoonImage> {
     console.log('=== Starting image generation ===');
     console.log('Concept:', JSON.stringify(concept, null, 2));
     console.log('Articles count:', articles.length);
+    console.log('Panel count requested:', panelCount);
 
     // Check rate limiting
     if (!ImageGenerationRateLimiter.canGenerateImage()) {
@@ -157,7 +160,7 @@ class GeminiService {
     console.log('No cached image found, generating new one...');
 
     console.log('Generating comic script...');
-    const script = await this.generateComicScript(concept, articles);
+    const script = await this.generateComicScript(concept, articles, panelCount);
     console.log('Comic script generated:', script);
 
     const prompt = this.buildImagePrompt(concept, script);
@@ -460,7 +463,8 @@ Return only valid JSON array.`;
 
   private buildScriptPrompt(
     concept: CartoonConcept,
-    articles: NewsArticle[]
+    articles: NewsArticle[],
+    panelCount: number = 4
   ): string {
     const news_section = articles.length > 0 ? `
 ACTUAL NEWS STORY CONTEXT (ground your humor in these real details):
@@ -469,6 +473,10 @@ ${articles.map(a => a.title).join('\n')}
 Your comic strip should reference or play off these actual news story details to make the humor more relevant and grounded in reality.
 ` : '';
 
+    const panelDescription = panelCount === 1
+      ? 'a single panel political cartoon'
+      : `a ${panelCount}-panel comic strip`;
+
     return `Create a detailed comic strip script for this cartoon concept:
 
 Title: ${concept.title}
@@ -476,7 +484,7 @@ Concept: ${concept.premise}
 Setting: ${concept.location}
 ${news_section}
 
-Write a 2-3 panel comic strip script with:
+Write ${panelDescription} with:
 1. Panel descriptions (what visually appears in each panel)
 2. Character positions and expressions
 3. Dialogue or speech bubbles (if applicable)

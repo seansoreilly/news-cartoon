@@ -11,6 +11,7 @@ const ImageGenerator: React.FC = React.memo(() => {
   const [localLoading, setLocalLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
+  const [panelCount, setPanelCount] = useState<number>(4);
 
   const selectedConcept = cartoon ? {
     ...cartoon.ideas[0],
@@ -46,7 +47,7 @@ const ImageGenerator: React.FC = React.memo(() => {
         );
       }
 
-      const cartoonImage = await geminiService.generateCartoonImage(selectedConcept, selectedArticles);
+      const cartoonImage = await geminiService.generateCartoonImage(selectedConcept, selectedArticles, panelCount);
       const imageUrl = `data:${cartoonImage.mimeType};base64,${cartoonImage.base64Data}`;
       setImagePath(imageUrl);
       setLocalError(null);
@@ -102,6 +103,36 @@ const ImageGenerator: React.FC = React.memo(() => {
             </h3>
             <p className="text-gray-600 mb-4">{selectedConcept.premise}</p>
             <p className="text-sm text-gray-500 mb-4">Why it's funny: {selectedConcept.why_funny}</p>
+
+            <div className="mb-4">
+              <label htmlFor="panel-count" className="block text-sm font-medium text-gray-700 mb-2">
+                Comic Style:
+              </label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPanelCount(1)}
+                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${
+                    panelCount === 1
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                  disabled={localLoading}
+                >
+                  Single Panel
+                </button>
+                <button
+                  onClick={() => setPanelCount(4)}
+                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${
+                    panelCount === 4
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                  disabled={localLoading}
+                >
+                  4-Panel Strip
+                </button>
+              </div>
+            </div>
 
             <button
               onClick={handleGenerateImage}
