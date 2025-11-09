@@ -1,5 +1,9 @@
 import { http, HttpResponse } from 'msw';
 
+/**
+ * Mock Data Fixtures
+ */
+
 // Mock news articles
 const mockArticles = {
   articles: [
@@ -31,6 +35,8 @@ const mockArticles = {
     },
   ],
 };
+
+const emptyArticles = { articles: [] };
 
 // Mock Gemini API responses
 const mockGeminiConceptResponse = {
@@ -78,8 +84,14 @@ const mockGeminiImageResponse = {
   ],
 };
 
+/**
+ * MSW Handlers
+ *
+ * These handlers mock API responses for testing. Each handler can be overridden
+ * in individual tests using server.use(handler).
+ */
 export const handlers = [
-  // News API endpoint
+  // News API: Search endpoint
   http.get('http://localhost:3000/api/news/search', ({ request }) => {
     const url = new URL(request.url);
     const query = url.searchParams.get('q');
@@ -91,30 +103,123 @@ export const handlers = [
       );
     }
 
+    // Simulate empty results for specific queries
+    if (query === 'no-results') {
+      return HttpResponse.json(emptyArticles);
+    }
+
     return HttpResponse.json(mockArticles);
   }),
 
-  // Gemini concept generation
+  // News API: Location endpoint
+  http.get('http://localhost:3000/api/news/location', ({ request }) => {
+    const url = new URL(request.url);
+    const location = url.searchParams.get('location');
+
+    if (!location) {
+      return HttpResponse.json(
+        { error: 'Location parameter is required' },
+        { status: 400 }
+      );
+    }
+
+    return HttpResponse.json(mockArticles);
+  }),
+
+  // Gemini: Concept generation
   http.post(
     'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent',
-    () => {
+    async ({ request }) => {
+      // Check for authentication
+      if (!request.headers.get('x-goog-api-key')) {
+        return HttpResponse.json(
+          { error: 'Missing API key' },
+          { status: 401 }
+        );
+      }
+
+      // Parse body safely
+      try {
+        const body = await request.json() as Record<string, any>;
+
+        // Simulate rate limiting for specific prompts
+        if (
+          (body.contents?.[0]?.parts?.[0]?.text || '').includes('rate-limit')
+        ) {
+          return HttpResponse.json(
+            { error: 'Rate limit exceeded' },
+            { status: 429 }
+          );
+        }
+      } catch {
+        // Continue if body is not JSON
+      }
+
       return HttpResponse.json(mockGeminiConceptResponse);
     }
   ),
 
-  // Gemini script generation
+  // Gemini: Script generation
   http.post(
     'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent',
-    () => {
+    async ({ request }) => {
+      if (!request.headers.get('x-goog-api-key')) {
+        return HttpResponse.json(
+          { error: 'Missing API key' },
+          { status: 401 }
+        );
+      }
+
       return HttpResponse.json(mockGeminiScriptResponse);
     }
   ),
 
-  // Gemini image generation (vision API)
+  // Gemini: Image generation (vision API)
   http.post(
     'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent',
-    () => {
+    async ({ request }) => {
+      if (!request.headers.get('x-goog-api-key')) {
+        return HttpResponse.json(
+          { error: 'Missing API key' },
+          { status: 401 }
+        );
+      }
+
+      // Parse body safely to check for invalid data simulation
+      try {
+        const body = await request.json() as Record<string, any>;
+
+        // Simulate error for invalid image data
+        if (
+          (body.contents?.[0]?.parts?.[0]?.text || '').includes('invalid')
+        ) {
+          return HttpResponse.json(
+            { error: 'Invalid image data' },
+            { status: 400 }
+          );
+        }
+      } catch {
+        // Continue if body is not JSON
+      }
+
       return HttpResponse.json(mockGeminiImageResponse);
     }
   ),
+
+  // IP Geolocation API (for location detection)
+  http.get('https://ipapi.co/json/', () => {
+    return HttpResponse.json({
+      ip: '192.168.1.1',
+      city: 'San Francisco',
+      region: 'California',
+      country: 'US',
+      latitude: 37.7749,
+      longitude: -122.4194,
+    });
+  }),
+
+  // Health check endpoint
+  http.get('http://localhost:3000/api/health', () => {
+    return HttpResponse.json({ status: 'ok' });
+  }),
 ];
