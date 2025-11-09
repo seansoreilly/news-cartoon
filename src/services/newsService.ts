@@ -14,7 +14,7 @@ const RETRY_DELAY_MS = 1000;
 
 class NewsService {
   private cache: CacheStore = {};
-  private baseUrl = 'http://localhost:3000/api/news';
+  private baseUrl = import.meta.env.PROD ? '/api/news' : 'http://localhost:3000/api/news';
 
   constructor() {
     // API key is now handled server-side via backend proxy
