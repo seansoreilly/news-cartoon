@@ -1,18 +1,18 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { newsService } from '../newsService';
 
-// Mock fetch
-globalThis.fetch = vi.fn();
-
 describe('NewsService', () => {
+  const mockFetch = vi.fn();
+
   beforeEach(() => {
     newsService.clearCache();
-    vi.clearAllMocks();
+    mockFetch.mockClear();
+    globalThis.fetch = mockFetch as any;
     vi.useFakeTimers();
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    mockFetch.mockClear();
     vi.useRealTimers();
   });
 
@@ -40,7 +40,7 @@ describe('NewsService', () => {
 
   describe('fetchNewsByLocation', () => {
     it('should fetch news articles for a valid location', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify(mockArticles), { status: 200 })
       );
 
@@ -66,7 +66,7 @@ describe('NewsService', () => {
     });
 
     it('should include timestamp in response', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify(mockArticles), { status: 200 })
       );
 
@@ -81,7 +81,7 @@ describe('NewsService', () => {
         articles: mockArticles.articles.slice(0, 5),
       };
 
-      vi.mocked(fetch).mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify(limitedArticles), { status: 200 })
       );
 
@@ -96,7 +96,7 @@ describe('NewsService', () => {
 
   describe('fetchNewsByKeyword', () => {
     it('should fetch news articles for a valid keyword', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify(mockArticles), { status: 200 })
       );
 
@@ -122,7 +122,7 @@ describe('NewsService', () => {
     });
 
     it('should include timestamp in response', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify(mockArticles), { status: 200 })
       );
 
@@ -135,7 +135,7 @@ describe('NewsService', () => {
 
   describe('Caching', () => {
     it('should cache results and return cached data on subsequent calls', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify(mockArticles), { status: 200 })
       );
 
@@ -149,7 +149,7 @@ describe('NewsService', () => {
     });
 
     it('should use different cache keys for location vs keyword', async () => {
-      vi.mocked(fetch)
+      mockFetch
         .mockResolvedValueOnce(
           new Response(JSON.stringify(mockArticles), { status: 200 })
         )
@@ -167,7 +167,7 @@ describe('NewsService', () => {
     });
 
     it('should clear cache on clearCache()', async () => {
-      vi.mocked(fetch)
+      mockFetch
         .mockResolvedValueOnce(
           new Response(JSON.stringify(mockArticles), { status: 200 })
         )
@@ -190,7 +190,7 @@ describe('NewsService', () => {
 
   describe('Error Handling', () => {
     it('should handle response with empty articles array', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify({ articles: [] }), { status: 200 })
       );
 
@@ -201,7 +201,7 @@ describe('NewsService', () => {
     });
 
     it('should handle response missing articles field', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify({}), { status: 200 })
       );
 
@@ -214,7 +214,7 @@ describe('NewsService', () => {
 
   describe('Response Parsing', () => {
     it('should parse article with all fields', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify(mockArticles), { status: 200 })
       );
 
@@ -247,7 +247,7 @@ describe('NewsService', () => {
         ],
       };
 
-      vi.mocked(fetch).mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify(articlesWithoutOptional), { status: 200 })
       );
 
@@ -270,7 +270,7 @@ describe('NewsService', () => {
         ],
       };
 
-      vi.mocked(fetch).mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify(articlesWithoutSource), { status: 200 })
       );
 

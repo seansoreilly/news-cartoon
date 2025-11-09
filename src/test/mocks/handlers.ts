@@ -126,7 +126,7 @@ export const handlers = [
     return HttpResponse.json(mockArticles);
   }),
 
-  // Gemini: Concept generation
+  // Gemini: Unified concept and script generation
   http.post(
     'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent',
     async ({ request }) => {
@@ -141,36 +141,27 @@ export const handlers = [
       // Parse body safely
       try {
         const body = await request.json() as Record<string, any>;
+        const text = body.contents?.[0]?.parts?.[0]?.text || '';
 
         // Simulate rate limiting for specific prompts
-        if (
-          (body.contents?.[0]?.parts?.[0]?.text || '').includes('rate-limit')
-        ) {
+        if (text.includes('rate-limit')) {
           return HttpResponse.json(
             { error: 'Rate limit exceeded' },
             { status: 429 }
           );
         }
+
+        // Return script response for script-related prompts
+        if (text.includes('comic script') || text.includes('Generate comic script')) {
+          return HttpResponse.json(mockGeminiScriptResponse);
+        }
+
+        // Default to concept response
+        return HttpResponse.json(mockGeminiConceptResponse);
       } catch {
         // Continue if body is not JSON
+        return HttpResponse.json(mockGeminiConceptResponse);
       }
-
-      return HttpResponse.json(mockGeminiConceptResponse);
-    }
-  ),
-
-  // Gemini: Script generation
-  http.post(
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent',
-    async ({ request }) => {
-      if (!request.headers.get('x-goog-api-key')) {
-        return HttpResponse.json(
-          { error: 'Missing API key' },
-          { status: 401 }
-        );
-      }
-
-      return HttpResponse.json(mockGeminiScriptResponse);
     }
   ),
 

@@ -67,13 +67,29 @@ const ConceptGenerator: React.FC = () => {
     );
   }
 
+  if (!location?.name) {
+    return (
+      <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-lg shadow-md mb-6">
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">Generate Cartoon Concepts</h2>
+        <div className="text-center py-8">
+          <p className="text-gray-600 text-lg mb-2">
+            Please set your location first
+          </p>
+          <p className="text-sm text-gray-500">
+            Location is needed to generate relevant cartoon concepts
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (selectedArticles.length === 0) {
     return (
       <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-lg shadow-md mb-6">
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Generate Cartoon Concepts</h2>
         <div className="text-center py-8">
           <p className="text-gray-600 text-lg mb-2">
-            Select news articles above to generate cartoon concepts
+            Please select news articles above to generate cartoon concepts
           </p>
           <p className="text-sm text-gray-500">
             Choose one or more articles to turn into a cartoon

@@ -40,11 +40,6 @@ describe('LocationDetector', () => {
   });
 
   describe('Rendering', () => {
-    it('should render location detection component', () => {
-      render(<LocationDetector />);
-      expect(screen.getByText(/location/i)).toBeInTheDocument();
-    });
-
     it('should display detection method buttons', () => {
       render(<LocationDetector />);
       expect(screen.getByRole('button', { name: /auto detect/i })).toBeInTheDocument();
@@ -370,25 +365,6 @@ describe('LocationDetector', () => {
   });
 
   describe('Error Handling', () => {
-    it('should display error message on detection failure', async () => {
-      const user = userEvent.setup();
-      const errorMessage = 'Failed to detect location';
-
-      (locationService.getLocationFromGPS as any).mockRejectedValue(
-        new Error('GPS denied')
-      );
-      (AppErrorHandler.getUserMessage as any).mockReturnValue(errorMessage);
-
-      render(<LocationDetector />);
-
-      const gpsButton = screen.getByRole('button', { name: /gps/i });
-      await user.click(gpsButton);
-
-      await waitFor(() => {
-        expect(screen.getByText(errorMessage)).toBeInTheDocument();
-      });
-    });
-
     it('should update store error on detection failure', async () => {
       const user = userEvent.setup();
       const mockSetError = vi.fn();

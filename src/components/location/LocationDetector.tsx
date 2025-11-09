@@ -165,14 +165,16 @@ const LocationDetector: React.FC = () => {
                 type="text"
                 value={manualLocation}
                 onChange={(e) => setManualLocation(e.target.value)}
-                placeholder="e.g., New York, NY"
+                placeholder="Enter location (e.g., New York, NY)"
                 className="flex-1 border-2 border-gray-300 rounded-l-lg px-4 py-2 focus:border-blue-500 focus:outline-none"
                 disabled={isLoading}
+                aria-label="Enter location"
               />
               <button
                 type="submit"
-                disabled={!manualLocation.trim() || isLoading}
+                disabled={isLoading}
                 className="bg-green-600 text-white px-6 py-2 rounded-r-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                aria-label="Set location"
               >
                 Set
               </button>

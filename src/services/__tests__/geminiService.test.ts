@@ -1,16 +1,16 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { geminiService } from '../geminiService';
 
-// Mock fetch
-globalThis.fetch = vi.fn();
-
 describe('GeminiService - Humor Scoring', () => {
+  const mockFetch = vi.fn();
+
   beforeEach(() => {
-    vi.clearAllMocks();
+    mockFetch.mockClear();
+    globalThis.fetch = mockFetch as any;
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    mockFetch.mockClear();
   });
 
   describe('generateHumorScore', () => {
@@ -29,7 +29,7 @@ describe('GeminiService - Humor Scoring', () => {
         ],
       };
 
-      vi.mocked(fetch).mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify(mockResponse), { status: 200 })
       );
 
@@ -58,7 +58,7 @@ describe('GeminiService - Humor Scoring', () => {
         ],
       };
 
-      vi.mocked(fetch).mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify(mockResponse), { status: 200 })
       );
 
@@ -85,7 +85,7 @@ describe('GeminiService - Humor Scoring', () => {
         ],
       };
 
-      vi.mocked(fetch).mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify(mockResponse), { status: 200 })
       );
 
@@ -112,7 +112,7 @@ describe('GeminiService - Humor Scoring', () => {
         ],
       };
 
-      vi.mocked(fetch).mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify(mockResponse), { status: 200 })
       );
 
@@ -136,7 +136,7 @@ describe('GeminiService - Humor Scoring', () => {
         ],
       };
 
-      vi.mocked(fetch).mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify(mockResponse), { status: 200 })
       );
 
@@ -160,7 +160,7 @@ describe('GeminiService - Humor Scoring', () => {
         ],
       };
 
-      vi.mocked(fetch).mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify(mockResponse), { status: 200 })
       );
 
@@ -184,7 +184,7 @@ describe('GeminiService - Humor Scoring', () => {
         ],
       };
 
-      vi.mocked(fetch).mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify(mockResponse), { status: 200 })
       );
 
@@ -195,7 +195,7 @@ describe('GeminiService - Humor Scoring', () => {
     });
 
     it('should return 50 (default) on API error', async () => {
-      vi.mocked(fetch).mockRejectedValueOnce(new Error('API Error'));
+      mockFetch.mockRejectedValueOnce(new Error('API Error'));
 
       const score = await geminiService.generateHumorScore('Test', 'Test');
 
@@ -217,7 +217,7 @@ describe('GeminiService - Humor Scoring', () => {
         ],
       };
 
-      vi.mocked(fetch).mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify(mockResponse), { status: 200 })
       );
 
@@ -241,7 +241,7 @@ describe('GeminiService - Humor Scoring', () => {
         ],
       };
 
-      vi.mocked(fetch).mockResolvedValueOnce(
+      mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify(mockResponse), { status: 200 })
       );
 
@@ -279,7 +279,7 @@ describe('GeminiService - Humor Scoring', () => {
         ],
       };
 
-      vi.mocked(fetch).mockResolvedValue(
+      mockFetch.mockResolvedValue(
         new Response(JSON.stringify(mockResponse), { status: 200 })
       );
 
