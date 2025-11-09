@@ -1,294 +1,178 @@
 # Testing Documentation
 
-This document outlines the testing strategy, tools, and best practices used in the News Cartoon project.
+This document provides comprehensive information about the testing infrastructure for the News Cartoon application.
 
-## Testing Stack
+## Table of Contents
 
-- **Vitest**: Unit and integration test runner with JSdom environment
-- **React Testing Library**: Component testing utilities
-- **Mock Service Worker (MSW)**: API mocking for tests
-- **Playwright**: End-to-end and cross-browser testing
-- **@testing-library/user-event**: User interaction simulation
-- **@testing-library/jest-dom**: Custom matchers for DOM assertions
+1. [Overview](#overview)
+2. [Test Structure](#test-structure)
+3. [Running Tests](#running-tests)
+4. [Unit Tests](#unit-tests)
+5. [Integration Tests](#integration-tests)
+6. [E2E Tests](#e2e-tests)
+7. [Performance Tests](#performance-tests)
+8. [Coverage Reports](#coverage-reports)
+9. [Debugging Tests](#debugging-tests)
+10. [Best Practices](#best-practices)
 
-## Test Types and Locations
+## Overview
 
-### Unit Tests
-- **Location**: `src/**/__tests__/*.test.ts`
-- **Purpose**: Test individual functions and services in isolation
-- **Tools**: Vitest, vi.fn() for mocking
-- **Examples**: Service methods, utility functions, store logic
+The News Cartoon project uses a comprehensive multi-layer testing strategy:
 
-### Component Tests
-- **Location**: `src/components/**/__tests__/*.test.tsx`
-- **Purpose**: Test React components in isolation with mocked dependencies
-- **Tools**: React Testing Library, Vitest
-- **Focus**: User interactions, rendering, prop handling
+- **Unit Tests**: Test individual functions, services, and stores in isolation
+- **Integration Tests**: Test component-store interactions and workflows
+- **Component Tests**: Test React components with React Testing Library
+- **E2E Tests**: Test complete user workflows with Playwright
+- **Performance Tests**: Measure and validate performance metrics
 
-### Integration Tests
-- **Location**: `src/**/__tests__/*.test.ts`
-- **Purpose**: Test multiple components/services working together
-- **Tools**: React Testing Library, Vitest, MSW
-- **Focus**: Feature workflows, state management
+### Test Statistics
 
-### End-to-End Tests
-- **Location**: `e2e/*.spec.ts`
-- **Purpose**: Test complete user journeys in real browsers
-- **Tools**: Playwright
-- **Focus**: User workflows, cross-browser compatibility, mobile responsiveness
+- **Unit Tests**: 40+ tests (services, stores, utilities)
+- **Component Tests**: 60+ tests (UI components and interactions)
+- **Integration Tests**: 15+ tests (workflows and cross-component interactions)
+- **E2E Tests**: 80+ tests (user journeys, accessibility, responsiveness, performance)
+- **Total**: 195+ tests providing comprehensive coverage
+
+## Test Structure
+
+```
+project/
+├── src/
+│   ├── components/__tests__/   # Component tests
+│   ├── services/__tests__/     # Service tests
+│   ├── store/__tests__/        # Store tests
+│   ├── utils/__tests__/        # Utility tests
+│   └── test/
+│       └── mocks/
+│           ├── handlers.ts
+│           ├── server.ts
+│           └── __tests__/
+├── e2e/                         # End-to-End tests
+│   ├── smoke.spec.ts
+│   ├── workflow.spec.ts
+│   ├── accessibility.spec.ts
+│   ├── responsive.spec.ts
+│   └── performance.spec.ts
+└── playwright.config.ts
+```
 
 ## Running Tests
 
-### Unit/Integration Tests
-```bash
-# Run all tests in watch mode (development)
-npm test
+### Unit and Component Tests
 
-# Run tests in UI mode (interactive dashboard)
-npm run test:ui
+```bash
+# Run all unit and component tests in watch mode
+npm test
 
 # Run tests with coverage report
 npm run test:coverage
 
-# Run tests once (CI mode)
-npm test -- --run
+# Run tests and open interactive UI
+npm run test:ui
 
-# Run tests for a specific file
-npm test -- src/services/__tests__/newsService.test.ts
+# Run specific test file
+npm test -- LocationDetector.test.tsx
 
-# Run tests matching a pattern
-npm test -- --grep "caching"
+# Run tests matching pattern
+npm test -- --grep "should handle"
 ```
 
-### End-to-End Tests
+### E2E Tests
+
 ```bash
-# Run all E2E tests in headed mode
-npx playwright test
+# Run all E2E tests in headed mode (see the browser)
+npx playwright test e2e/ --headed
 
-# Run E2E tests in headed mode (see the browser)
-npx playwright test --headed
+# Run specific E2E test file
+npx playwright test e2e/smoke.spec.ts
 
-# Run tests for a specific file
-npx playwright test e2e/example.spec.ts
+# Run in debug mode
+npx playwright test --debug
 
-# Run tests for a specific browser
-npx playwright test --project=chromium
-
-# View E2E test report
+# View test results HTML report
 npx playwright show-report
 ```
 
-## Test Setup
+## Unit Tests
 
-### Global Setup (`src/test/setup.ts`)
-- Imports Testing Library jest-dom matchers
-- Initializes Mock Service Worker
-- Mocks browser APIs (localStorage, geolocation, fetch)
-- Sets up test environment variables
+Unit tests verify individual functions and modules in isolation.
 
-### MSW Handlers (`src/test/mocks/handlers.ts`)
-- Defines mock responses for all API endpoints
-- Includes handlers for:
-  - News API (`http://localhost:3000/api/news/search`)
-  - Gemini Concept API
-  - Gemini Script API
-  - Gemini Image Generation API
+### Services Tests
+- newsService.test.ts: News fetching, caching, error handling
+- geminiService.test.ts: Gemini API integration
+- locationService.test.ts: Location detection
 
-### MSW Server (`src/test/mocks/server.ts`)
-- Initializes MSW server with handlers
-- Automatically integrated into test setup
+### Stores Tests
+- locationStore.test.ts: Location state management
+- newsStore.test.ts: News state and article selection
+- cartoonStore.test.ts: Cartoon generation state
+- preferencesStore.test.ts: User preferences storage
 
-## Writing Tests
+### Utilities Tests
+- errorHandler.test.ts: Error handling and formatting
+- rateLimiter.test.ts: Rate limiting logic
 
-### Service Tests Example
-```typescript
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { newsService } from '../newsService';
+## Integration Tests
 
-describe('NewsService', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+Located in `src/components/__tests__/Integration.test.tsx`
 
-  it('should fetch news articles for a valid location', async () => {
-    const result = await newsService.fetchNewsByLocation('Sydney');
+Tests complete workflows:
+1. Location → News → Cartoon Pipeline
+2. Store Synchronization
+3. Error Handling across layers
 
-    expect(result.articles).toHaveLength(3);
-    expect(result.topic).toBe('Sydney');
-  });
+## E2E Tests
 
-  it('should throw error for empty location', async () => {
-    await expect(newsService.fetchNewsByLocation('')).rejects.toThrow();
-  });
-});
-```
+### Smoke Tests
+Basic functionality: loads, UI visible, navigation works, no errors
 
-### Component Tests Example
-```typescript
-import { render, screen, fireEvent } from '@testing-library/react';
-import { NewsDisplay } from '../NewsDisplay';
+### Workflow Tests
+User journeys: location selection, news display, cartoon generation, settings
 
-describe('NewsDisplay', () => {
-  it('should render news articles', () => {
-    const articles = [
-      { title: 'Test News', description: 'Test Description', url: '#' }
-    ];
+### Accessibility Tests
+Keyboard navigation, ARIA attributes, focus management, color contrast, screen reader support
 
-    render(<NewsDisplay articles={articles} />);
+### Responsive Design Tests
+Mobile (Pixel 5, iPhone 12), Tablet (iPad Pro), Desktop, Cross-browser compatibility
 
-    expect(screen.getByText('Test News')).toBeInTheDocument();
-  });
-
-  it('should handle article selection', async () => {
-    const onSelect = vi.fn();
-    render(<NewsDisplay articles={articles} onSelect={onSelect} />);
-
-    fireEvent.click(screen.getByText('Test News'));
-    expect(onSelect).toHaveBeenCalled();
-  });
-});
-```
-
-### E2E Tests Example
-```typescript
-import { test, expect } from '@playwright/test';
-
-test('user can search for news and view results', async ({ page }) => {
-  await page.goto('/');
-
-  // Search for news
-  await page.fill('input[placeholder="Search"]', 'technology');
-  await page.click('button:has-text("Search")');
-
-  // Verify results appear
-  await expect(page.locator('[data-testid="news-article"]').first()).toBeVisible();
-});
-```
+### Performance Tests
+Load performance, runtime performance, memory usage, network optimization, Core Web Vitals
 
 ## Best Practices
 
-### 1. Test Naming
-- Use clear, descriptive test names that explain what's being tested
-- Follow pattern: "should [expected behavior] when [condition]"
-- Example: "should return cached results when called twice"
+### Writing Tests
 
-### 2. Test Organization
-- Group related tests using `describe()` blocks
-- One assertion per test when possible
-- Separate setup, execution, and assertion (AAA pattern)
+1. Use descriptive test names
+2. Follow Arrange-Act-Assert pattern
+3. Use React Testing Library best practices
+4. Mock external dependencies
+5. Test user behavior, not implementation
 
-### 3. Mocking
-- Mock external dependencies (API calls, browser APIs)
-- Mock at the service level, not the component level
-- Use MSW for HTTP requests
-- Use `vi.fn()` for function spies
+### Organizing Tests
 
-### 4. Assertions
-- Use specific assertions: `toEqual()` instead of `toBeTruthy()`
-- Test behavior, not implementation
-- Include error cases and edge cases
+1. One test file per component/module
+2. Group related tests with `describe`
+3. Use `beforeEach` for setup
+4. Use `afterEach` for cleanup
+5. Keep tests focused and independent
 
-### 5. Async Testing
-- Always `await` async operations
-- Use `async/await` instead of callbacks
-- Test error handling with `rejects.toThrow()`
+## Troubleshooting
 
-### 6. Component Testing
-- Test from the user's perspective
-- Use `screen` queries instead of `getByTestId` when possible
-- Test user interactions with `fireEvent` or `userEvent`
-- Test accessibility attributes
-
-## Pre-commit Hooks
-
-The project uses Husky and lint-staged to automatically:
-1. Run ESLint with auto-fix on staged files
-2. Run related tests for modified files
-3. Prevent commits with linting or test failures
-
-To bypass hooks (not recommended):
+### Tests Timing Out
 ```bash
-git commit --no-verify
+npm test -- --testTimeout=10000
+npx playwright test --timeout=30000
 ```
 
-## Coverage Goals
-
-Target coverage metrics:
-- **Statements**: 80%+
-- **Branches**: 75%+
-- **Functions**: 80%+
-- **Lines**: 80%+
-
-Generate coverage report:
-```bash
-npm run test:coverage
-```
-
-## CI/CD Integration
-
-GitHub Actions automatically runs:
-1. Linting (ESLint)
-2. Build verification (TypeScript + Vite)
-3. Unit/Integration tests (Vitest)
-4. End-to-End tests (Playwright)
-
-Workflows are triggered on:
-- Push to `main` or `develop` branches
-- Pull requests to `main` or `develop` branches
-
-Test artifacts are uploaded to GitHub for review:
-- Playwright HTML report
-- Coverage reports
-
-## Debugging Tests
-
-### Vitest Debugging
-```bash
-# Run tests with debugging (requires VS Code debugger)
-npm test -- --inspect-brk
-
-# Use Vitest UI for interactive debugging
-npm run test:ui
-```
-
-### Playwright Debugging
-```bash
-# Run tests with Playwright Inspector
-npx playwright test --debug
-
-# Record test interactions
-npx playwright codegen http://localhost:5173
-
-# View detailed trace
-npx playwright show-trace trace.zip
-```
-
-## Common Issues and Solutions
-
-### Issue: "Cannot find module" errors
-**Solution**: Ensure imports use correct paths relative to the file location
-
-### Issue: "Timeout of 5000ms exceeded"
-**Solution**: Increase timeout or check if async operations are properly awaited
-
-### Issue: MSW handler not intercepting requests
-**Solution**: Verify the URL pattern matches exactly, check handler registration
-
-### Issue: Component not rendering in tests
-**Solution**: Verify all provider setup, check for required props, use `render()` from testing library
+### Flaky Tests
+- Avoid hardcoded delays
+- Use `waitFor` for async operations
+- Mock network requests
+- Ensure test isolation
 
 ## Resources
 
 - [Vitest Documentation](https://vitest.dev/)
-- [React Testing Library Docs](https://testing-library.com/docs/react-testing-library/intro/)
-- [Mock Service Worker Docs](https://mswjs.io/)
+- [React Testing Library](https://testing-library.com/react)
 - [Playwright Documentation](https://playwright.dev/)
-- [Testing Best Practices](https://kentcdodds.com/blog/common-mistakes-with-react-testing-library)
-
-## Maintenance
-
-- Review and update tests when features change
-- Keep mock data synchronized with actual API responses
-- Update E2E tests when user workflows change
-- Monitor coverage metrics and aim to maintain 80%+ coverage
-- Regularly update testing dependencies
+- [Mock Service Worker](https://mswjs.io/)
