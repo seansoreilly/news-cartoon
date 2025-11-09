@@ -1,0 +1,111 @@
+Product Requirements Document: Regression Test Suite for News Cartoon Application
+
+## Project Overview
+Create a comprehensive regression test suite for the News Cartoon application to ensure reliability, prevent regressions, and maintain code quality across all features and components.
+
+## Goals
+- Achieve 80%+ code coverage across all modules
+- Implement automated test runs in CI/CD pipeline
+- Create reliable, maintainable, and fast-running tests
+- Cover all critical user paths and edge cases
+- Enable confident refactoring and feature additions
+
+## Requirements
+
+### 1. Unit Testing
+- Test all service modules (newsService, geminiService, locationService)
+- Test all Zustand stores (cartoonStore, newsStore, locationStore, preferencesStore)
+- Test utility functions (errorHandler, rateLimiter, cache utilities)
+- Mock external dependencies (APIs, localStorage, browser APIs)
+- Validate error handling and edge cases
+
+### 2. Component Testing
+- Test all React components in isolation
+- Verify component props, state, and interactions
+- Test loading states, error states, and success states
+- Validate accessibility (ARIA attributes, keyboard navigation)
+- Test responsive behavior and conditional rendering
+
+### 3. Integration Testing
+- Test service-to-store integration flows
+- Verify API request/response cycles
+- Test component-store interactions
+- Validate data flow through the application
+- Test error propagation and recovery
+
+### 4. End-to-End Testing
+- Test critical user journeys:
+  - Location detection and news fetching
+  - Manual location entry and search
+  - Cartoon concept generation from news
+  - Comic script generation
+  - Image generation with rate limiting
+  - Settings persistence
+  - Error recovery flows
+- Test cross-browser compatibility
+- Validate mobile responsiveness
+
+### 5. API Testing
+- Test backend server endpoints (/api/news/search, /api/article/content)
+- Validate request validation and sanitization
+- Test error responses and status codes
+- Verify CORS configuration
+- Test rate limiting and caching
+
+### 6. Performance Testing
+- Measure component render performance
+- Test bundle size limits
+- Validate lazy loading effectiveness
+- Test API response time thresholds
+- Monitor memory usage patterns
+
+### 7. Test Infrastructure
+- Set up continuous integration testing
+- Configure test coverage reporting
+- Implement pre-commit test hooks
+- Create test data fixtures and factories
+- Set up visual regression testing
+
+### 8. Documentation
+- Document testing strategy and patterns
+- Create testing guidelines for contributors
+- Document test running and debugging procedures
+- Maintain test coverage reports
+- Create troubleshooting guides
+
+## Technical Specifications
+
+### Testing Stack
+- Vitest for unit and integration testing
+- React Testing Library for component testing
+- Playwright for E2E testing
+- Mock Service Worker (MSW) for API mocking
+- Testing Library User Event for interactions
+
+### Coverage Goals
+- Statements: 80%+
+- Branches: 75%+
+- Functions: 80%+
+- Lines: 80%+
+
+### Performance Targets
+- Unit tests: < 5 seconds total
+- Integration tests: < 20 seconds total
+- E2E tests: < 2 minutes total
+- Pre-commit hooks: < 10 seconds
+
+## Deliverables
+- Complete test suite with 80%+ coverage
+- CI/CD pipeline configuration
+- Test documentation and guidelines
+- Performance benchmarks
+- Visual regression test suite
+- Automated test reports
+
+## Success Criteria
+- All critical paths have test coverage
+- Zero regression bugs in production
+- Test suite runs reliably in CI/CD
+- Developer confidence in making changes
+- Fast feedback loop for development
+- Clear test failure messages

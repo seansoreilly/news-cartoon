@@ -1,0 +1,18 @@
+# Task ID: 6
+# Title: Create API and backend tests
+# Status: pending
+# Dependencies: None
+# Priority: medium
+# Description: Write comprehensive tests for the Express backend server
+# Details:
+- Test /api/news/search endpoint with various queries
+- Test /api/article/content scraping functionality
+- Test RSS feed parsing from Google News
+- Test error handling and status codes
+- Test CORS configuration
+- Test request validation and sanitization
+- Test caching mechanisms
+- Use supertest for API testing
+
+# Test Strategy:
+Run server tests separately with npm run test:server. Verify all endpoints handle edge cases.

@@ -1,0 +1,16 @@
+# Task ID: 2
+# Title: Create unit tests for all service modules
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Write comprehensive unit tests for newsService, geminiService, and locationService
+# Details:
+- Test newsService: fetchNewsByLocation, fetchNewsByKeyword, caching, retry logic
+- Test geminiService: generateCartoonConcepts, generateComicScript, generateCartoonImage, caching
+- Test locationService: detectLocation, getLocationFromGPS, getLocationFromIP
+- Mock all external API calls and browser APIs
+- Test error handling, edge cases, and retry mechanisms
+- Achieve 90%+ coverage for service layer
+
+# Test Strategy:
+Each service should have its own test file. Verify all public methods are tested with various scenarios.

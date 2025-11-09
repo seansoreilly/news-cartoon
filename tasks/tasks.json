@@ -1,0 +1,240 @@
+{
+  "project": "news-cartoon",
+  "version": "1.0.0",
+  "description": "Regression Test Suite for News Cartoon Application",
+  "tags": {
+    "master": {
+      "name": "master",
+      "description": "Default tag",
+      "createdAt": "2025-11-09T00:00:00.000Z",
+      "tasks": []
+    },
+    "regression-tests": {
+      "name": "regression-tests",
+      "description": "Comprehensive regression test suite for news-cartoon application",
+      "createdAt": "2025-11-09T00:00:00.000Z",
+      "tasks": [
+        {
+          "id": "1",
+          "title": "Set up comprehensive test infrastructure",
+          "description": "Configure Vitest, React Testing Library, and test utilities for the project",
+          "details": "- Configure Vitest in vite.config.ts with jsdom environment\n- Set up comprehensive test globals and mocks in src/test/setup.ts\n- Create shared test utilities and custom render functions\n- Configure code coverage with 80% threshold targets\n- Set up test data fixtures and factory functions\n- Add MSW (Mock Service Worker) for API mocking\n- Configure pre-commit hooks for test running",
+          "testStrategy": "Run npm test to verify all configurations work. Generate coverage report and ensure it displays correctly.",
+          "priority": "high",
+          "status": "pending",
+          "dependencies": [],
+          "createdAt": "2025-11-09T00:00:00.000Z",
+          "subtasks": []
+        },
+        {
+          "id": "2",
+          "title": "Create unit tests for all service modules",
+          "description": "Write comprehensive unit tests for newsService, geminiService, and locationService",
+          "details": "- Test newsService: fetchNewsByLocation, fetchNewsByKeyword, caching, retry logic\n- Test geminiService: generateCartoonConcepts, generateComicScript, generateCartoonImage, caching\n- Test locationService: detectLocation, getLocationFromGPS, getLocationFromIP\n- Mock all external API calls and browser APIs\n- Test error handling, edge cases, and retry mechanisms\n- Achieve 90%+ coverage for service layer",
+          "testStrategy": "Each service should have its own test file. Verify all public methods are tested with various scenarios.",
+          "priority": "high",
+          "status": "pending",
+          "dependencies": [
+            "1"
+          ],
+          "createdAt": "2025-11-09T00:00:00.000Z",
+          "subtasks": []
+        },
+        {
+          "id": "3",
+          "title": "Create unit tests for all Zustand stores",
+          "description": "Write comprehensive tests for cartoonStore, newsStore, locationStore, and preferencesStore",
+          "details": "- Test all store actions and state transitions\n- Test localStorage persistence and hydration\n- Test store reset functionality\n- Test computed values and selectors\n- Test error state management\n- Verify store isolation and independence",
+          "testStrategy": "Create separate test files for each store. Use renderHook from React Testing Library to test store hooks.",
+          "priority": "high",
+          "status": "pending",
+          "dependencies": [
+            "1"
+          ],
+          "createdAt": "2025-11-09T00:00:00.000Z",
+          "subtasks": []
+        },
+        {
+          "id": "4",
+          "title": "Create component tests for all React components",
+          "description": "Write comprehensive component tests using React Testing Library",
+          "details": "- Test NewsDisplay component with various article states\n- Test ConceptGenerator with concept selection flow\n- Test ImageGenerator with rate limiting scenarios\n- Test LocationDetector with GPS and manual entry\n- Test Layout, ErrorBoundary, and navigation components\n- Test loading states, error states, and user interactions\n- Verify accessibility and ARIA attributes",
+          "testStrategy": "Each component should have a corresponding .test.tsx file. Use userEvent for interactions.",
+          "priority": "high",
+          "status": "pending",
+          "dependencies": [
+            "1"
+          ],
+          "createdAt": "2025-11-09T00:00:00.000Z",
+          "subtasks": []
+        },
+        {
+          "id": "5",
+          "title": "Set up Playwright for E2E testing",
+          "description": "Configure Playwright and create end-to-end tests for critical user journeys",
+          "details": "- Install and configure Playwright with multiple browsers\n- Create E2E tests for location-based news flow\n- Test keyword search and article display\n- Test complete cartoon generation flow\n- Test rate limiting and error recovery\n- Test settings persistence across sessions\n- Set up visual regression testing\n- Configure parallel test execution",
+          "testStrategy": "Run playwright test to verify all user flows work correctly across browsers.",
+          "priority": "medium",
+          "status": "pending",
+          "dependencies": [
+            "2",
+            "3",
+            "4"
+          ],
+          "createdAt": "2025-11-09T00:00:00.000Z",
+          "subtasks": []
+        },
+        {
+          "id": "6",
+          "title": "Create API and backend tests",
+          "description": "Write comprehensive tests for the Express backend server",
+          "details": "- Test /api/news/search endpoint with various queries\n- Test /api/article/content scraping functionality\n- Test RSS feed parsing from Google News\n- Test error handling and status codes\n- Test CORS configuration\n- Test request validation and sanitization\n- Test caching mechanisms\n- Use supertest for API testing",
+          "testStrategy": "Run server tests separately with npm run test:server. Verify all endpoints handle edge cases.",
+          "priority": "medium",
+          "status": "pending",
+          "dependencies": [
+            "1"
+          ],
+          "createdAt": "2025-11-09T00:00:00.000Z",
+          "subtasks": []
+        },
+        {
+          "id": "7",
+          "title": "Set up CI/CD test automation",
+          "description": "Configure GitHub Actions or similar CI/CD for automated testing",
+          "details": "- Create workflow for running tests on pull requests\n- Set up test matrix for multiple Node versions\n- Configure code coverage reporting to Codecov or similar\n- Set up branch protection requiring passing tests\n- Configure performance budget checks\n- Add bundle size analysis\n- Set up automated dependency updates with tests",
+          "testStrategy": "Push changes to trigger CI/CD pipeline. Verify all checks pass and reports generate.",
+          "priority": "medium",
+          "status": "pending",
+          "dependencies": [
+            "5",
+            "6"
+          ],
+          "createdAt": "2025-11-09T00:00:00.000Z",
+          "subtasks": []
+        },
+        {
+          "id": "8",
+          "title": "Create testing documentation and guidelines",
+          "description": "Document testing strategies, patterns, and best practices for the project",
+          "details": "- Write comprehensive testing guide in docs/TESTING.md\n- Document test running commands and options\n- Create troubleshooting guide for common test issues\n- Document mocking strategies and patterns\n- Create examples of good test practices\n- Document coverage goals and how to improve them\n- Create contribution guidelines for test requirements",
+          "testStrategy": "Review documentation with team. Ensure new contributors can understand and run tests.",
+          "priority": "low",
+          "status": "pending",
+          "dependencies": [
+            "7"
+          ],
+          "createdAt": "2025-11-09T00:00:00.000Z",
+          "subtasks": []
+        }
+      ]
+    }
+  },
+  "metadata": {
+    "createdAt": "2025-11-09T00:00:00.000Z",
+    "updatedAt": "2025-11-09T00:00:00.000Z",
+    "currentTag": "regression-tests"
+  },
+  "regression-tests": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Set up comprehensive test infrastructure",
+        "description": "Configure Vitest, React Testing Library, and test utilities for the project",
+        "details": "- Configure Vitest in vite.config.ts with jsdom environment\n- Set up comprehensive test globals and mocks in src/test/setup.ts\n- Create shared test utilities and custom render functions\n- Configure code coverage with 80% threshold targets\n- Set up test data fixtures and factory functions\n- Add MSW (Mock Service Worker) for API mocking\n- Configure pre-commit hooks for test running",
+        "testStrategy": "Run npm test to verify all configurations work. Generate coverage report and ensure it displays correctly.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Create unit tests for all service modules",
+        "description": "Write comprehensive unit tests for newsService, geminiService, and locationService",
+        "details": "- Test newsService: fetchNewsByLocation, fetchNewsByKeyword, caching, retry logic\n- Test geminiService: generateCartoonConcepts, generateComicScript, generateCartoonImage, caching\n- Test locationService: detectLocation, getLocationFromGPS, getLocationFromIP\n- Mock all external API calls and browser APIs\n- Test error handling, edge cases, and retry mechanisms\n- Achieve 90%+ coverage for service layer",
+        "testStrategy": "Each service should have its own test file. Verify all public methods are tested with various scenarios.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Create unit tests for all Zustand stores",
+        "description": "Write comprehensive tests for cartoonStore, newsStore, locationStore, and preferencesStore",
+        "details": "- Test all store actions and state transitions\n- Test localStorage persistence and hydration\n- Test store reset functionality\n- Test computed values and selectors\n- Test error state management\n- Verify store isolation and independence",
+        "testStrategy": "Create separate test files for each store. Use renderHook from React Testing Library to test store hooks.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Create component tests for all React components",
+        "description": "Write comprehensive component tests using React Testing Library",
+        "details": "- Test NewsDisplay component with various article states\n- Test ConceptGenerator with concept selection flow\n- Test ImageGenerator with rate limiting scenarios\n- Test LocationDetector with GPS and manual entry\n- Test Layout, ErrorBoundary, and navigation components\n- Test loading states, error states, and user interactions\n- Verify accessibility and ARIA attributes",
+        "testStrategy": "Each component should have a corresponding .test.tsx file. Use userEvent for interactions.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Set up Playwright for E2E testing",
+        "description": "Configure Playwright and create end-to-end tests for critical user journeys",
+        "details": "- Install and configure Playwright with multiple browsers\n- Create E2E tests for location-based news flow\n- Test keyword search and article display\n- Test complete cartoon generation flow\n- Test rate limiting and error recovery\n- Test settings persistence across sessions\n- Set up visual regression testing\n- Configure parallel test execution",
+        "testStrategy": "Run playwright test to verify all user flows work correctly across browsers.",
+        "status": "pending",
+        "dependencies": [
+          3,
+          4
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Create API and backend tests",
+        "description": "Write comprehensive tests for the Express backend server",
+        "details": "- Test /api/news/search endpoint with various queries\n- Test /api/article/content scraping functionality\n- Test RSS feed parsing from Google News\n- Test error handling and status codes\n- Test CORS configuration\n- Test request validation and sanitization\n- Test caching mechanisms\n- Use supertest for API testing",
+        "testStrategy": "Run server tests separately with npm run test:server. Verify all endpoints handle edge cases.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Set up CI/CD test automation",
+        "description": "Configure GitHub Actions or similar CI/CD for automated testing",
+        "details": "- Create workflow for running tests on pull requests\n- Set up test matrix for multiple Node versions\n- Configure code coverage reporting to Codecov or similar\n- Set up branch protection requiring passing tests\n- Configure performance budget checks\n- Add bundle size analysis\n- Set up automated dependency updates with tests",
+        "testStrategy": "Push changes to trigger CI/CD pipeline. Verify all checks pass and reports generate.",
+        "status": "pending",
+        "dependencies": [
+          6
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Create testing documentation and guidelines",
+        "description": "Document testing strategies, patterns, and best practices for the project",
+        "details": "- Write comprehensive testing guide in docs/TESTING.md\n- Document test running commands and options\n- Create troubleshooting guide for common test issues\n- Document mocking strategies and patterns\n- Create examples of good test practices\n- Document coverage goals and how to improve them\n- Create contribution guidelines for test requirements",
+        "testStrategy": "Review documentation with team. Ensure new contributors can understand and run tests.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "low",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-11-09T02:17:00.667Z",
+      "updated": "2025-11-09T02:18:55.917Z",
+      "description": "Comprehensive regression test suite for news-cartoon application"
+    }
+  }
+}

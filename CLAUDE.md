@@ -130,3 +130,7 @@ Components dispatch store actions and derive UI from store state—no prop drill
 3. **Missing image data**: Vision API fallback logs the actual response structure for debugging
 4. **Geolocation denied**: LocationDetector handles gracefully; falls back to manual entry
 5. **Rate limit hit during image gen**: `ImageGenerationRateLimiter` enforces cooldown with user-facing error message
+
+## Task Master AI Instructions
+**Import Task Master's development workflow commands and guidelines, treat as if import is in the main CLAUDE.md file.**
+@./.taskmaster/CLAUDE.md

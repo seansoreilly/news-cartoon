@@ -1,0 +1,16 @@
+# Task ID: 3
+# Title: Create unit tests for all Zustand stores
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Write comprehensive tests for cartoonStore, newsStore, locationStore, and preferencesStore
+# Details:
+- Test all store actions and state transitions
+- Test localStorage persistence and hydration
+- Test store reset functionality
+- Test computed values and selectors
+- Test error state management
+- Verify store isolation and independence
+
+# Test Strategy:
+Create separate test files for each store. Use renderHook from React Testing Library to test store hooks.

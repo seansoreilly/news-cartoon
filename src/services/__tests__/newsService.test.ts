@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { newsService } from '../newsService';
 
 // Mock fetch
-global.fetch = vi.fn();
+globalThis.fetch = vi.fn();
 
 describe('NewsService', () => {
   beforeEach(() => {
@@ -85,7 +85,7 @@ describe('NewsService', () => {
         new Response(JSON.stringify(limitedArticles), { status: 200 })
       );
 
-      const result = await newsService.fetchNewsByLocation('Brisbane', 5);
+      await newsService.fetchNewsByLocation('Brisbane', 5);
 
       expect(fetch).toHaveBeenCalledWith(
         expect.stringContaining('max=5'),

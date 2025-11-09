@@ -37,7 +37,6 @@ const isTitleDuplicate = (title: string, description: string): boolean => {
 
   // Check if description contains most of the title (accounting for variations)
   const titleWords = normalizedTitle.split(' ').filter(w => w.length > 3);
-  const descWords = normalizedDesc.split(' ');
 
   // If more than 70% of title words appear in description, it's likely a duplicate
   const matchedWords = titleWords.filter(w => normalizedDesc.includes(w)).length;

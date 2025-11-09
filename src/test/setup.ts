@@ -1,5 +1,13 @@
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
+import { vi, afterAll, afterEach, beforeAll } from 'vitest';
+import { server } from './mocks/server';
+
+/**
+ * Mock Service Worker setup
+ */
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 /**
  * Mock fetch API

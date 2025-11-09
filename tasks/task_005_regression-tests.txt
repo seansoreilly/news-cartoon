@@ -1,0 +1,18 @@
+# Task ID: 5
+# Title: Set up Playwright for E2E testing
+# Status: pending
+# Dependencies: 3, 4
+# Priority: medium
+# Description: Configure Playwright and create end-to-end tests for critical user journeys
+# Details:
+- Install and configure Playwright with multiple browsers
+- Create E2E tests for location-based news flow
+- Test keyword search and article display
+- Test complete cartoon generation flow
+- Test rate limiting and error recovery
+- Test settings persistence across sessions
+- Set up visual regression testing
+- Configure parallel test execution
+
+# Test Strategy:
+Run playwright test to verify all user flows work correctly across browsers.
