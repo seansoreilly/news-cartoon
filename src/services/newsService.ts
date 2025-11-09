@@ -22,7 +22,7 @@ class NewsService {
 
   async fetchNewsByLocation(
     location: string,
-    limit = 10
+    limit = parseInt(import.meta.env.VITE_DEFAULT_NEWS_LIMIT || '10')
   ): Promise<NewsResponse> {
     if (!location || location.trim() === '') {
       throw createNewsError('Location cannot be empty');
@@ -62,7 +62,7 @@ class NewsService {
 
   async fetchNewsByKeyword(
     keyword: string,
-    limit = 10
+    limit = parseInt(import.meta.env.VITE_DEFAULT_NEWS_LIMIT || '10')
   ): Promise<NewsResponse> {
     if (!keyword || keyword.trim() === '') {
       throw createNewsError('Keyword cannot be empty');

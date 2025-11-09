@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { q, max = '10', sortby = 'publishedAt' } = req.query;
+  const { q, max = process.env.VITE_DEFAULT_NEWS_LIMIT || '10', sortby = 'publishedAt' } = req.query;
 
   if (!q) {
     return res.status(400).json({ error: 'Query parameter "q" is required' });

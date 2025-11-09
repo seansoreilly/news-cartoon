@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { location, max = '10' } = req.query;
+  const { location, max = process.env.VITE_DEFAULT_NEWS_LIMIT || '10' } = req.query;
 
   if (!location) {
     return res.status(400).json({ error: 'Location parameter is required' });
