@@ -170,7 +170,7 @@ const ImageGenerator: React.FC = React.memo(() => {
                 onClick={handleDownload}
                 className="flex-1 min-w-[150px] bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
               >
-                Download Image
+                Download Image
               </button>
 
               <button
