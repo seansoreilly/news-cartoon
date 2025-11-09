@@ -20,13 +20,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               Dynamically generated cartoons based on your local news
             </p>
           </div>
-
-          {/* Logo positioned on the right */}
-          <img
-            src="/graphic.png"
-            alt="News Cartoon Logo"
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 w-20 h-20 md:w-24 md:h-24 drop-shadow-lg"
-          />
         </div>
       </header>
 
