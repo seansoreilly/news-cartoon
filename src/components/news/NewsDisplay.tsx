@@ -104,7 +104,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, selected, onSelect }) => {
               onClick={(e) => e.stopPropagation()}
               className="text-xs text-blue-600 hover:text-blue-800 hover:underline font-medium whitespace-nowrap"
             >
-              Read →
+              Article →
             </a>
           </div>
         </div>
