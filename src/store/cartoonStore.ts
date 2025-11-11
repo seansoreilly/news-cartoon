@@ -5,11 +5,13 @@ interface CartoonState {
   cartoon: CartoonData | null;
   comicScript: ComicScript | null;
   imagePath: string | null;
+  selectedConceptIndex: number | null;
   isLoading: boolean;
   error: string | null;
   setCartoon: (cartoon: CartoonData) => void;
   setComicScript: (script: ComicScript) => void;
   setImagePath: (path: string) => void;
+  setSelectedConceptIndex: (index: number) => void;
   clearCartoon: () => void;
   setError: (error: string | null) => void;
   setLoading: (loading: boolean) => void;
@@ -19,11 +21,12 @@ export const useCartoonStore = create<CartoonState>((set) => ({
   cartoon: null,
   comicScript: null,
   imagePath: null,
+  selectedConceptIndex: null,
   isLoading: false,
   error: null,
 
   setCartoon: (cartoon: CartoonData) => {
-    set({ cartoon, error: null });
+    set({ cartoon, error: null, selectedConceptIndex: null });
   },
 
   setComicScript: (comicScript: ComicScript) => {
@@ -34,11 +37,16 @@ export const useCartoonStore = create<CartoonState>((set) => ({
     set({ imagePath });
   },
 
+  setSelectedConceptIndex: (selectedConceptIndex: number) => {
+    set({ selectedConceptIndex, imagePath: null, comicScript: null });
+  },
+
   clearCartoon: () => {
     set({
       cartoon: null,
       comicScript: null,
       imagePath: null,
+      selectedConceptIndex: null,
       error: null,
     });
   },

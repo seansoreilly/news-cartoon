@@ -6,15 +6,15 @@ import { ImageGenerationRateLimiter } from '../../utils/rateLimiter';
 import { AppErrorHandler } from '../../utils/errorHandler';
 
 const ImageGenerator: React.FC = React.memo(() => {
-  const { cartoon, imagePath, setImagePath, setLoading, setError } = useCartoonStore();
+  const { cartoon, imagePath, setImagePath, setLoading, setError, selectedConceptIndex } = useCartoonStore();
   const { selectedArticles } = useNewsStore();
   const [localLoading, setLocalLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
-  const [panelCount, setPanelCount] = useState<number>(4);
+  const [panelCount, setPanelCount] = useState<number>(1);
 
-  const selectedConcept = cartoon ? {
-    ...cartoon.ideas[0],
+  const selectedConcept = cartoon && selectedConceptIndex !== null && cartoon.ideas[selectedConceptIndex] ? {
+    ...cartoon.ideas[selectedConceptIndex],
     location: cartoon.location,
   } : undefined;
 
@@ -80,13 +80,20 @@ const ImageGenerator: React.FC = React.memo(() => {
     setLocalError(null);
   };
 
+  if (!cartoon || !cartoon.ideas || cartoon.ideas.length === 0) {
+    return null;
+  }
+
   if (!selectedConcept) {
     return (
       <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-6 rounded-lg shadow-md mb-6">
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Cartoon Image</h2>
         <div className="text-center py-8">
-          <p className="text-gray-600 text-lg">
-            Select a cartoon concept to generate an image
+          <p className="text-gray-600 text-lg mb-2">
+            👆 Please select a cartoon concept above to generate an image
+          </p>
+          <p className="text-sm text-gray-500">
+            Click on any concept to select it
           </p>
         </div>
       </div>
@@ -108,31 +115,23 @@ const ImageGenerator: React.FC = React.memo(() => {
 
             <div className="mb-4">
               <label htmlFor="panel-count" className="block text-sm font-medium text-gray-700 mb-2">
-                Comic Style:
+                Number of Panels:
               </label>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setPanelCount(1)}
-                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${
-                    panelCount === 1
-                      ? 'bg-amber-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                  disabled={localLoading}
-                >
-                  Single Panel
-                </button>
-                <button
-                  onClick={() => setPanelCount(4)}
-                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${
-                    panelCount === 4
-                      ? 'bg-amber-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                  disabled={localLoading}
-                >
-                  4-Panel Strip
-                </button>
+              <div className="grid grid-cols-3 gap-2">
+                {[1, 2, 3, 4, 5, 6].map((num) => (
+                  <button
+                    key={num}
+                    onClick={() => setPanelCount(num)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                      panelCount === num
+                        ? 'bg-amber-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                    disabled={localLoading}
+                  >
+                    {num} {num === 1 ? 'Panel' : 'Panels'}
+                  </button>
+                ))}
               </div>
             </div>
 

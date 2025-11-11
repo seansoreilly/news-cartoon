@@ -115,6 +115,18 @@ app.get('/api/health', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`News API server running on http://localhost:${PORT}`);
 });
+
+// Keep the process alive
+process.on('SIGINT', () => {
+  console.log('\nShutting down server...');
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
+});
+
+// Prevent the process from exiting immediately
+process.stdin.resume();
