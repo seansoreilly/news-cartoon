@@ -243,9 +243,12 @@ class GeminiService {
     const textElements: Array<{ panel: number; text: string; type: string }> = [];
 
     script.panels.forEach((panel, index) => {
+      // Check if panel is a string
+      const panelText = typeof panel === 'string' ? panel : panel.description;
+
       // Extract text in quotes or dialogue
-      const quotedText = panel.match(/"([^"]+)"/g) || [];
-      quotedText.forEach(text => {
+      const quotedText = panelText.match(/"([^"]+)"/g) || [];
+      quotedText.forEach((text: string) => {
         const cleaned = text.replace(/"/g, '').toUpperCase().trim();
         if (cleaned && cleaned.split(' ').length <= 4) { // Limit to 4 words max
           textElements.push({
@@ -257,8 +260,8 @@ class GeminiService {
       });
 
       // Extract sign/label text (words like "sign:", "label:", "text:" followed by content)
-      const labelMatch = panel.match(/\b(?:sign|label|text|caption):\s*([^,.!?]+)/gi) || [];
-      labelMatch.forEach(match => {
+      const labelMatch = panelText.match(/\b(?:sign|label|text|caption):\s*([^,.!?]+)/gi) || [];
+      labelMatch.forEach((match: string) => {
         const text = match.split(':')[1]?.trim().toUpperCase();
         if (text && text.split(' ').length <= 3) {
           textElements.push({
@@ -280,27 +283,6 @@ class GeminiService {
     return text.split('').join('-');
   }
 
-  /**
-   * Simplify text for better accuracy
-   */
-  private simplifyText(text: string): string {
-    // Common replacements for better accuracy
-    const replacements: Record<string, string> = {
-      'GOVERNMENT': 'GOVT',
-      'BECAUSE': 'CUZ',
-      'THROUGH': 'THRU',
-      'THOUGH': 'THO',
-      'TONIGHT': 'TONITE',
-      'ALRIGHT': 'ALRITE'
-    };
-
-    let simplified = text.toUpperCase();
-    Object.entries(replacements).forEach(([long, short]) => {
-      simplified = simplified.replace(new RegExp(long, 'g'), short);
-    });
-
-    return simplified;
-  }
 
   private buildImagePrompt(concept: CartoonConcept, script: ComicScript, panelCount: number = 4): string {
     // Extract all text elements from the script
@@ -493,9 +475,15 @@ REMEMBER: Text accuracy is the #1 priority. Every word must be spelled EXACTLY a
     const candidate = response.candidates[0];
 
     // First check if candidate itself has the inline data (some API versions)
-    if ('inlineData' in candidate && candidate.inlineData) {
+    // Using unknown type to handle API response variations safely
+    const candidateExtended = candidate as typeof candidate & {
+      inlineData?: { data?: string; mimeType?: string };
+      parts?: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }>;
+    };
+
+    if ('inlineData' in candidateExtended && candidateExtended.inlineData) {
       console.log('[parseImageResponse] Found inlineData directly in candidate');
-      const data = candidate.inlineData.data;
+      const data = candidateExtended.inlineData.data;
       if (data) {
         console.log('[parseImageResponse] ✅ Successfully extracted image data from candidate');
         return data;
@@ -511,7 +499,7 @@ REMEMBER: Text accuracy is the #1 priority. Every word must be spelled EXACTLY a
     });
 
     // If no content, check if there's a direct parts array
-    const parts = candidate.content?.parts || candidate.parts || [];
+    const parts = candidate.content?.parts || candidateExtended.parts || [];
 
     if (parts.length === 0) {
       console.error('[parseImageResponse] No parts found in candidate');

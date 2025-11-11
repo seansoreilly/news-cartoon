@@ -46,7 +46,7 @@ const ConceptDisplay: React.FC = () => {
                 {concept.title}
               </h3>
               <p className={`mb-2 ${isSelected ? 'text-gray-700' : 'text-gray-600'}`}>
-                {concept.premise || concept.description}
+                {concept.premise}
               </p>
               {concept.why_funny && (
                 <p className={`italic text-sm ${isSelected ? 'text-purple-700' : 'text-gray-500'}`}>
