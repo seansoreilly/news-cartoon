@@ -106,7 +106,7 @@ class GeminiService {
       console.log('[generateComicScript] Received response from Gemini');
 
       console.log('[generateComicScript] Parsing script response...');
-      const panels = this.parseScriptResponse(response);
+      const panels = this.parseScriptResponse(response, panelCount);
       console.log('[generateComicScript] Parsed panels count:', panels.length);
 
       const script = {
@@ -712,8 +712,9 @@ Remember: LESS TEXT = BETTER. Focus on VISUAL comedy. Maximum 3 words per text e
     }
   }
 
-  private parseScriptResponse(response: GeminiResponse): string[] {
+  private parseScriptResponse(response: GeminiResponse, expectedPanelCount: number = 4): string[] {
     console.log('[parseScriptResponse] Starting to parse script response...');
+    console.log('[parseScriptResponse] Expected panel count:', expectedPanelCount);
 
     const text = response.candidates?.[0]?.content?.parts?.[0]?.text || '';
     console.log('[parseScriptResponse] Response text length:', text.length);
@@ -738,7 +739,7 @@ Remember: LESS TEXT = BETTER. Focus on VISUAL comedy. Maximum 3 words per text e
         if (parsed.panels && Array.isArray(parsed.panels) && parsed.panels.length > 0) {
           const panels = parsed.panels
             .map((p) => p.description || 'Visual description goes here')
-            .slice(0, 4);
+            .slice(0, expectedPanelCount);
 
           console.log('[parseScriptResponse] Successfully extracted panels from JSON:', panels.length);
           return panels;
@@ -765,7 +766,7 @@ Remember: LESS TEXT = BETTER. Focus on VISUAL comedy. Maximum 3 words per text e
 
       // For each section, combine all content until the next panel marker
       panelSections.forEach((section, index) => {
-        if (index >= 4) return; // Max 4 panels
+        if (index >= expectedPanelCount) return; // Max panels based on user selection
 
         // Clean up the section text
         const panelContent = section
@@ -792,7 +793,7 @@ Remember: LESS TEXT = BETTER. Focus on VISUAL comedy. Maximum 3 words per text e
 
     if (panels.length > 0) {
       console.log('[parseScriptResponse] Successfully extracted', panels.length, 'panels');
-      return panels.slice(0, 4);
+      return panels.slice(0, expectedPanelCount);
     }
 
     // Fallback: Extract any structured content that looks like panel descriptions
@@ -811,8 +812,8 @@ Remember: LESS TEXT = BETTER. Focus on VISUAL comedy. Maximum 3 words per text e
     if (visualLines.length > 0) {
       console.log('[parseScriptResponse] Found', visualLines.length, 'visual description lines');
       // Group them into panels (assuming equal distribution)
-      const panelSize = Math.ceil(visualLines.length / 4);
-      for (let i = 0; i < Math.min(4, Math.ceil(visualLines.length / panelSize)); i++) {
+      const panelSize = Math.ceil(visualLines.length / expectedPanelCount);
+      for (let i = 0; i < Math.min(expectedPanelCount, Math.ceil(visualLines.length / panelSize)); i++) {
         const panelLines = visualLines.slice(i * panelSize, (i + 1) * panelSize);
         panels.push(panelLines.join(' '));
       }
@@ -821,12 +822,15 @@ Remember: LESS TEXT = BETTER. Focus on VISUAL comedy. Maximum 3 words per text e
 
     // Default panels if parsing fails
     console.error('[parseScriptResponse] All parsing methods failed, using default panels');
-    return [
+    const defaultPanels = [
       'A scene showing the main concept with visual humor',
       'Characters reacting to the situation',
       'The conflict or tension escalates',
       'The punchline or resolution with editorial commentary',
+      'Additional development of the humor',
+      'Final twist or concluding visual gag',
     ];
+    return defaultPanels.slice(0, expectedPanelCount);
   }
 
   async generateHumorScore(title: string, description?: string): Promise<number> {
