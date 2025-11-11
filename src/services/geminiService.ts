@@ -241,7 +241,7 @@ Follow this script precisely to ensure visual coherence and proper humor deliver
       ? 'IMPORTANT: Create a SINGLE PANEL political cartoon. Do NOT create multiple panels.'
       : `IMPORTANT: Create a ${panelCount}-panel comic strip laid out horizontally in a row.`;
 
-    return `Create a newspaper comic strip cartoon image in the style of Mark Knight (Melbourne cartoonist):
+    return `Create a professional newspaper comic strip cartoon image in editorial style:
 
 Title: "${concept.title}"
 Concept: ${concept.premise}
@@ -259,7 +259,7 @@ TEXT RENDERING REQUIREMENTS (CRITICAL FOR SPELLING ACCURACY):
 - Double-check spelling of all words that appear as text in the image
 - If space is limited, simplify text rather than distort spellings
 
-Art style requirements (inspired by Mark Knight):
+Art style requirements:
 - Clean, precise line art with sharp details
 - Professional newspaper cartoon quality
 - Expressive, well-defined characters
@@ -275,7 +275,7 @@ The cartoon should be:
 - Appropriate for all ages
 - Similar quality to professional newspaper editorial cartoons
 
-Focus on visual comedy, clever visual puns, and clear communication of the concept. Emulate the sharp wit and visual sophistication of Mark Knight's editorial cartoons.
+Focus on visual comedy, clever visual puns, and clear communication of the concept. Emulate the sharp wit and visual sophistication of professional editorial cartoons.
 `;
   }
 
@@ -456,7 +456,7 @@ Focus on visual comedy, clever visual puns, and clear communication of the conce
       })
       .join('\n');
 
-    return `You are a brilliant editorial cartoonist in the style of Mark Knight.
+    return `You are a brilliant editorial cartoonist creating professional newspaper-style cartoons.
 
 Based on news headlines from ${location}:
 
