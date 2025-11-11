@@ -569,14 +569,42 @@ REMEMBER: Text accuracy is the #1 priority. Every word must be spelled EXACTLY a
       })
       .join('\n');
 
-    return `You are a brilliant editorial cartoonist creating professional newspaper-style cartoons.
+    return `You are a brilliant editorial cartoonist specializing in VISUAL humor and sharp satire.
 
-Based on news headlines from ${location}:
-
+NEWS HEADLINES from ${location}:
 ${headlines}
 
-Generate 5 cartoon concepts. Each should have title, premise, and why_funny.
-Return only valid JSON array.`;
+COMEDY TECHNIQUE INSTRUCTIONS:
+Generate 5 cartoon concepts using DIFFERENT comedy techniques from this list:
+
+1. VISUAL PUN: Transform a key element into its literal visual representation
+2. ROLE REVERSAL: Swap expected positions (e.g., computers interviewing humans for jobs)
+3. EXAGGERATION: Take one aspect to absurd extremes (e.g., tiny problem shown as mountain)
+4. JUXTAPOSITION: Place contrasting elements side by side for ironic effect
+5. ANTHROPOMORPHISM: Give human traits to objects/concepts involved in the story
+6. ANACHRONISM: Show modern problem in historical setting or vice versa
+7. PERSPECTIVE SHIFT: Show from POV of unexpected character (the road's view of traffic)
+8. SCALE INVERSION: Make important things tiny, trivial things enormous
+
+REQUIREMENTS FOR EACH CONCEPT:
+- Must be funny WITHOUT dialogue (visual gag primary)
+- Should make viewers think "I never looked at it that way"
+- Include specific visual details that enhance the humor
+- Focus on IRONY and ABSURDITY, not just illustration
+- Make it work as a SILENT film scene
+
+AVOID:
+- Concepts that require text to be funny
+- Direct illustration without twist
+- Offensive stereotypes
+- Purely verbal puns
+
+Generate exactly 5 concepts as JSON array with these fields:
+- title: Catchy name for the cartoon
+- premise: VISUAL description of what viewers will SEE (not read)
+- why_funny: The comedic technique used and why it creates humor
+
+Focus on SHOWING the absurdity, not telling it.`;
   }
 
   private buildScriptPrompt(
@@ -593,12 +621,14 @@ ${articles.map(a => a.title).join('\n')}
       ? 'a single panel political cartoon'
       : `a ${panelCount}-panel comic strip`;
 
-    return `Create a comic strip script with MINIMAL TEXT for maximum clarity:
+    return `Create a comic strip script with EXACTLY ${panelCount} panel${panelCount === 1 ? '' : 's'}:
 
 Title: ${concept.title}
 Concept: ${concept.premise}
 Setting: ${concept.location}
 ${news_section}
+
+IMPORTANT: Generate EXACTLY ${panelCount} panel${panelCount === 1 ? '' : 's'} - no more, no less.
 
 CRITICAL TEXT RULES:
 - Maximum 2 text elements per panel (speech bubble, sign, caption)
@@ -616,13 +646,48 @@ Write ${panelDescription} with:
 4. Visual gags that work WITHOUT text
 5. Clear visual progression
 
-EXAMPLE FORMAT:
-Panel 1: A politician at podium looking confused. Sign: "VOTE NOW". Crowd looking skeptical.
-Panel 2: Politician holds up chart upside down. Speech bubble: "IT WORKS!"
-Panel 3: Crowd facepalming. One person says: "REALLY?"
-Panel 4: Politician shrugging with big smile. Caption: THE END
+${this.getExampleFormat(panelCount)}
 
 Remember: LESS TEXT = BETTER. Focus on VISUAL comedy. Maximum 3 words per text element!`;
+  }
+
+  private getExampleFormat(panelCount: number): string {
+    const examples: Record<number, string> = {
+      1: `EXAMPLE FORMAT (1 panel):
+Panel 1: A massive computer server shaped like a bird flying south. Sign: "MELBOURNE". Confused kangaroos watching from below.`,
+
+      2: `EXAMPLE FORMAT (2 panels):
+Panel 1: Politician at podium looking confident. Sign: "TRUST ME"
+Panel 2: Same politician tangled in his own red tape. Caption: OOPS`,
+
+      3: `EXAMPLE FORMAT (3 panels):
+Panel 1: Tech CEO showing tiny phone. "REVOLUTIONARY!"
+Panel 2: Phone grows enormous in user's hands
+Panel 3: User crushed under giant phone. Sign: HELP`,
+
+      4: `EXAMPLE FORMAT (4 panels):
+Panel 1: A politician at podium looking confused. Sign: "VOTE NOW"
+Panel 2: Politician holds up chart upside down. "IT WORKS!"
+Panel 3: Crowd facepalming. One person says: "REALLY?"
+Panel 4: Politician shrugging with big smile. Caption: THE END`,
+
+      5: `EXAMPLE FORMAT (5 panels):
+Panel 1: Robot interviewing human. Sign: "JOBS"
+Panel 2: Human sweating nervously
+Panel 3: Robot checking "NOT COMPATIBLE"
+Panel 4: Human looking dejected
+Panel 5: Robot hiring another robot. "PERFECT!"`,
+
+      6: `EXAMPLE FORMAT (6 panels):
+Panel 1: Small problem appears (ant-sized)
+Panel 2: Manager points at it dramatically
+Panel 3: Problem grows slightly bigger
+Panel 4: Emergency meeting called
+Panel 5: Problem now building-sized
+Panel 6: Everyone ignoring giant problem. "WHAT PROBLEM?"`
+    };
+
+    return examples[panelCount] || examples[4];
   }
 
   private async callGeminiApi(
@@ -834,18 +899,31 @@ Remember: LESS TEXT = BETTER. Focus on VISUAL comedy. Maximum 3 words per text e
   }
 
   async generateHumorScore(title: string, description?: string): Promise<number> {
-    const prompt = `Rate this news article's potential for a funny editorial cartoon on a scale of 1-100.
+    const prompt = `You are a comedy analyst evaluating news for editorial cartoon potential.
 
 Title: ${title}
 ${description ? `Description: ${description}` : ''}
 
-Consider:
-- Absurdity, irony, or contradiction
-- Visual comedy potential
-- Political/social satire opportunities
-- Exaggeration possibilities
+Score this on multiple humor dimensions (0-20 each):
 
-Respond with ONLY a number between 1 and 100, nothing else.`;
+1. ABSURDITY: How bizarre/unexpected is this situation?
+2. IRONY: Is there contradiction between expectation and reality?
+3. VISUAL POTENTIAL: Can this be shown without words?
+4. RELATABILITY: Will everyday people find this familiar yet silly?
+5. BENIGN VIOLATION: Is it wrong but ultimately harmless?
+
+Add the scores for a total out of 100.
+
+Consider these comedy goldmines:
+- Human incompetence in positions of power
+- Technology failing in ironic ways
+- Animals/objects behaving like humans
+- Bureaucracy taken to absurd extremes
+- Modern problems that would confuse ancestors
+- David vs Goliath situations
+- "First world problems" taken seriously
+
+Respond with ONLY the total number (1-100).`;
 
     try {
       const response = await this.callGeminiApi(prompt);
