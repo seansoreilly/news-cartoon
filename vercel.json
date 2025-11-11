@@ -1,7 +1,6 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "devCommand": "npm run dev",
   "installCommand": "npm install",
   "headers": [
     {
@@ -46,7 +45,7 @@
   ],
   "rewrites": [
     {
-      "source": "/((?!assets|vite\\.svg|graphic\\.png|.*\\.).*)",
+      "source": "/((?!api|assets|vite\\.svg|graphic\\.png|.*\\.).*)",
       "destination": "/index.html"
     }
   ]

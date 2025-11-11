@@ -8,6 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+node_modules/.tmp/
 dist
 dist-ssr
 *.local
@@ -38,7 +39,8 @@ node_modules/
 .vscode
 # OS specific
 
+.vercel
+
 # Task files
 # tasks.json
 # tasks/ 
-.vercel

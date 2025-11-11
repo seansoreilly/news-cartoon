@@ -702,55 +702,102 @@ Respond with ONLY a number between 1 and 100, nothing else.`;
   async batchAnalyzeArticles(articles: Array<{ title: string; description?: string; content?: string }>): Promise<Array<{ summary: string; humorScore: number }>> {
     console.log(`[batchAnalyzeArticles] Analyzing ${articles.length} articles...`);
 
-    const prompt = `You are an expert editorial cartoonist analyzing news articles for their cartoon potential.
+    // Process in smaller batches to avoid API limits and improve reliability
+    const BATCH_SIZE = 3;
+    const results: Array<{ summary: string; humorScore: number }> = [];
 
-Analyze these ${articles.length} news articles and for each one provide:
-1. A 1-2 paragraph summary highlighting the key satirical angle and comedic elements
+    for (let i = 0; i < articles.length; i += BATCH_SIZE) {
+      const batch = articles.slice(i, Math.min(i + BATCH_SIZE, articles.length));
+      const batchNumber = Math.floor(i/BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(articles.length / BATCH_SIZE);
+
+      console.log(`[batchAnalyzeArticles] Processing batch ${batchNumber}/${totalBatches} (articles ${i+1}-${Math.min(i+BATCH_SIZE, articles.length)})`);
+
+      const prompt = `You are an expert editorial cartoonist analyzing news articles for their cartoon potential.
+
+Analyze these ${batch.length} news articles and for each one provide:
+1. A 1-2 paragraph summary highlighting the key satirical angle and comedic elements that would make it funny as a cartoon
 2. A humor score from 1-100 based on cartoon potential (absurdity, irony, visual comedy, satire opportunities)
 
 Articles:
-${articles.map((article, idx) => `
+${batch.map((article, idx) => `
 Article ${idx + 1}:
 Title: ${article.title}
 Description: ${article.description || 'No description'}
-${article.content ? `Content: ${article.content.substring(0, 500)}...` : ''}
+${article.content ? `Content excerpt: ${article.content.substring(0, 300)}...` : ''}
 `).join('\n---\n')}
 
-Respond ONLY with a valid JSON array in this exact format:
+Respond ONLY with a valid JSON array with EXACTLY ${batch.length} entries (one for each article above), in this format:
 [
-  {"summary": "Brief satirical summary", "humorScore": 75},
-  {"summary": "Brief satirical summary", "humorScore": 82},
-  ...
-]
+  {"summary": "The satirical angle here is...", "humorScore": 75},
+  {"summary": "This story offers comedic potential because...", "humorScore": 82}${batch.length > 2 ? ',\n  {"summary": "...", "humorScore": 65}' : ''}
+]`;
 
-Make sure the array has exactly ${articles.length} entries, one for each article in order.`;
+      try {
+        const response = await this.callGeminiApi(prompt);
+        const responseText = response.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
 
-    try {
-      const response = await this.callGeminiApi(prompt);
-      const responseText = response.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+        console.log(`[batchAnalyzeArticles] Batch ${batchNumber} response preview:`, responseText.substring(0, 150));
 
-      console.log('[batchAnalyzeArticles] Response preview:', responseText.substring(0, 200));
+        // Clean the response text - remove markdown code block markers if present
+        let cleanedResponse = responseText;
+        if (responseText.includes('```json')) {
+          cleanedResponse = responseText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+        } else if (responseText.includes('```')) {
+          cleanedResponse = responseText.replace(/```\s*/g, '');
+        }
 
-      // Extract JSON from response
-      const jsonMatch = responseText.match(/\[[\s\S]*\]/);
-      if (!jsonMatch) {
-        console.error('[batchAnalyzeArticles] No JSON array found in response');
-        throw new Error('Invalid response format');
+        // Extract JSON from response - look for array pattern
+        const jsonMatch = cleanedResponse.match(/\[[\s\S]*?\]/);
+        if (!jsonMatch) {
+          console.error(`[batchAnalyzeArticles] Batch ${batchNumber}: No JSON array found in response`);
+          // Add fallback for this batch
+          batch.forEach(() => results.push({ summary: '', humorScore: 50 }));
+          continue;
+        }
+
+        let batchResults: Array<{ summary: string; humorScore: number }>;
+        try {
+          // Clean up the matched JSON string - handle trailing commas more thoroughly
+          const jsonStr = jsonMatch[0]
+            .replace(/,(\s*[}\]])/g, '$1')  // Remove all trailing commas before } or ]
+            .replace(/[\n\r]+/g, ' '); // Replace newlines with spaces
+
+          batchResults = JSON.parse(jsonStr);
+        } catch (parseError) {
+          console.error(`[batchAnalyzeArticles] Batch ${batchNumber}: Failed to parse JSON`, parseError);
+          console.log(`[batchAnalyzeArticles] Attempted to parse:`, jsonMatch[0].substring(0, 200));
+          batch.forEach(() => results.push({ summary: '', humorScore: 50 }));
+          continue;
+        }
+
+        // Ensure we have the right number of results
+        if (batchResults.length < batch.length) {
+          console.warn(`[batchAnalyzeArticles] Batch ${batchNumber}: Expected ${batch.length} results, got ${batchResults.length}. Padding with defaults.`);
+          while (batchResults.length < batch.length) {
+            batchResults.push({ summary: '', humorScore: 50 });
+          }
+        }
+
+        // Take only the needed number of results
+        results.push(...batchResults.slice(0, batch.length));
+        console.log(`[batchAnalyzeArticles] ✅ Batch ${batchNumber} successful (${batchResults.length} articles)`);
+
+        // Small delay between batches to avoid rate limiting
+        if (i + BATCH_SIZE < articles.length) {
+          await this.sleep(1000);
+        }
+      } catch (error) {
+        console.error(`[batchAnalyzeArticles] Batch ${batchNumber} error:`, error);
+        // Add fallback for this batch
+        batch.forEach(() => results.push({ summary: '', humorScore: 50 }));
       }
-
-      const results = JSON.parse(jsonMatch[0]) as Array<{ summary: string; humorScore: number }>;
-
-      if (results.length !== articles.length) {
-        console.warn(`[batchAnalyzeArticles] Expected ${articles.length} results, got ${results.length}`);
-      }
-
-      console.log(`[batchAnalyzeArticles] ✅ Successfully analyzed ${results.length} articles`);
-      return results;
-    } catch (error) {
-      console.error('[batchAnalyzeArticles] Error:', error);
-      // Return fallback scores
-      return articles.map(() => ({ summary: '', humorScore: 50 }));
     }
+
+    const successCount = results.filter(r => r.summary && r.summary.length > 0).length;
+    console.log(`[batchAnalyzeArticles] ✅ Completed: ${successCount}/${articles.length} articles with AI summaries`);
+
+    return results;
   }
 
   private sleep(ms: number): Promise<void> {

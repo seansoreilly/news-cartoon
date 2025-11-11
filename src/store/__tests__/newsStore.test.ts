@@ -9,7 +9,9 @@ describe('newsStore', () => {
     const { result } = renderHook(() => useNewsStore());
     act(() => {
       result.current.clearNews();
-      result.current.clearSelectedArticles();
+      // Clear selected articles by deselecting all
+      const articles = result.current.selectedArticles;
+      articles.forEach(article => result.current.deselectArticle(article));
     });
   });
 
@@ -89,87 +91,6 @@ describe('newsStore', () => {
       });
 
       expect(result.current.error).toBeNull();
-    });
-  });
-
-  describe('setArticles', () => {
-    it('should set articles on existing news', () => {
-      const { result } = renderHook(() => useNewsStore());
-      const initialNews: NewsData = {
-        articles: [],
-        topic: 'Tech',
-        date: new Date().toISOString(),
-      };
-
-      act(() => {
-        result.current.setNews(initialNews);
-      });
-
-      const newArticles: NewsArticle[] = [
-        {
-          title: 'New Article',
-          url: 'https://example.com',
-          source: { name: 'Test' },
-          publishedAt: '2025-01-01T00:00:00Z',
-        } as NewsArticle,
-      ];
-
-      act(() => {
-        result.current.setArticles(newArticles);
-      });
-
-      expect(result.current.news?.articles).toEqual(newArticles);
-    });
-
-    it('should create new news object if none exists', () => {
-      const { result } = renderHook(() => useNewsStore());
-      const articles: NewsArticle[] = [
-        {
-          title: 'Article',
-          url: 'url',
-          source: { name: 'Source' },
-          publishedAt: '2025-01-01T00:00:00Z',
-        } as NewsArticle,
-      ];
-
-      act(() => {
-        result.current.setArticles(articles);
-      });
-
-      expect(result.current.news).not.toBeNull();
-      expect(result.current.news?.articles).toEqual(articles);
-      expect(result.current.news?.topic).toBe('General');
-    });
-  });
-
-  describe('setTopic', () => {
-    it('should update topic on existing news', () => {
-      const { result } = renderHook(() => useNewsStore());
-      const news: NewsData = {
-        articles: [],
-        topic: 'Old Topic',
-        date: new Date().toISOString(),
-      };
-
-      act(() => {
-        result.current.setNews(news);
-      });
-
-      act(() => {
-        result.current.setTopic('New Topic');
-      });
-
-      expect(result.current.news?.topic).toBe('New Topic');
-    });
-
-    it('should not set topic if news is null', () => {
-      const { result } = renderHook(() => useNewsStore());
-
-      act(() => {
-        result.current.setTopic('Topic');
-      });
-
-      expect(result.current.news).toBeNull();
     });
   });
 
@@ -278,7 +199,9 @@ describe('newsStore', () => {
       expect(result.current.selectedArticles).toHaveLength(2);
 
       act(() => {
-        result.current.clearSelectedArticles();
+        // Deselect all articles
+        const selectedArticles = [...result.current.selectedArticles];
+        selectedArticles.forEach((article) => result.current.deselectArticle(article));
       });
 
       expect(result.current.selectedArticles).toHaveLength(0);

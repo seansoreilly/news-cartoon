@@ -89,63 +89,6 @@ describe('locationStore', () => {
     });
   });
 
-  describe('updateCoordinates', () => {
-    it('should update coordinates on existing location', () => {
-      const { result } = renderHook(() => useLocationStore());
-      const initialLocation: LocationData = {
-        name: 'Test Location',
-        coordinates: { lat: 0, lng: 0 },
-        source: 'manual',
-      };
-
-      act(() => {
-        result.current.setLocation(initialLocation);
-      });
-
-      act(() => {
-        result.current.updateCoordinates({ lat: 40.7128, lng: -74.006 });
-      });
-
-      expect(result.current.location?.coordinates).toEqual({
-        lat: 40.7128,
-        lng: -74.006,
-      });
-      expect(result.current.location?.name).toBe('Test Location');
-    });
-
-    it('should not update coordinates if location is null', () => {
-      const { result } = renderHook(() => useLocationStore());
-
-      act(() => {
-        result.current.updateCoordinates({ lat: 40.7128, lng: -74.006 });
-      });
-
-      expect(result.current.location).toBeNull();
-    });
-
-    it('should handle negative coordinates', () => {
-      const { result } = renderHook(() => useLocationStore());
-      const location: LocationData = {
-        name: 'Southern Hemisphere',
-        coordinates: { lat: -33.8688, lng: 151.2093 },
-        source: 'gps',
-      };
-
-      act(() => {
-        result.current.setLocation(location);
-      });
-
-      act(() => {
-        result.current.updateCoordinates({ lat: -25.2744, lng: 133.7751 });
-      });
-
-      expect(result.current.location?.coordinates).toEqual({
-        lat: -25.2744,
-        lng: 133.7751,
-      });
-    });
-  });
-
   describe('Error Handling', () => {
     it('should set error message', () => {
       const { result } = renderHook(() => useLocationStore());
@@ -287,8 +230,12 @@ describe('locationStore', () => {
 
       expect(result.current.location?.coordinates.lat).toBe(51.5074);
 
+      // Update location with new coordinates
       act(() => {
-        result.current.updateCoordinates({ lat: 51.508, lng: -0.128 });
+        result.current.setLocation({
+          ...initialLocation,
+          coordinates: { lat: 51.508, lng: -0.128 }
+        });
       });
 
       expect(result.current.location?.coordinates.lat).toBe(51.508);

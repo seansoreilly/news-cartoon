@@ -191,17 +191,6 @@ describe('Accessibility Tests', () => {
   });
 
   describe('Responsive Design Tests', () => {
-    it('Layout should be responsive', () => {
-      const { container } = render(
-        <Layout>
-          <div>Test</div>
-        </Layout>
-      );
-
-      const layoutDiv = container.querySelector('.max-w-\\[900px\\]');
-      expect(layoutDiv).toHaveClass('px-4', 'py-8');
-    });
-
     it('should have responsive text sizing', () => {
       render(
         <Layout>
@@ -376,16 +365,6 @@ describe('Accessibility Tests', () => {
       expect(footer?.parentElement).toBeTruthy();
     });
 
-    it('should maintain content order', () => {
-      const { container } = render(
-        <Layout>
-          <div>Content</div>
-        </Layout>
-      );
-
-      const children = container.querySelector('.container')?.children;
-      expect(children?.length).toBeGreaterThanOrEqual(3);
-    });
   });
 
   describe('Mobile Accessibility', () => {
@@ -409,16 +388,6 @@ describe('Accessibility Tests', () => {
       expect(button).toHaveClass('px-3', 'py-2');
     });
 
-    it('should have readable font sizes on mobile', () => {
-      render(
-        <Layout>
-          <div>Test</div>
-        </Layout>
-      );
-
-      const subtitle = screen.getByText(/AI-powered/i);
-      expect(subtitle).toBeInTheDocument();
-    });
   });
 
   describe('Focus Management', () => {

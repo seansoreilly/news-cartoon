@@ -296,4 +296,289 @@ describe('GeminiService - Humor Scoring', () => {
       });
     });
   });
+
+  describe('batchAnalyzeArticles', () => {
+    it('should successfully analyze a batch of articles', async () => {
+      const mockResponse = {
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  text: '[{"summary": "Test summary 1", "humorScore": 75}, {"summary": "Test summary 2", "humorScore": 60}, {"summary": "Test summary 3", "humorScore": 85}]',
+                },
+              ],
+            },
+          },
+        ],
+      };
+
+      mockFetch.mockResolvedValueOnce(
+        new Response(JSON.stringify(mockResponse), { status: 200 })
+      );
+
+      const articles = [
+        { title: 'Article 1', description: 'Desc 1' },
+        { title: 'Article 2', description: 'Desc 2' },
+        { title: 'Article 3', description: 'Desc 3' },
+      ];
+
+      const results = await geminiService.batchAnalyzeArticles(articles);
+
+      expect(results).toHaveLength(3);
+      expect(results[0]).toEqual({ summary: 'Test summary 1', humorScore: 75 });
+      expect(results[1]).toEqual({ summary: 'Test summary 2', humorScore: 60 });
+      expect(results[2]).toEqual({ summary: 'Test summary 3', humorScore: 85 });
+    });
+
+    it('should handle markdown-wrapped JSON responses', async () => {
+      const mockResponse = {
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  text: '```json\n[{"summary": "Satirical angle here", "humorScore": 70}, {"summary": "Comedy potential", "humorScore": 82}]\n```',
+                },
+              ],
+            },
+          },
+        ],
+      };
+
+      mockFetch.mockResolvedValueOnce(
+        new Response(JSON.stringify(mockResponse), { status: 200 })
+      );
+
+      const articles = [
+        { title: 'Article 1', description: 'Desc 1' },
+        { title: 'Article 2', description: 'Desc 2' },
+      ];
+
+      const results = await geminiService.batchAnalyzeArticles(articles);
+
+      expect(results).toHaveLength(2);
+      expect(results[0].summary).toBe('Satirical angle here');
+      expect(results[0].humorScore).toBe(70);
+      expect(results[1].summary).toBe('Comedy potential');
+      expect(results[1].humorScore).toBe(82);
+    });
+
+    it('should handle JSON with trailing commas', async () => {
+      const mockResponse = {
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  text: '[{"summary": "Test with comma", "humorScore": 65,}, {"summary": "Another test", "humorScore": 70,}]',
+                },
+              ],
+            },
+          },
+        ],
+      };
+
+      mockFetch.mockResolvedValueOnce(
+        new Response(JSON.stringify(mockResponse), { status: 200 })
+      );
+
+      const articles = [
+        { title: 'Article 1', description: 'Desc 1' },
+        { title: 'Article 2', description: 'Desc 2' },
+      ];
+
+      const results = await geminiService.batchAnalyzeArticles(articles);
+
+      expect(results).toHaveLength(2);
+      expect(results[0].humorScore).toBe(65);
+      expect(results[1].humorScore).toBe(70);
+    });
+
+    it('should handle malformed JSON with fallback values', async () => {
+      const mockResponse = {
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  text: 'This is not valid JSON at all',
+                },
+              ],
+            },
+          },
+        ],
+      };
+
+      mockFetch.mockResolvedValueOnce(
+        new Response(JSON.stringify(mockResponse), { status: 200 })
+      );
+
+      const articles = [
+        { title: 'Article 1', description: 'Desc 1' },
+        { title: 'Article 2', description: 'Desc 2' },
+      ];
+
+      const results = await geminiService.batchAnalyzeArticles(articles);
+
+      expect(results).toHaveLength(2);
+      expect(results[0]).toEqual({ summary: '', humorScore: 50 });
+      expect(results[1]).toEqual({ summary: '', humorScore: 50 });
+    });
+
+    it('should process articles in batches of 3', async () => {
+      const mockResponse1 = {
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  text: '[{"summary": "Batch 1 - 1", "humorScore": 71}, {"summary": "Batch 1 - 2", "humorScore": 72}, {"summary": "Batch 1 - 3", "humorScore": 73}]',
+                },
+              ],
+            },
+          },
+        ],
+      };
+
+      const mockResponse2 = {
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  text: '[{"summary": "Batch 2 - 1", "humorScore": 81}, {"summary": "Batch 2 - 2", "humorScore": 82}]',
+                },
+              ],
+            },
+          },
+        ],
+      };
+
+      mockFetch
+        .mockResolvedValueOnce(new Response(JSON.stringify(mockResponse1), { status: 200 }))
+        .mockResolvedValueOnce(new Response(JSON.stringify(mockResponse2), { status: 200 }));
+
+      const articles = [
+        { title: 'Article 1' },
+        { title: 'Article 2' },
+        { title: 'Article 3' },
+        { title: 'Article 4' },
+        { title: 'Article 5' },
+      ];
+
+      const results = await geminiService.batchAnalyzeArticles(articles);
+
+      expect(results).toHaveLength(5);
+      expect(results[0].summary).toBe('Batch 1 - 1');
+      expect(results[2].summary).toBe('Batch 1 - 3');
+      expect(results[3].summary).toBe('Batch 2 - 1');
+      expect(results[4].summary).toBe('Batch 2 - 2');
+      expect(fetch).toHaveBeenCalledTimes(2); // Two batches
+    });
+
+    it('should handle partial batch failures gracefully', async () => {
+      const mockResponse1 = {
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  text: '[{"summary": "Success", "humorScore": 75}]',
+                },
+              ],
+            },
+          },
+        ],
+      };
+
+      // Second batch fails
+      mockFetch
+        .mockResolvedValueOnce(new Response(JSON.stringify(mockResponse1), { status: 200 }))
+        .mockRejectedValueOnce(new Error('API Error'));
+
+      const articles = [
+        { title: 'Article 1' },
+        { title: 'Article 2' },
+        { title: 'Article 3' },
+        { title: 'Article 4' },
+      ];
+
+      const results = await geminiService.batchAnalyzeArticles(articles);
+
+      expect(results).toHaveLength(4);
+      expect(results[0].summary).toBe('Success');
+      expect(results[0].humorScore).toBe(75);
+      // Padding for first batch
+      expect(results[1]).toEqual({ summary: '', humorScore: 50 });
+      expect(results[2]).toEqual({ summary: '', humorScore: 50 });
+      // Second batch failed, should have fallbacks
+      expect(results[3]).toEqual({ summary: '', humorScore: 50 });
+    });
+
+    it('should handle incomplete JSON array responses', async () => {
+      const mockResponse = {
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  text: '```json\n[{"summary": "The satirical angle here is the absurdity of', // Cut off mid-sentence
+                },
+              ],
+            },
+          },
+        ],
+      };
+
+      mockFetch.mockResolvedValueOnce(
+        new Response(JSON.stringify(mockResponse), { status: 200 })
+      );
+
+      const articles = [
+        { title: 'Article 1', description: 'Desc 1' },
+        { title: 'Article 2', description: 'Desc 2' },
+      ];
+
+      const results = await geminiService.batchAnalyzeArticles(articles);
+
+      expect(results).toHaveLength(2);
+      // Should fall back to default values when JSON parsing fails
+      expect(results[0]).toEqual({ summary: '', humorScore: 50 });
+      expect(results[1]).toEqual({ summary: '', humorScore: 50 });
+    });
+
+    it('should pad results when API returns fewer results than expected', async () => {
+      const mockResponse = {
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  text: '[{"summary": "Only one result", "humorScore": 90}]',
+                },
+              ],
+            },
+          },
+        ],
+      };
+
+      mockFetch.mockResolvedValueOnce(
+        new Response(JSON.stringify(mockResponse), { status: 200 })
+      );
+
+      const articles = [
+        { title: 'Article 1', description: 'Desc 1' },
+        { title: 'Article 2', description: 'Desc 2' },
+        { title: 'Article 3', description: 'Desc 3' },
+      ];
+
+      const results = await geminiService.batchAnalyzeArticles(articles);
+
+      expect(results).toHaveLength(3);
+      expect(results[0]).toEqual({ summary: 'Only one result', humorScore: 90 });
+      expect(results[1]).toEqual({ summary: '', humorScore: 50 });
+      expect(results[2]).toEqual({ summary: '', humorScore: 50 });
+    });
+  });
 });

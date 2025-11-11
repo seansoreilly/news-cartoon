@@ -7,7 +7,6 @@ interface LocationState {
   isLoading: boolean;
   error: string | null;
   setLocation: (location: LocationData) => void;
-  updateCoordinates: (coordinates: { lat: number; lng: number }) => void;
   clearLocation: () => void;
   setError: (error: string | null) => void;
   setLoading: (loading: boolean) => void;
@@ -25,14 +24,6 @@ export const useLocationStore = create<
 
       setLocation: (location: LocationData) => {
         set({ location, error: null });
-      },
-
-      updateCoordinates: (coordinates: { lat: number; lng: number }) => {
-        set((state) => ({
-          location: state.location
-            ? { ...state.location, coordinates }
-            : null,
-        }));
       },
 
       clearLocation: () => {

@@ -117,7 +117,7 @@ const LocationDetector: React.FC = () => {
             </div>
             <button
               onClick={handleChangeLocation}
-              className="text-sm bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              className="text-sm bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
               aria-label="Change location"
             >
               Change Location
@@ -130,7 +130,8 @@ const LocationDetector: React.FC = () => {
             <button
               onClick={handleAutoDetect}
               disabled={isLoading}
-              className="flex-1 min-w-[200px] bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="flex-1 min-w-[200px] bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+              aria-label="Auto detect location using GPS or IP"
               aria-busy={isLoading && activeMethod === 'gps'}
             >
               {isLoading && activeMethod === 'gps' ? '🔍 Auto Detecting...' : '🔍 Auto Detect'}
@@ -139,7 +140,8 @@ const LocationDetector: React.FC = () => {
             <button
               onClick={handleDetectGPS}
               disabled={isLoading}
-              className="flex-1 min-w-[150px] bg-blue-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="flex-1 min-w-[150px] bg-blue-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+              aria-label="Use GPS to detect location"
               aria-busy={isLoading && activeMethod === 'gps'}
             >
               {isLoading && activeMethod === 'gps' ? '📍 Using GPS...' : '📍 Use GPS'}
@@ -148,7 +150,8 @@ const LocationDetector: React.FC = () => {
             <button
               onClick={handleDetectIP}
               disabled={isLoading}
-              className="flex-1 min-w-[150px] bg-gray-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="flex-1 min-w-[150px] bg-gray-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2"
+              aria-label="Use IP address to detect location"
               aria-busy={isLoading && activeMethod === 'ip'}
             >
               {isLoading && activeMethod === 'ip' ? '🌐 Using IP...' : '🌐 Use IP'}

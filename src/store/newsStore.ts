@@ -7,11 +7,8 @@ interface NewsState {
   isLoading: boolean;
   error: string | null;
   setNews: (news: NewsData | ((prevNews: NewsData | null) => NewsData | null)) => void;
-  setArticles: (articles: NewsArticle[]) => void;
-  setTopic: (topic: string) => void;
   selectArticle: (article: NewsArticle) => void;
   deselectArticle: (article: NewsArticle) => void;
-  clearSelectedArticles: () => void;
   clearNews: () => void;
   setError: (error: string | null) => void;
   setLoading: (loading: boolean) => void;
@@ -32,24 +29,6 @@ export const useNewsStore = create<NewsState>((set) => ({
     } else {
       set({ news, error: null });
     }
-  },
-
-  setArticles: (articles: NewsArticle[]) => {
-    set((state) => ({
-      news: state.news
-        ? { ...state.news, articles }
-        : {
-            articles,
-            topic: 'General',
-            date: new Date().toISOString(),
-          },
-    }));
-  },
-
-  setTopic: (topic: string) => {
-    set((state) => ({
-      news: state.news ? { ...state.news, topic } : null,
-    }));
   },
 
   clearNews: () => {
@@ -84,9 +63,5 @@ export const useNewsStore = create<NewsState>((set) => ({
         (a) => !(a.title === article.title && a.url === article.url)
       ),
     }));
-  },
-
-  clearSelectedArticles: () => {
-    set({ selectedArticles: [] });
   },
 }));

@@ -74,6 +74,8 @@ const ImageGenerator: React.FC = React.memo(() => {
   };
 
   const handleRegenerateImage = () => {
+    // Clear the image cache so a new image will be generated
+    geminiService.clearImageCache();
     setImagePath('');
     setLocalError(null);
   };
