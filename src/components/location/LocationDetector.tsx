@@ -33,7 +33,7 @@ const LocationDetector: React.FC = () => {
     const trimmedLocation = manualLocation.trim();
 
     if (!trimmedLocation) {
-      setError('Please enter search words');
+      setError('Please enter search keywords');
       return;
     }
 
@@ -60,7 +60,7 @@ const LocationDetector: React.FC = () => {
 
   return (
     <div className="p-6 rounded-lg shadow-md mb-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">News search words</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-4">Search Keywords</h2>
 
       {location ? (
         <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg border-2 border-green-200">
@@ -71,7 +71,7 @@ const LocationDetector: React.FC = () => {
             <button
               onClick={handleChangeLocation}
               className="text-sm bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
-              aria-label="Change search words"
+              aria-label="Change search keywords"
             >
               Change
             </button>
@@ -105,16 +105,16 @@ const LocationDetector: React.FC = () => {
                 type="text"
                 value={manualLocation}
                 onChange={(e) => setManualLocation(e.target.value)}
-                placeholder="Enter search words (e.g., technology, sports)"
+                placeholder="Enter search keywords (e.g., technology, sports)"
                 className="flex-1 border-2 border-gray-300 rounded-lg px-4 py-3 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-20 transition-all"
                 disabled={isLoading}
-                aria-label="Enter search words"
+                aria-label="Enter search keywords"
               />
               <button
                 type="submit"
                 disabled={isLoading || !manualLocation.trim()}
                 className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md"
-                aria-label="Set search words"
+                aria-label="Set search keywords"
               >
                 Search
               </button>

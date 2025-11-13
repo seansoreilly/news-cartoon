@@ -17,7 +17,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               NewsCartoon.lol
             </h1>
             <p className="text-white text-opacity-90 mt-1 text-sm">
-              Dynamically generated cartoons based on your local news
+              Generate editorial cartoons from news articles
             </p>
           </div>
         </div>

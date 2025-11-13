@@ -42,19 +42,19 @@ describe('LocationDetector', () => {
   describe('Rendering', () => {
     it('should display detection method buttons', () => {
       render(<LocationDetector />);
-      expect(screen.getByRole('button', { name: /auto detect/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /detect my location/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /gps/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /ip/i })).toBeInTheDocument();
     });
 
     it('should display manual location input form', () => {
       render(<LocationDetector />);
-      expect(screen.getByPlaceholderText(/enter location/i)).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(/enter search keywords/i)).toBeInTheDocument();
     });
 
     it('should display submit button for manual entry', () => {
       render(<LocationDetector />);
-      expect(screen.getByRole('button', { name: /set location/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /search/i })).toBeInTheDocument();
     });
   });
 
@@ -199,7 +199,7 @@ describe('LocationDetector', () => {
     it('should call auto detect service', async () => {
       const user = userEvent.setup();
       render(<LocationDetector />);
-      const autoButton = screen.getByRole('button', { name: /auto detect/i });
+      const autoButton = screen.getByRole('button', { name: /detect my location/i });
 
       await user.click(autoButton);
 
@@ -219,7 +219,7 @@ describe('LocationDetector', () => {
       });
 
       render(<LocationDetector />);
-      const autoButton = screen.getByRole('button', { name: /auto detect/i });
+      const autoButton = screen.getByRole('button', { name: /detect my location/i });
 
       await user.click(autoButton);
 
@@ -234,7 +234,7 @@ describe('LocationDetector', () => {
       const user = userEvent.setup();
       render(<LocationDetector />);
 
-      const input = screen.getByPlaceholderText(/enter location/i);
+      const input = screen.getByPlaceholderText(/enter search keywords/i);
       await user.type(input, 'San Francisco, CA');
 
       expect(input).toHaveValue('San Francisco, CA');
@@ -252,10 +252,10 @@ describe('LocationDetector', () => {
 
       render(<LocationDetector />);
 
-      const input = screen.getByPlaceholderText(/enter location/i);
+      const input = screen.getByPlaceholderText(/enter search keywords/i);
       await user.type(input, 'Los Angeles, CA');
 
-      const submitButton = screen.getByRole('button', { name: /set location/i });
+      const submitButton = screen.getByRole('button', { name: /search/i });
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -279,10 +279,10 @@ describe('LocationDetector', () => {
 
       render(<LocationDetector />);
 
-      const input = screen.getByPlaceholderText(/enter location/i) as HTMLInputElement;
+      const input = screen.getByPlaceholderText(/enter search keywords/i) as HTMLInputElement;
       await user.type(input, 'Boston, MA');
 
-      const submitButton = screen.getByRole('button', { name: /set location/i });
+      const submitButton = screen.getByRole('button', { name: /search/i });
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -294,11 +294,11 @@ describe('LocationDetector', () => {
       const user = userEvent.setup();
       render(<LocationDetector />);
 
-      const submitButton = screen.getByRole('button', { name: /set location/i });
+      const submitButton = screen.getByRole('button', { name: /search/i });
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/please enter a location/i)).toBeInTheDocument();
+        expect(screen.getByText(/please enter search keywords/i)).toBeInTheDocument();
       });
     });
 
@@ -306,14 +306,14 @@ describe('LocationDetector', () => {
       const user = userEvent.setup();
       render(<LocationDetector />);
 
-      const input = screen.getByPlaceholderText(/enter location/i);
+      const input = screen.getByPlaceholderText(/enter search keywords/i);
       await user.type(input, '   ');
 
-      const submitButton = screen.getByRole('button', { name: /set location/i });
+      const submitButton = screen.getByRole('button', { name: /search/i });
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/please enter a location/i)).toBeInTheDocument();
+        expect(screen.getByText(/please enter search keywords/i)).toBeInTheDocument();
       });
     });
   });
@@ -458,7 +458,7 @@ describe('LocationDetector', () => {
     it('should have accessible buttons', () => {
       render(<LocationDetector />);
 
-      expect(screen.getByRole('button', { name: /auto detect/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /detect my location/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /gps/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /ip/i })).toBeInTheDocument();
     });
@@ -466,7 +466,7 @@ describe('LocationDetector', () => {
     it('should have accessible input', () => {
       render(<LocationDetector />);
 
-      const input = screen.getByPlaceholderText(/enter location/i);
+      const input = screen.getByPlaceholderText(/enter search keywords/i);
       expect(input).toBeInTheDocument();
       expect(input).toHaveAttribute('type', 'text');
     });
@@ -474,7 +474,7 @@ describe('LocationDetector', () => {
     it('should have accessible form structure', () => {
       render(<LocationDetector />);
 
-      const form = screen.getByRole('button', { name: /set location/i }).closest('form');
+      const form = screen.getByRole('button', { name: /search/i }).closest('form');
       expect(form).toBeInTheDocument();
     });
   });

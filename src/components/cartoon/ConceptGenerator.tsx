@@ -14,12 +14,12 @@ const ConceptGenerator: React.FC = () => {
 
   const handleGenerateConcepts = async () => {
     if (selectedArticles.length === 0) {
-      setLocalError('Please select at least one news article');
+      setLocalError('Please select at least one article');
       return;
     }
 
     if (!location?.name) {
-      setLocalError('Location is required to generate concepts');
+      setLocalError('Search keywords are required to generate concepts');
       return;
     }
 
@@ -73,10 +73,10 @@ const ConceptGenerator: React.FC = () => {
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Generate Cartoon Concepts</h2>
         <div className="text-center py-8">
           <p className="text-gray-600 text-lg mb-2">
-            Please set your location first
+            Please enter search keywords first
           </p>
           <p className="text-sm text-gray-500">
-            Location is needed to generate relevant cartoon concepts
+            Search keywords are needed to find relevant news articles
           </p>
         </div>
       </div>
@@ -89,7 +89,7 @@ const ConceptGenerator: React.FC = () => {
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Generate Cartoon Concepts</h2>
         <div className="text-center py-8">
           <p className="text-gray-600 text-lg mb-2">
-            Please select news articles above to generate cartoon concepts
+            Please select articles above to generate cartoon concepts
           </p>
           <p className="text-sm text-gray-500">
             Choose one or more articles to turn into a cartoon

@@ -172,10 +172,10 @@ describe('Component Integration Tests', () => {
 
       render(<LocationDetector />);
 
-      const input = screen.getByPlaceholderText(/enter location/i);
+      const input = screen.getByPlaceholderText(/enter search keywords/i);
       await user.type(input, 'San Francisco, CA');
 
-      const submitButton = screen.getByRole('button', { name: /set location/i });
+      const submitButton = screen.getByRole('button', { name: /search/i });
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -236,10 +236,10 @@ describe('Component Integration Tests', () => {
 
       render(<LocationDetector />);
 
-      const input = screen.getByPlaceholderText(/enter location/i);
+      const input = screen.getByPlaceholderText(/enter search keywords/i);
       await user.type(input, 'Test');
 
-      const submitButton = screen.getByRole('button', { name: /set location/i });
+      const submitButton = screen.getByRole('button', { name: /search/i });
       await user.click(submitButton);
 
       // Should set location successfully (manual entry doesn't fail)
@@ -373,11 +373,11 @@ describe('Component Integration Tests', () => {
 
       render(<LocationDetector />);
 
-      const input = screen.getByPlaceholderText(/enter location/i);
+      const input = screen.getByPlaceholderText(/enter search keywords/i);
 
       // Type in location
       await user.type(input, 'Location 1');
-      const submitButton = screen.getByRole('button', { name: /set location/i });
+      const submitButton = screen.getByRole('button', { name: /search/i });
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -432,10 +432,10 @@ describe('Component Integration Tests', () => {
 
       render(<LocationDetector />);
 
-      const input = screen.getByPlaceholderText(/enter location/i);
+      const input = screen.getByPlaceholderText(/enter search keywords/i);
       await user.type(input, 'New Location');
 
-      const submitButton = screen.getByRole('button', { name: /set location/i });
+      const submitButton = screen.getByRole('button', { name: /search/i });
       await user.click(submitButton);
 
       await waitFor(() => {
