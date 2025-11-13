@@ -33,7 +33,7 @@ const LocationDetector: React.FC = () => {
     const trimmedLocation = manualLocation.trim();
 
     if (!trimmedLocation) {
-      setError('Please enter a location');
+      setError('Please enter search words');
       return;
     }
 
@@ -59,29 +59,26 @@ const LocationDetector: React.FC = () => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-lg shadow-md mb-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Your Location</h2>
+    <div className="p-6 rounded-lg shadow-md mb-6">
+      <h2 className="text-2xl font-bold text-gray-800 mb-4">News search words</h2>
 
       {location ? (
-        <div className="bg-white p-4 rounded-lg border-2 border-green-200">
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg border-2 border-green-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-lg font-semibold text-gray-800">{location.name}</p>
-              <p className="text-sm text-gray-600 mt-1">
-                Source: {location.source === 'gps' ? 'GPS' : location.source === 'ip' ? 'IP Address' : 'Manual Entry'}
-              </p>
             </div>
             <button
               onClick={handleChangeLocation}
               className="text-sm bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
-              aria-label="Change location"
+              aria-label="Change search words"
             >
-              Change Location
+              Change
             </button>
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg space-y-4">
           <button
             onClick={handleAutoDetect}
             disabled={isLoading}
@@ -108,18 +105,18 @@ const LocationDetector: React.FC = () => {
                 type="text"
                 value={manualLocation}
                 onChange={(e) => setManualLocation(e.target.value)}
-                placeholder="Type a city name (e.g., Melbourne)"
+                placeholder="Enter search words (e.g., technology, sports)"
                 className="flex-1 border-2 border-gray-300 rounded-lg px-4 py-3 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-20 transition-all"
                 disabled={isLoading}
-                aria-label="Enter location manually"
+                aria-label="Enter search words"
               />
               <button
                 type="submit"
                 disabled={isLoading || !manualLocation.trim()}
                 className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md"
-                aria-label="Set location"
+                aria-label="Set search words"
               >
-                Set
+                Search
               </button>
             </div>
           </form>
