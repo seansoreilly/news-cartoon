@@ -1,0 +1,81 @@
+PRODUCT HUNT SUBMISSION - NEWS CARTOON
+=====================================
+
+NAME
+----
+News Cartoon
+
+
+TAGLINE (60 chars max)
+----------------------
+Turn today's news into editorial cartoons with AI
+
+Alternative options:
+- AI generates funny cartoons from your local news
+- Transform breaking news into satirical comic strips
+
+
+LINKS
+-----
+https://newscartoon.lol/
+
+
+DESCRIPTION (500 chars max)
+---------------------------
+News Cartoon transforms local and trending news into witty editorial cartoons using AI. Simply enter your location or a topic, and watch as current events become satirical comic strips. Built with Google's Gemini AI, it generates custom multi-panel cartoons that capture the absurdity of modern news with humor and artistic flair. Perfect for sharing news commentary with a comedic twist, making current events more digestible and entertaining.
+
+
+LAUNCH TAGS (select 3) - UPDATED RECOMMENDATIONS
+-------------------------------------------------
+PRIMARY RECOMMENDATION:
+1. AI Generative Media (Best fit - AI creating visual content from text)
+2. Entertainment (News made entertaining through humor)
+3. News (Direct relevance to news consumption)
+
+ALTERNATIVE COMBINATIONS:
+Option A (Creative Focus):
+1. AI Generative Media
+2. Graphic Design Tools
+3. Entertainment
+
+Option B (News/Media Focus):
+1. News
+2. AI Generative Media
+3. Social Media Tools
+
+Option C (AI-First Focus):
+1. Artificial Intelligence
+2. Entertainment
+3. Media & Entertainment
+
+WHY THESE TAGS:
+- "AI Generative Media" is the most relevant category for AI tools that create visual content
+- "Entertainment" captures the humor/satirical aspect that makes your app unique
+- "News" directly relates to your core content source
+- Avoid overly broad tags like "Design & Creative" or "Social & Community"
+
+
+FIRST COMMENT
+-------------
+Hey Product Hunt! 👋
+
+I built News Cartoon because I was tired of doom-scrolling through depressing news feeds. I wanted a way to stay informed while also finding humor in the chaos.
+
+The app fetches real news from your area (or any topic you choose) and uses Google's Gemini AI to create editorial cartoons that capture the essence of each story with satirical wit. Think of it as having your own personal political cartoonist who never sleeps.
+
+What makes it unique:
+- Location-based news fetching for hyper-local content
+- Three-step AI pipeline that creates concepts, scripts, and final artwork
+- Built-in humor enhancement to ensure the cartoons are actually funny
+- Rate limiting to prevent abuse while keeping it free to use
+
+Try it with your city or a trending topic - I'd love to hear what cartoons it creates for your news!
+
+Built with React, TypeScript, and lots of caffeine. Open to feedback and feature suggestions!
+
+
+ADDITIONAL NOTES
+----------------
+- Mark "Is this an open source project?" as NO (unless you plan to open-source it)
+- For X account: Add your Twitter handle if you have one for the project
+- Consider adding a Product Hunt-specific demo link or video in the additional links section if you create one

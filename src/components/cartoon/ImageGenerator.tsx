@@ -87,7 +87,7 @@ const ImageGenerator: React.FC = React.memo(() => {
   if (!selectedConcept) {
     return (
       <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-6 rounded-lg shadow-md mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Cartoon Image</h2>
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">Generated Image</h2>
         <div className="text-center py-8">
           <p className="text-gray-600 text-lg mb-2">
             👆 Please select a cartoon concept above to generate an image
@@ -102,7 +102,7 @@ const ImageGenerator: React.FC = React.memo(() => {
 
   return (
     <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-6 rounded-lg shadow-md mb-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Cartoon Image</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-4">Generated Image</h2>
 
       {!imagePath ? (
         <div className="space-y-4">
