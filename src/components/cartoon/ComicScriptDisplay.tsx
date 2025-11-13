@@ -1,5 +1,6 @@
 import React from 'react';
 import { useCartoonStore } from '../../store/cartoonStore';
+import type { ComicPanel, ComicScriptPanel } from '../../types/cartoon';
 
 const ComicScriptDisplay: React.FC = () => {
   const { comicScript } = useCartoonStore();
@@ -28,9 +29,15 @@ const ComicScriptDisplay: React.FC = () => {
         <div>
           <span className="font-semibold">Panels:</span>
           <ul className="list-disc list-inside mt-2">
-            {comicScript.panels.map((panel: any, index: number) => (
-              <li key={index}>{panel}</li>
-            ))}
+            {comicScript.panels.map((panel: string | ComicPanel | ComicScriptPanel, index: number) => {
+              if (typeof panel === 'string') {
+                return <li key={index}>{panel}</li>;
+              }
+              if ('visualDescription' in panel) {
+                return <li key={index}>{(panel as ComicScriptPanel).visualDescription}</li>;
+              }
+              return <li key={index}>{(panel as ComicPanel).description}</li>;
+            })}
           </ul>
         </div>
       )}

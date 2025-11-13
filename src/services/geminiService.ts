@@ -1,5 +1,5 @@
 import type { NewsArticle } from '../types/news';
-import type { CartoonConcept, CartoonData, ComicScript, CartoonImage } from '../types/cartoon';
+import type { CartoonConcept, CartoonData, ComicScript, CartoonImage, ComicScriptPanel, ComicPanel } from '../types/cartoon';
 import { createCartoonError } from '../types/error';
 import { ImageGenerationRateLimiter } from '../utils/rateLimiter';
 
@@ -163,15 +163,12 @@ class GeminiService {
     const script = await this.generateComicScript(concept, articles, panelCount);
     console.log('Comic script generated:', script);
 
+    // Extract and validate text elements before building prompt
+    const textElements = this.extractTextElements(script);
+    this.validateTextElements(textElements);
+
     const prompt = this.buildImagePrompt(concept, script, panelCount);
     console.log('Image prompt length:', prompt.length, 'characters');
-
-    // Log extracted text elements for debugging
-    const textElements = this.extractTextElements(script);
-    console.log('[Text Extraction] Found text elements:', textElements.length);
-    textElements.forEach(elem => {
-      console.log(`  Panel ${elem.panel} (${elem.type}): "${elem.text}" [${this.spellOutText(elem.text)}]`);
-    });
 
     try {
       console.log('Calling Vision API...');
@@ -238,119 +235,174 @@ class GeminiService {
 
   /**
    * Extract and format text elements from comic script panels
+   * Handles both new ComicScriptPanel format and legacy string format
    */
   private extractTextElements(script: ComicScript): Array<{ panel: number; text: string; type: string }> {
     const textElements: Array<{ panel: number; text: string; type: string }> = [];
 
     script.panels.forEach((panel, index) => {
-      // Check if panel is a string
-      const panelText = typeof panel === 'string' ? panel : panel.description;
+      const panelNum = index + 1;
 
-      // Extract text in quotes or dialogue
-      const quotedText = panelText.match(/"([^"]+)"/g) || [];
-      quotedText.forEach((text: string) => {
-        const cleaned = text.replace(/"/g, '').toUpperCase().trim();
-        if (cleaned && cleaned.split(' ').length <= 4) { // Limit to 4 words max
-          textElements.push({
-            panel: index + 1,
-            text: cleaned,
-            type: 'dialogue'
+      // Handle new ComicScriptPanel format with explicit visibleText
+      if (panel && typeof panel === 'object' && 'visibleText' in panel) {
+        const scriptPanel = panel as ComicScriptPanel;
+        if (Array.isArray(scriptPanel.visibleText)) {
+          scriptPanel.visibleText.forEach((textElem) => {
+            if (textElem.content && textElem.content.trim()) {
+              const cleaned = textElem.content.trim().toUpperCase();
+              if (cleaned.split(' ').length <= 4) {
+                textElements.push({
+                  panel: panelNum,
+                  text: cleaned,
+                  type: textElem.type || 'sign',
+                });
+                console.log(`[extractTextElements] Panel ${panelNum}: Found text from ${textElem.type}: "${cleaned}"`);
+              }
+            }
           });
         }
-      });
+      } else {
+        // Handle legacy string format
+        const panelText = typeof panel === 'string' ? panel : (panel as ComicPanel)?.description || '';
 
-      // Extract sign/label text (words like "sign:", "label:", "text:" followed by content)
-      const labelMatch = panelText.match(/\b(?:sign|label|text|caption):\s*([^,.!?]+)/gi) || [];
-      labelMatch.forEach((match: string) => {
-        const text = match.split(':')[1]?.trim().toUpperCase();
-        if (text && text.split(' ').length <= 3) {
-          textElements.push({
-            panel: index + 1,
-            text,
-            type: 'label'
-          });
-        }
-      });
+        // Extract text in quotes or dialogue
+        const quotedText = panelText.match(/"([^"]+)"/g) || [];
+        quotedText.forEach((text: string) => {
+          const cleaned = text.replace(/"/g, '').toUpperCase().trim();
+          if (cleaned && cleaned.split(' ').length <= 4) {
+            textElements.push({
+              panel: panelNum,
+              text: cleaned,
+              type: 'dialogue',
+            });
+          }
+        });
+
+        // Extract sign/label text (words like "sign:", "label:", "text:" followed by content)
+        const labelMatch = panelText.match(/\b(?:sign|label|text|caption):\s*([^,.!?]+)/gi) || [];
+        labelMatch.forEach((match: string) => {
+          const text = match.split(':')[1]?.trim().toUpperCase();
+          if (text && text.split(' ').length <= 3) {
+            textElements.push({
+              panel: panelNum,
+              text,
+              type: 'label',
+            });
+          }
+        });
+      }
     });
 
+    console.log('[extractTextElements] Extracted', textElements.length, 'text elements total');
     return textElements;
   }
 
   /**
-   * Create character-by-character spelling for critical text
+   * Validate text elements before sending to vision API
+   * Ensures all text is properly formatted and within limits
    */
-  private spellOutText(text: string): string {
-    return text.split('').join('-');
-  }
+  private validateTextElements(textElements: Array<{ panel: number; text: string; type: string }>): void {
+    console.log('[validateTextElements] Validating', textElements.length, 'text elements');
 
+    const issues: string[] = [];
+
+    textElements.forEach((elem) => {
+      // Check if text is empty
+      if (!elem.text || elem.text.trim().length === 0) {
+        issues.push(`Panel ${elem.panel}: Empty text element`);
+        return;
+      }
+
+      // Check word count (max 4 words)
+      const wordCount = elem.text.split(/\s+/).length;
+      if (wordCount > 4) {
+        issues.push(`Panel ${elem.panel}: Text exceeds 4 words ("${elem.text}" = ${wordCount} words)`);
+      }
+
+      // Check if text is all caps
+      if (elem.text !== elem.text.toUpperCase()) {
+        console.warn(`[validateTextElements] Panel ${elem.panel}: Text not in ALL CAPS: "${elem.text}"`);
+      }
+
+      // Warn about special characters that might render poorly
+      if (/[^\w\s\-'!?.]/.test(elem.text)) {
+        console.warn(`[validateTextElements] Panel ${elem.panel}: Contains special characters: "${elem.text}"`);
+      }
+    });
+
+    // Log validation results
+    if (issues.length === 0) {
+      console.log('[validateTextElements] ✅ All text elements valid');
+    } else {
+      console.warn('[validateTextElements] ⚠️ Issues found:');
+      issues.forEach(issue => console.warn(`  - ${issue}`));
+    }
+  }
 
   private buildImagePrompt(concept: CartoonConcept, script: ComicScript, panelCount: number = 4): string {
     // Extract all text elements from the script
     const textElements = this.extractTextElements(script);
 
-    // Build text manifest with spelling
-    const textManifest = textElements.length > 0 ? `
-=== EXACT TEXT TO RENDER (CRITICAL - FOLLOW PRECISELY) ===
-${textElements.map(elem =>
-  `Panel ${elem.panel} ${elem.type}: "${elem.text}" [spelled: ${this.spellOutText(elem.text)}]`
-).join('\n')}
+    // Validate text before building prompt
+    console.log('[buildImagePrompt] Building image prompt with', textElements.length, 'text elements');
+    textElements.forEach(elem => {
+      console.log(`  - Panel ${elem.panel}: "${elem.text}" (${elem.type})`);
+    });
 
-IMPORTANT: These are the ONLY text elements that should appear. Render each EXACTLY as shown above.
-===================================
+    // Build text manifest with letter-by-letter spelling format
+    const textManifest = textElements.length > 0 ? `
+TEXT TO RENDER IN IMAGE:
+${textElements.map(elem => {
+  const spelled = this.spellOutTextWithBrackets(elem.text);
+  return `Panel ${elem.panel} (${elem.type}): [${spelled}]`;
+}).join('\n')}
 ` : '';
 
-    const script_section = `
-VISUAL SCRIPT STRUCTURE:
-${script.panels.map((panel, i) => `Panel ${i + 1}: ${panel}`).join('\n')}
-`;
-
     const panelDescription = panelCount === 1
-      ? 'FORMAT: Single panel editorial cartoon (ONE panel only, no divisions)'
-      : `FORMAT: ${panelCount}-panel comic strip in horizontal layout`;
+      ? 'Single panel editorial cartoon'
+      : `${panelCount}-panel comic strip (horizontal layout)`;
 
-    // Triple-redundancy prompt structure
-    return `${textManifest}
+    // Simplified, clear prompt structure
+    return `Generate a cartoon image: ${panelDescription}
 
-CARTOON GENERATION INSTRUCTIONS:
+CONCEPT:
+Title: ${concept.title}
+Premise: ${concept.premise}
+Location: ${concept.location}
 
-${panelDescription}
+VISUAL DESCRIPTION:
+${script.panels.map((panel, i) => {
+  if (typeof panel === 'string') return `Panel ${i + 1}: ${panel}`;
+  if ('visualDescription' in panel) return `Panel ${i + 1}: ${(panel as ComicScriptPanel).visualDescription}`;
+  return `Panel ${i + 1}: ${(panel as ComicPanel).description || 'Visual scene'}`;
+}).join('\n')}
 
-Title Concept: "${concept.title}"
-Core Premise: ${concept.premise}
-Setting: ${concept.location}
+${textManifest}
+TEXT RENDERING RULES:
+1. ONLY text shown above should appear in the image
+2. Each letter must be CLEAR and READABLE
+3. Use BOLD, SANS-SERIF font (like Impact or Arial Black)
+4. Text must be ALL CAPS
+5. Make text LARGE and PROMINENT
+6. Maximum 3 words per text element
+7. If text doesn't fit clearly, use fewer words
 
-${script_section}
-
-=== TEXT ACCURACY RULES (MANDATORY) ===
-1. ONLY include text explicitly listed in the TEXT MANIFEST above
-2. Spell every word EXACTLY as shown - no variations
-3. Use BOLD, SIMPLE, SANS-SERIF fonts only (like Impact or Arial Black)
-4. Make all text LARGE and CLEAR - no small text
-5. Maximum 3-4 words per speech bubble or sign
-6. If you cannot fit text clearly, use fewer words rather than distorting spelling
-7. ALL CAPS for all text elements
-8. No cursive, script, or decorative fonts
-9. Each letter must be distinct and separate
-10. Double-check: Every word must match the TEXT MANIFEST spelling exactly
-===================================
-
-VISUAL STYLE REQUIREMENTS:
-- Clean, sharp line art with clear details
+VISUAL STYLE:
 - Professional editorial cartoon quality
+- Sharp, clean line art
 - Expressive character faces and body language
-- Visual humor through expressions and situations
 - Bright, newspaper-appropriate colors
+- Visual humor through situations, not just text
 - Clear visual flow and composition
-- Focus on visual storytelling over text
 
-${textElements.length > 0 ? `
-=== TEXT VERIFICATION CHECKLIST ===
-Confirm each text element appears EXACTLY as specified:
-${textElements.map(elem => `☐ Panel ${elem.panel}: "${elem.text}"`).join('\n')}
-===================================
-` : ''}
+TEXT VERIFICATION: Render EXACTLY as shown in text list above. Every word must match perfectly.`;
+  }
 
-REMEMBER: Text accuracy is the #1 priority. Every word must be spelled EXACTLY as provided in the TEXT MANIFEST section above.`;
+  /**
+   * Create bracket-formatted spelling: "HELLO" -> "[H] [E] [L] [L] [O]"
+   */
+  private spellOutTextWithBrackets(text: string): string {
+    return text.split('').map(char => `[${char}]`).join(' ');
   }
 
   private async callVisionApi(
@@ -605,74 +657,141 @@ NEWS CONTEXT:
 ${articles.map(a => a.title).join('\n')}
 ` : '';
 
-    const panelDescription = panelCount === 1
-      ? 'a single panel political cartoon'
-      : `a ${panelCount}-panel comic strip`;
-
-    return `Create a comic strip script with EXACTLY ${panelCount} panel${panelCount === 1 ? '' : 's'}:
+    return `Create a comic strip script with EXACTLY ${panelCount} panel${panelCount === 1 ? '' : 's'}.
 
 Title: ${concept.title}
 Concept: ${concept.premise}
 Setting: ${concept.location}
 ${news_section}
 
-IMPORTANT: Generate EXACTLY ${panelCount} panel${panelCount === 1 ? '' : 's'} - no more, no less.
+RESPOND WITH VALID JSON ONLY. No markdown, no explanation. Pure JSON array.
 
-CRITICAL TEXT RULES:
-- Maximum 2 text elements per panel (speech bubble, sign, caption)
-- Maximum 3 words per text element
-- Use SIMPLE, COMMON words only
-- Prefer visual humor over verbal jokes
-- If dialogue needed, keep it SHORT and CLEAR
-- Avoid puns that require exact spelling
-- Focus on VISUAL storytelling
+Format each panel as a JSON object with these EXACT fields:
+{
+  "panelNumber": 1,
+  "visualDescription": "What the viewer SEES (no dialogue, just visual details)",
+  "visibleText": [
+    {"type": "sign", "content": "TEXT ON SIGN"},
+    {"type": "dialogue", "content": "DIALOGUE"}
+  ],
+  "characters": ["list", "of", "characters"],
+  "setting": "Where this takes place"
+}
 
-Write ${panelDescription} with:
-1. Visual description of what appears in each panel
-2. Character actions and expressions (focus on VISUAL humor)
-3. Any text (keep MINIMAL - format as: "text here" for dialogue or Sign: TEXT for labels)
-4. Visual gags that work WITHOUT text
-5. Clear visual progression
+CRITICAL RULES:
+1. EXACTLY ${panelCount} panel(s) - no more, no less
+2. Maximum 3 words per text element (dialogue, sign, caption)
+3. ONLY text in "visibleText" array will be rendered - nothing else
+4. Keep visualDescription SHORT and VISUAL-FOCUSED (2-3 sentences max)
+5. Use SIMPLE, COMMON words only
+6. ALL TEXT MUST BE IN ALL CAPS
 
-${this.getExampleFormat(panelCount)}
+EXAMPLE FOR ${panelCount} PANEL${panelCount === 1 ? '' : 'S'}:
+${this.getExampleScriptJson(panelCount)}
 
-Remember: LESS TEXT = BETTER. Focus on VISUAL comedy. Maximum 3 words per text element!`;
+Generate the JSON array now:`;
   }
 
-  private getExampleFormat(panelCount: number): string {
+  private getExampleScriptJson(panelCount: number): string {
     const examples: Record<number, string> = {
-      1: `EXAMPLE FORMAT (1 panel):
-Panel 1: A massive computer server shaped like a bird flying south. Sign: "MELBOURNE". Confused kangaroos watching from below.`,
+      1: `[
+  {
+    "panelNumber": 1,
+    "visualDescription": "A massive computer server shaped like a bird flying south for winter. Confused kangaroos watch from below.",
+    "visibleText": [{"type": "sign", "content": "MELBOURNE"}],
+    "characters": ["kangaroos", "server"],
+    "setting": "Australian outback"
+  }
+]`,
 
-      2: `EXAMPLE FORMAT (2 panels):
-Panel 1: Politician at podium looking confident. Sign: "TRUST ME"
-Panel 2: Same politician tangled in his own red tape. Caption: OOPS`,
+      2: `[
+  {
+    "panelNumber": 1,
+    "visualDescription": "Politician standing at podium, looking very confident and proud.",
+    "visibleText": [{"type": "sign", "content": "TRUST ME"}],
+    "characters": ["politician"],
+    "setting": "podium stage"
+  },
+  {
+    "panelNumber": 2,
+    "visualDescription": "Same politician now tangled completely in red tape, struggling.",
+    "visibleText": [{"type": "caption", "content": "OOPS"}],
+    "characters": ["politician"],
+    "setting": "same stage"
+  }
+]`,
 
-      3: `EXAMPLE FORMAT (3 panels):
-Panel 1: Tech CEO showing tiny phone. "REVOLUTIONARY!"
-Panel 2: Phone grows enormous in user's hands
-Panel 3: User crushed under giant phone. Sign: HELP`,
+      3: `[
+  {
+    "panelNumber": 1,
+    "visualDescription": "Tech CEO proudly showing off a tiny phone to audience.",
+    "visibleText": [{"type": "dialogue", "content": "REVOLUTIONARY!"}],
+    "characters": ["CEO", "audience"],
+    "setting": "product launch stage"
+  },
+  {
+    "panelNumber": 2,
+    "visualDescription": "Same phone growing impossibly larger in the CEO's hands.",
+    "visibleText": [],
+    "characters": ["CEO"],
+    "setting": "stage"
+  },
+  {
+    "panelNumber": 3,
+    "visualDescription": "User completely crushed under the now-giant phone.",
+    "visibleText": [{"type": "sign", "content": "HELP"}],
+    "characters": ["user"],
+    "setting": "street"
+  }
+]`,
 
-      4: `EXAMPLE FORMAT (4 panels):
-Panel 1: A politician at podium looking confused. Sign: "VOTE NOW"
-Panel 2: Politician holds up chart upside down. "IT WORKS!"
-Panel 3: Crowd facepalming. One person says: "REALLY?"
-Panel 4: Politician shrugging with big smile. Caption: THE END`,
+      4: `[
+  {
+    "panelNumber": 1,
+    "visualDescription": "Politician at podium looking very confused.",
+    "visibleText": [{"type": "sign", "content": "VOTE NOW"}],
+    "characters": ["politician"],
+    "setting": "podium"
+  },
+  {
+    "panelNumber": 2,
+    "visualDescription": "Politician holds up a chart but it's completely upside down.",
+    "visibleText": [{"type": "dialogue", "content": "IT WORKS!"}],
+    "characters": ["politician"],
+    "setting": "podium"
+  },
+  {
+    "panelNumber": 3,
+    "visualDescription": "Crowd facepalming in disbelief.",
+    "visibleText": [{"type": "dialogue", "content": "REALLY?"}],
+    "characters": ["crowd"],
+    "setting": "audience area"
+  },
+  {
+    "panelNumber": 4,
+    "visualDescription": "Politician shrugging happily, completely oblivious.",
+    "visibleText": [{"type": "caption", "content": "THE END"}],
+    "characters": ["politician"],
+    "setting": "podium"
+  }
+]`,
 
-      5: `EXAMPLE FORMAT (5 panels):
-Panel 1: Robot interviewing human. Sign: "JOBS"
-Panel 2: Human sweating nervously
-Panel 3: Robot checking "NOT COMPATIBLE"
-Panel 4: Human looking dejected
-Panel 5: Robot hiring another robot. "PERFECT!"`,
+      5: `[
+  {"panelNumber": 1, "visualDescription": "Robot interviewing nervous human at desk.", "visibleText": [{"type": "sign", "content": "JOBS"}], "characters": ["robot", "human"], "setting": "office"},
+  {"panelNumber": 2, "visualDescription": "Human sweating nervously under intense robot stare.", "visibleText": [], "characters": ["robot", "human"], "setting": "office"},
+  {"panelNumber": 3, "visualDescription": "Robot clipboard shows large red X mark.", "visibleText": [{"type": "sign", "content": "NOT QUALIFIED"}], "characters": ["robot", "human"], "setting": "office"},
+  {"panelNumber": 4, "visualDescription": "Human looking dejected, shoulders slumped.", "visibleText": [], "characters": ["human"], "setting": "office"},
+  {"panelNumber": 5, "visualDescription": "Robot shaking hands with another identical robot.", "visibleText": [{"type": "dialogue", "content": "PERFECT!"}], "characters": ["robot1", "robot2"], "setting": "office"}
+]`,
 
-      6: `EXAMPLE FORMAT (6 panels):
-Panel 1: Small problem appears (ant-sized)
-Panel 2: Manager points at it dramatically
-Panel 3: Problem grows slightly bigger
-Panel 4: Emergency meeting called
-Panel 5: Problem now building-sized
-Panel 6: Everyone ignoring giant problem. "WHAT PROBLEM?"`
+      6: `[
+  {"panelNumber": 1, "visualDescription": "Tiny problem appears (ant-sized) in office.", "visibleText": [], "characters": [], "setting": "office"},
+  {"panelNumber": 2, "visualDescription": "Manager points at small problem dramatically.", "visibleText": [], "characters": ["manager"], "setting": "office"},
+  {"panelNumber": 3, "visualDescription": "Problem grows to size of a cat.", "visibleText": [], "characters": ["manager"], "setting": "office"},
+  {"panelNumber": 4, "visualDescription": "Emergency meeting called, people in panic.", "visibleText": [{"type": "sign", "content": "EMERGENCY"}], "characters": ["team"], "setting": "meeting room"},
+  {"panelNumber": 5, "visualDescription": "Problem now massive, building-sized.", "visibleText": [], "characters": [], "setting": "office building"},
+  {"panelNumber": 6, "visualDescription": "Everyone ignoring the giant problem casually.", "visibleText": [{"type": "caption", "content": "WHAT PROBLEM?"}], "characters": ["people"], "setting": "office"}
+]`,
     };
 
     return examples[panelCount] || examples[4];
@@ -765,125 +884,73 @@ Panel 6: Everyone ignoring giant problem. "WHAT PROBLEM?"`
     }
   }
 
-  private parseScriptResponse(response: GeminiResponse, expectedPanelCount: number = 4): string[] {
-    console.log('[parseScriptResponse] Starting to parse script response...');
+  private parseScriptResponse(response: GeminiResponse, expectedPanelCount: number = 4): ComicScriptPanel[] {
+    console.log('[parseScriptResponse] Starting to parse new JSON script format...');
     console.log('[parseScriptResponse] Expected panel count:', expectedPanelCount);
 
     const text = response.candidates?.[0]?.content?.parts?.[0]?.text || '';
     console.log('[parseScriptResponse] Response text length:', text.length);
     console.log('[parseScriptResponse] Response text preview:', text.substring(0, 500));
 
-    // First, try to parse as JSON
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    // Try to parse as JSON array (new format)
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (jsonMatch) {
-      console.log('[parseScriptResponse] Found JSON match, attempting JSON parse...');
+      console.log('[parseScriptResponse] Found JSON array, parsing new format...');
       try {
-        const parsed = JSON.parse(jsonMatch[0]) as {
-          panels?: Array<{
-            description?: string;
-          }>;
-        };
+        const parsed = JSON.parse(jsonMatch[0]) as Array<{
+          panelNumber?: number;
+          visualDescription?: string;
+          visibleText?: Array<{ type: string; content: string }>;
+          characters?: string[];
+          setting?: string;
+        }>;
 
-        console.log('[parseScriptResponse] Parsed JSON successfully:', {
-          hasPanels: !!parsed.panels,
-          panelsCount: parsed.panels?.length || 0,
-        });
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          console.log('[parseScriptResponse] Successfully parsed JSON array with', parsed.length, 'panels');
 
-        if (parsed.panels && Array.isArray(parsed.panels) && parsed.panels.length > 0) {
-          const panels = parsed.panels
-            .map((p) => p.description || 'Visual description goes here')
-            .slice(0, expectedPanelCount);
+          const panels: ComicScriptPanel[] = parsed.slice(0, expectedPanelCount).map((panel, index) => {
+            console.log(`[parseScriptResponse] Panel ${index + 1}:`, {
+              hasVisualDescription: !!panel.visualDescription,
+              textElementCount: panel.visibleText?.length || 0,
+            });
 
-          console.log('[parseScriptResponse] Successfully extracted panels from JSON:', panels.length);
+            const visibleText = Array.isArray(panel.visibleText)
+              ? panel.visibleText.map(v => ({
+                  type: (v.type as 'dialogue' | 'sign' | 'caption' | 'label') || 'sign',
+                  content: v.content || '',
+                }))
+              : [];
+
+            return {
+              panelNumber: panel.panelNumber || index + 1,
+              visualDescription: panel.visualDescription || 'Visual description goes here',
+              visibleText,
+              characters: Array.isArray(panel.characters) ? panel.characters : [],
+              setting: panel.setting || 'Scene',
+            };
+          });
+
+          console.log('[parseScriptResponse] Successfully extracted', panels.length, 'panels with structured data');
           return panels;
         }
       } catch (error) {
-        console.warn('[parseScriptResponse] JSON parse failed, trying markdown format:', error);
+        console.warn('[parseScriptResponse] JSON parsing failed:', error);
       }
     }
 
-    // Improved markdown parsing for various Panel formats
-    console.log('[parseScriptResponse] Attempting to parse panel sections...');
-
-    const panels: string[] = [];
-
-    // Try multiple panel detection patterns
-    // Pattern 1: **Panel N:** or **Panel N**
-    // Pattern 2: Panel N: (without asterisks)
-    // Pattern 3: Panel 1 (without colon)
-    const panelSplitRegex = /(?:^|\n)(?:\*\*)?Panel\s+\d+(?:\*\*)?:?\s*/gmi;
-    const panelSections = text.split(panelSplitRegex).filter(s => s.trim().length > 0);
-
-    if (panelSections.length > 0) {
-      console.log('[parseScriptResponse] Found', panelSections.length, 'panel sections');
-
-      // For each section, combine all content until the next panel marker
-      panelSections.forEach((section, index) => {
-        if (index >= expectedPanelCount) return; // Max panels based on user selection
-
-        // Clean up the section text
-        const panelContent = section
-          .split('\n')
-          .map(line => line.trim())
-          .filter(line => line.length > 0)
-          .map(line => {
-            // Remove bullet points if present
-            if (line.startsWith('*')) {
-              line = line.replace(/^\*+\s*/, '');
-            }
-            // Remove bold markdown
-            line = line.replace(/\*\*(.+?)\*\*/g, '$1');
-            return line;
-          })
-          .join(' ');
-
-        if (panelContent.length > 0) {
-          panels.push(panelContent);
-          console.log(`[parseScriptResponse] Panel ${index + 1} content:`, panelContent.substring(0, 100));
-        }
+    // Fallback: Create default panels if parsing completely fails
+    console.warn('[parseScriptResponse] Could not parse JSON, using default panels');
+    const defaultPanels: ComicScriptPanel[] = [];
+    for (let i = 1; i <= expectedPanelCount; i++) {
+      defaultPanels.push({
+        panelNumber: i,
+        visualDescription: `Panel ${i}: A scene showing the cartoon concept with visual humor`,
+        visibleText: [],
+        characters: [],
+        setting: 'Scene',
       });
     }
-
-    if (panels.length > 0) {
-      console.log('[parseScriptResponse] Successfully extracted', panels.length, 'panels');
-      return panels.slice(0, expectedPanelCount);
-    }
-
-    // Fallback: Extract any structured content that looks like panel descriptions
-    console.warn('[parseScriptResponse] Panel parsing failed, trying line-by-line extraction');
-    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-
-    // Look for lines that describe visual content
-    const visualLines = lines.filter(line =>
-      line.includes('Visual:') ||
-      line.includes('Characters:') ||
-      line.includes('Text:') ||
-      line.includes('Action:') ||
-      line.includes('Scene:')
-    );
-
-    if (visualLines.length > 0) {
-      console.log('[parseScriptResponse] Found', visualLines.length, 'visual description lines');
-      // Group them into panels (assuming equal distribution)
-      const panelSize = Math.ceil(visualLines.length / expectedPanelCount);
-      for (let i = 0; i < Math.min(expectedPanelCount, Math.ceil(visualLines.length / panelSize)); i++) {
-        const panelLines = visualLines.slice(i * panelSize, (i + 1) * panelSize);
-        panels.push(panelLines.join(' '));
-      }
-      return panels;
-    }
-
-    // Default panels if parsing fails
-    console.error('[parseScriptResponse] All parsing methods failed, using default panels');
-    const defaultPanels = [
-      'A scene showing the main concept with visual humor',
-      'Characters reacting to the situation',
-      'The conflict or tension escalates',
-      'The punchline or resolution with editorial commentary',
-      'Additional development of the humor',
-      'Final twist or concluding visual gag',
-    ];
-    return defaultPanels.slice(0, expectedPanelCount);
+    return defaultPanels;
   }
 
   async generateHumorScore(title: string, description?: string): Promise<number> {

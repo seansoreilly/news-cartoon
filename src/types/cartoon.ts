@@ -21,8 +21,19 @@ export interface ComicPanel {
   setting?: string;
 }
 
+export interface ComicScriptPanel {
+  panelNumber: number;
+  visualDescription: string;
+  visibleText: Array<{
+    type: 'dialogue' | 'sign' | 'caption' | 'label';
+    content: string;
+  }>;
+  characters: string[];
+  setting: string;
+}
+
 export interface ComicScript {
-  panels: ComicPanel[] | string[];
+  panels: ComicPanel[] | string[] | ComicScriptPanel[];
   description: string;
   generatedAt: number;
   newsContext?: string;
