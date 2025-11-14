@@ -10,6 +10,7 @@ const ConceptDisplay: React.FC = () => {
   const { selectedArticles } = useNewsStore();
   const [localError, setLocalError] = useState<string | null>(null);
   const [localLoading, setLocalLoading] = useState(false);
+  const [selectedPanelCount, setSelectedPanelCount] = useState<number>(4);
 
   if (!cartoon || !cartoon.ideas || cartoon.ideas.length === 0) {
     return null;
@@ -33,11 +34,11 @@ const ConceptDisplay: React.FC = () => {
     setLoading(true);
 
     try {
-      console.log('[ConceptDisplay] Generating comic script for concept:', selectedConcept.title);
+      console.log('[ConceptDisplay] Generating cartoon script for concept:', selectedConcept.title);
       const script = await geminiService.generateComicScript(
         selectedConcept,
         selectedArticles,
-        4
+        selectedPanelCount
       );
       setComicScript(script);
       setLocalError(null);
@@ -104,14 +105,37 @@ const ConceptDisplay: React.FC = () => {
               <p className="text-red-800 text-sm">{localError}</p>
             </div>
           )}
+
+          <div className="mb-4 bg-white p-4 rounded-lg border-2 border-purple-200">
+            <label className="block text-sm font-semibold text-gray-700 mb-3">
+              Number of Panels:
+            </label>
+            <div className="grid grid-cols-4 gap-2">
+              {[1, 2, 3, 4].map((panelNum) => (
+                <button
+                  key={panelNum}
+                  onClick={() => setSelectedPanelCount(panelNum)}
+                  className={`px-3 py-2 rounded-lg font-medium transition-all ${
+                    selectedPanelCount === panelNum
+                      ? 'bg-purple-600 text-white shadow-md'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                  disabled={localLoading}
+                >
+                  {panelNum}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <button
             onClick={handleGenerateScript}
             disabled={localLoading}
             className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 shadow-lg"
-            aria-label="Generate comic script"
+            aria-label="Generate cartoon script"
             aria-busy={localLoading}
           >
-            {localLoading ? '✨ Generating Script...' : '✨ Generate Comic Script'}
+            {localLoading ? '✨ Generating Script...' : '✨ Generate Cartoon Script'}
           </button>
         </div>
       )}

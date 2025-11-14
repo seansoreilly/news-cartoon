@@ -11,7 +11,6 @@ const ImageGenerator: React.FC = React.memo(() => {
   const [localLoading, setLocalLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
-  const [panelCount, setPanelCount] = useState<number>(1);
 
   const selectedConcept = cartoon && selectedConceptIndex !== null && cartoon.ideas[selectedConceptIndex] ? {
     ...cartoon.ideas[selectedConceptIndex],
@@ -47,7 +46,7 @@ const ImageGenerator: React.FC = React.memo(() => {
         );
       }
 
-      const cartoonImage = await geminiService.generateCartoonImage(selectedConcept, selectedArticles, panelCount);
+      const cartoonImage = await geminiService.generateCartoonImage(selectedConcept, selectedArticles);
       const imageUrl = `data:${cartoonImage.mimeType};base64,${cartoonImage.base64Data}`;
       setImagePath(imageUrl);
       setLocalError(null);
@@ -115,28 +114,6 @@ const ImageGenerator: React.FC = React.memo(() => {
             </h3>
             <p className="text-gray-600 mb-4">{selectedConcept.premise}</p>
             <p className="text-sm text-gray-500 mb-4">Why it's funny: {selectedConcept.why_funny}</p>
-
-            <div className="mb-4">
-              <label htmlFor="panel-count" className="block text-sm font-medium text-gray-700 mb-2">
-                Number of Panels:
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {[1, 2, 3, 4, 5, 6].map((num) => (
-                  <button
-                    key={num}
-                    onClick={() => setPanelCount(num)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                      panelCount === num
-                        ? 'bg-amber-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                    disabled={localLoading}
-                  >
-                    {num} {num === 1 ? 'Panel' : 'Panels'}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             <button
               onClick={handleGenerateImage}

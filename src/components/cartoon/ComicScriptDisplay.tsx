@@ -41,74 +41,21 @@ const ComicScriptDisplay: React.FC = () => {
     setIsEditing(false);
   };
 
-  const handlePanelChange = (index: number, value: string) => {
-    const newPanels = [...editPanels];
-    newPanels[index] = value;
-    setEditPanels(newPanels);
-  };
 
-  const handleAddPanel = () => {
-    setEditPanels([...editPanels, '']);
-  };
-
-  const handleRemovePanel = (index: number) => {
-    setEditPanels(editPanels.filter((_, i) => i !== index));
-  };
 
   if (isEditing) {
     return (
       <div className="mt-6 p-4 bg-white rounded-lg border-2 border-purple-200">
-        <h3 className="font-semibold mb-4 text-lg">✏️ Edit Comic Script</h3>
+        <h3 className="font-semibold mb-4 text-lg">✏️ Edit Cartoon Script</h3>
 
         <div className="mb-4">
-          <label className="font-semibold text-gray-700 block mb-2">Description:</label>
+          <label className="font-semibold text-gray-700 block mb-2">Cartoon Script:</label>
           <textarea
-            value={editDescription}
-            onChange={(e) => setEditDescription(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-lg font-medium text-gray-800 resize-vertical min-h-20"
-            placeholder="Enter description..."
+            value={editPanels.join('\n\n')}
+            onChange={(e) => setEditPanels(e.target.value.split('\n\n'))}
+            className="w-full p-3 border border-gray-300 rounded-lg font-medium text-gray-800 resize-vertical min-h-40"
+            placeholder="Enter cartoon script..."
           />
-        </div>
-
-        {comicScript.newsContext && (
-          <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-            <span className="font-semibold text-gray-700">News Context:</span>
-            <p className="italic text-gray-600 mt-1">{comicScript.newsContext}</p>
-          </div>
-        )}
-
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <label className="font-semibold text-gray-700">Panels:</label>
-            <button
-              onClick={handleAddPanel}
-              className="text-sm px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-            >
-              + Add Panel
-            </button>
-          </div>
-
-          <div className="space-y-3">
-            {editPanels.map((panel, index) => (
-              <div key={index} className="flex gap-2 items-start">
-                <div className="flex-1">
-                  <textarea
-                    value={panel}
-                    onChange={(e) => handlePanelChange(index, e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-lg text-sm resize-vertical min-h-16"
-                    placeholder={`Panel ${index + 1}...`}
-                  />
-                </div>
-                <button
-                  onClick={() => handleRemovePanel(index)}
-                  className="px-2 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm mt-1"
-                  aria-label={`Remove panel ${index + 1}`}
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-          </div>
         </div>
 
         <div className="flex gap-2 pt-2">
@@ -132,7 +79,7 @@ const ComicScriptDisplay: React.FC = () => {
   return (
     <div className="mt-6 p-4 bg-gray-50 rounded-lg">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-lg">Comic Script</h3>
+        <h3 className="font-semibold text-lg">Cartoon Script</h3>
         <button
           onClick={() => setIsEditing(true)}
           className="text-sm px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
