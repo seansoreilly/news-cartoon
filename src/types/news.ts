@@ -15,6 +15,8 @@ export interface NewsArticle {
   summary?: string;
   humorScore?: number;
   contentFetched?: boolean; // Track if we've attempted to fetch full content
+  summaryLoading?: boolean; // Track if summary/humorScore is being loaded
+  summaryError?: boolean; // Track if summary/humorScore failed to load
 }
 
 export interface NewsResponse {

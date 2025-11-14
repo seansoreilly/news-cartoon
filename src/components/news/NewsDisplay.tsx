@@ -4,6 +4,7 @@ import { useLocationStore } from '../../store/locationStore';
 import { newsService } from '../../services/newsService';
 import { geminiService } from '../../services/geminiService';
 import { AppErrorHandler } from '../../utils/errorHandler';
+import LoadingSkeleton from '../common/LoadingSkeleton';
 import type { NewsArticle, NewsData } from '../../types';
 
 interface NewsCardProps {
@@ -52,6 +53,40 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, selected, onSelect }) => {
     cleanedSummary.length > 10 &&
     !isTitleDuplicate(article.title, cleanedSummary);
 
+  // Determine what to show in the humor score area
+  const renderHumorScore = () => {
+    if (article.summaryError) {
+      return (
+        <span className="inline-block px-2 py-1 rounded-full text-xs font-bold bg-gray-200 text-gray-600">
+          —
+        </span>
+      );
+    }
+
+    if (article.summaryLoading) {
+      return <LoadingSkeleton variant="humor-score" />;
+    }
+
+    if (article.humorScore !== undefined) {
+      return (
+        <span className={`inline-block px-2 py-1 rounded-full text-xs font-bold ${
+          article.humorScore >= 70 ? 'bg-green-200 text-green-800' :
+          article.humorScore >= 40 ? 'bg-amber-200 text-amber-800' :
+          'bg-gray-200 text-gray-700'
+        }`}>
+          {article.humorScore}
+        </span>
+      );
+    }
+
+    // Default case: show spinner (should be rare)
+    return (
+      <div className="inline-flex items-center justify-center w-8 h-8">
+        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600" />
+      </div>
+    );
+  };
+
   return (
     <div
       onClick={onSelect}
@@ -75,26 +110,22 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, selected, onSelect }) => {
               {article.title}
             </h3>
             <div className="flex-shrink-0">
-              {article.humorScore !== undefined ? (
-                <span className={`inline-block px-2 py-1 rounded-full text-xs font-bold ${
-                  article.humorScore >= 70 ? 'bg-green-200 text-green-800' :
-                  article.humorScore >= 40 ? 'bg-amber-200 text-amber-800' :
-                  'bg-gray-200 text-gray-700'
-                }`}>
-                  {article.humorScore}
-                </span>
-              ) : (
-                <div className="inline-flex items-center justify-center w-8 h-8">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                </div>
-              )}
+              {renderHumorScore()}
             </div>
           </div>
-          {shouldShowSummary && (
+          {article.summaryLoading ? (
+            <div className="mt-2">
+              <LoadingSkeleton variant="article" />
+            </div>
+          ) : article.summaryError ? (
+            <p className="text-xs text-gray-400 mt-2 italic">
+              No summary available
+            </p>
+          ) : shouldShowSummary ? (
             <p className="text-sm text-gray-600 mt-2 line-clamp-4">
               {cleanedSummary}
             </p>
-          )}
+          ) : null}
           <div className="flex items-center justify-between mt-2 gap-2">
             <p className="text-xs text-gray-500">Source: {article.source?.name}</p>
             <a
@@ -166,10 +197,13 @@ const NewsDisplay: React.FC = () => {
         const newsResponse = await newsService.fetchNewsByLocation(location.name);
 
         // Set initial news data with local humor scores (instant feedback)
+        // Mark articles as loading their summaries
         const articlesWithLocalScores = newsResponse.articles.map(article => ({
           ...article,
           summary: article.description,
           humorScore: calculateHumorScore(article.title, article.description),
+          summaryLoading: true, // Mark as loading AI summaries
+          summaryError: false,
         }));
 
         const newsData: NewsData = {
@@ -181,7 +215,7 @@ const NewsDisplay: React.FC = () => {
         setNews(newsData);
         setLoading(false);
 
-        // Then enhance with AI analysis in background
+        // Then enhance with AI analysis in background (parallel loading)
         console.log('🤖 Starting AI batch analysis of articles...');
         try {
           const analysis = await geminiService.batchAnalyzeArticles(
@@ -199,6 +233,8 @@ const NewsDisplay: React.FC = () => {
               ...article,
               summary: analysis[idx]?.summary || article.summary,
               humorScore: analysis[idx]?.humorScore || article.humorScore,
+              summaryLoading: false, // Done loading
+              summaryError: !analysis[idx], // Error if no analysis returned
             }));
             return { ...prevNews, articles: updatedArticles };
           });
@@ -206,7 +242,16 @@ const NewsDisplay: React.FC = () => {
           console.log('✅ AI analysis complete');
         } catch (aiError) {
           console.warn('⚠️ AI analysis failed, using local scores:', aiError);
-          // Keep the local scores if AI fails
+          // Mark all articles as having error loading AI summaries
+          setNews(prevNews => {
+            if (!prevNews) return prevNews;
+            const updatedArticles = prevNews.articles.map(article => ({
+              ...article,
+              summaryLoading: false,
+              summaryError: true, // Mark as error
+            }));
+            return { ...prevNews, articles: updatedArticles };
+          });
         }
       } catch (err) {
         const appError = AppErrorHandler.handleError(err);
