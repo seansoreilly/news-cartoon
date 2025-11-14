@@ -1,9 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useCartoonStore } from '../../store/cartoonStore';
+import { useNewsStore } from '../../store/newsStore';
+import { geminiService } from '../../services/geminiService';
+import { AppErrorHandler } from '../../utils/errorHandler';
 import type { CartoonConcept } from '../../types/cartoon';
 
 const ConceptDisplay: React.FC = () => {
-  const { cartoon, selectedConceptIndex, setSelectedConceptIndex } = useCartoonStore();
+  const { cartoon, selectedConceptIndex, setSelectedConceptIndex, setComicScript, setError, setLoading } = useCartoonStore();
+  const { selectedArticles } = useNewsStore();
+  const [localError, setLocalError] = useState<string | null>(null);
+  const [localLoading, setLocalLoading] = useState(false);
 
   if (!cartoon || !cartoon.ideas || cartoon.ideas.length === 0) {
     return null;
@@ -11,6 +17,39 @@ const ConceptDisplay: React.FC = () => {
 
   const handleConceptClick = (index: number) => {
     setSelectedConceptIndex(index);
+    setLocalError(null);
+  };
+
+  const handleGenerateScript = async () => {
+    if (selectedConceptIndex === null || !cartoon.ideas[selectedConceptIndex]) {
+      setLocalError('Please select a concept first');
+      return;
+    }
+
+    const selectedConcept = cartoon.ideas[selectedConceptIndex];
+
+    setLocalLoading(true);
+    setLocalError(null);
+    setLoading(true);
+
+    try {
+      console.log('[ConceptDisplay] Generating comic script for concept:', selectedConcept.title);
+      const script = await geminiService.generateComicScript(
+        selectedConcept,
+        selectedArticles,
+        4
+      );
+      setComicScript(script);
+      setLocalError(null);
+    } catch (err) {
+      const appError = AppErrorHandler.handleError(err);
+      const userMessage = AppErrorHandler.getUserMessage(appError);
+      setLocalError(userMessage);
+      setError(userMessage);
+    } finally {
+      setLocalLoading(false);
+      setLoading(false);
+    }
   };
 
   return (
@@ -57,6 +96,25 @@ const ConceptDisplay: React.FC = () => {
           );
         })}
       </div>
+
+      {selectedConceptIndex !== null && (
+        <div className="mt-6">
+          {localError && (
+            <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded">
+              <p className="text-red-800 text-sm">{localError}</p>
+            </div>
+          )}
+          <button
+            onClick={handleGenerateScript}
+            disabled={localLoading}
+            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 shadow-lg"
+            aria-label="Generate comic script"
+            aria-busy={localLoading}
+          >
+            {localLoading ? '✨ Generating Script...' : '✨ Generate Comic Script'}
+          </button>
+        </div>
+      )}
     </div>
   );
 };
