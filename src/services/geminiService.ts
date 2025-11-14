@@ -162,6 +162,7 @@ class GeminiService {
     console.log('Generating comic script...');
     const script = await this.generateComicScript(concept, articles, panelCount);
     console.log('Comic script generated:', script);
+    console.log('Panel count being used for image generation:', panelCount);
 
     // Extract and validate text elements before building prompt
     const textElements = this.extractTextElements(script);

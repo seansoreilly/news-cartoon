@@ -6,7 +6,7 @@ import { ImageGenerationRateLimiter } from '../../utils/rateLimiter';
 import { AppErrorHandler } from '../../utils/errorHandler';
 
 const ImageGenerator: React.FC = React.memo(() => {
-  const { cartoon, imagePath, setImagePath, setLoading, setError, selectedConceptIndex } = useCartoonStore();
+  const { cartoon, comicScript, imagePath, setImagePath, setLoading, setError, selectedConceptIndex } = useCartoonStore();
   const { selectedArticles } = useNewsStore();
   const [localLoading, setLocalLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -20,6 +20,11 @@ const ImageGenerator: React.FC = React.memo(() => {
   const handleGenerateImage = async () => {
     if (!selectedConcept) {
       setLocalError('No cartoon concept selected');
+      return;
+    }
+
+    if (!comicScript) {
+      setLocalError('No cartoon script generated');
       return;
     }
 
@@ -46,7 +51,9 @@ const ImageGenerator: React.FC = React.memo(() => {
         );
       }
 
-      const cartoonImage = await geminiService.generateCartoonImage(selectedConcept, selectedArticles);
+      // Extract panel count from the generated script
+      const panelCount = comicScript.panels ? comicScript.panels.length : 4;
+      const cartoonImage = await geminiService.generateCartoonImage(selectedConcept, selectedArticles, panelCount);
       const imageUrl = `data:${cartoonImage.mimeType};base64,${cartoonImage.base64Data}`;
       setImagePath(imageUrl);
       setLocalError(null);
