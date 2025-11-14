@@ -18,7 +18,7 @@ app.use(cors());
 app.use(express.json());
 
 /**
- * Parse Google News RSS feed
+ * Parse Google News RSS feed and filter articles from the last 3 days
  */
 const parseGoogleNewsRss = (rssData, limit) => {
   try {
@@ -33,41 +33,50 @@ const parseGoogleNewsRss = (rssData, limit) => {
     }
 
     const items = channel.ITEM || channel.item || [];
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
-    return items.slice(0, limit).map((item) => {
-      const title = item.TITLE?.[0] || item.title?.[0] || '';
-      const description = item.DESCRIPTION?.[0] || item.description?.[0] || '';
-      const link = item.LINK?.[0] || item.link?.[0] || '';
-      const pubDate = item.PUBDATE?.[0] || item.pubDate?.[0] || new Date().toISOString();
+    return items
+      .map((item) => {
+        const title = item.TITLE?.[0] || item.title?.[0] || '';
+        const description = item.DESCRIPTION?.[0] || item.description?.[0] || '';
+        const link = item.LINK?.[0] || item.link?.[0] || '';
+        const pubDate = item.PUBDATE?.[0] || item.pubDate?.[0] || new Date().toISOString();
 
-      // Extract source from title (Google News format: "Title - Source")
-      const titleParts = title.split(' - ');
-      const cleanTitle = titleParts.slice(0, -1).join(' - ') || title;
-      const source = titleParts[titleParts.length - 1] || 'Unknown';
+        // Extract source from title (Google News format: "Title - Source")
+        const titleParts = title.split(' - ');
+        const cleanTitle = titleParts.slice(0, -1).join(' - ') || title;
+        const source = titleParts[titleParts.length - 1] || 'Unknown';
 
-      // Clean HTML from description
-      const cleanDescription = description
-        .replace(/<[^>]*>/g, '')
-        .replace(/&quot;/g, '"')
-        .replace(/&apos;/g, "'")
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .trim();
+        // Clean HTML from description
+        const cleanDescription = description
+          .replace(/<[^>]*>/g, '')
+          .replace(/&quot;/g, '"')
+          .replace(/&apos;/g, "'")
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .trim();
 
-      return {
-        title: cleanTitle,
-        description: cleanDescription,
-        content: cleanDescription,
-        url: link,
-        image: null,
-        publishedAt: new Date(pubDate).toISOString(),
-        source: {
-          name: source,
-          url: null,
-        },
-      };
-    });
+        const publishedAtISO = new Date(pubDate).toISOString();
+
+        return {
+          title: cleanTitle,
+          description: cleanDescription,
+          content: cleanDescription,
+          url: link,
+          image: null,
+          publishedAt: publishedAtISO,
+          source: {
+            name: source,
+            url: null,
+          },
+          publishedDate: new Date(pubDate),
+        };
+      })
+      .filter((article) => article.publishedDate >= threeDaysAgo)
+      .slice(0, limit)
+      .map(({ publishedDate, ...article }) => article);
   } catch (error) {
     return [];
   }
