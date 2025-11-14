@@ -60,7 +60,10 @@ const LocationDetector: React.FC = () => {
 
   return (
     <div className="p-6 rounded-lg shadow-md mb-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Search Keywords</h2>
+      <div className="flex items-center gap-3 mb-4">
+        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm">1</span>
+        <h2 className="text-2xl font-bold text-gray-800">Search Keywords</h2>
+      </div>
 
       {location ? (
         <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg border-2 border-green-200">

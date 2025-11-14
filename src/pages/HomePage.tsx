@@ -5,18 +5,32 @@ import ConceptGenerator from '../components/cartoon/ConceptGenerator';
 import ConceptDisplay from '../components/cartoon/ConceptDisplay';
 import ComicScriptDisplay from '../components/cartoon/ComicScriptDisplay';
 import ImageGenerator from '../components/cartoon/ImageGenerator';
-import ProgressIndicator from '../components/common/ProgressIndicator';
+import { useLocationStore } from '../store/locationStore';
+import { useNewsStore } from '../store/newsStore';
+import { useCartoonStore } from '../store/cartoonStore';
 
 const HomePage: React.FC = () => {
+  const { location } = useLocationStore();
+  const { selectedArticles } = useNewsStore();
+  const { selectedConceptIndex, comicScript } = useCartoonStore();
+
+  const hasLocation = location?.name && location.name.trim() !== '';
+  const hasSelectedArticles = selectedArticles.length > 0;
+  const hasSelectedConcept = selectedConceptIndex !== null;
+  const hasComicScript = comicScript !== null;
+
   return (
-    <div className="space-y-6">
-      <ProgressIndicator />
+    <div className="space-y-8">
       <LocationDetector />
-      <NewsDisplay />
-      <ConceptGenerator />
-      <ConceptDisplay />
-      <ComicScriptDisplay />
-      <ImageGenerator />
+      {hasLocation && <NewsDisplay />}
+      {hasSelectedArticles && (
+        <div className="space-y-4">
+          <ConceptGenerator />
+          <ConceptDisplay />
+        </div>
+      )}
+      {hasSelectedConcept && <ComicScriptDisplay />}
+      {hasComicScript && <ImageGenerator />}
     </div>
   );
 };

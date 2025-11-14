@@ -327,7 +327,10 @@ const NewsDisplay: React.FC = () => {
   if (isLoading) {
     return (
       <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-lg shadow-md mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">News Articles</h2>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm">2</span>
+          <h2 className="text-2xl font-bold text-gray-800">News Articles</h2>
+        </div>
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="bg-gray-200 animate-pulse h-24 rounded-lg" />
@@ -340,7 +343,10 @@ const NewsDisplay: React.FC = () => {
   if (error) {
     return (
       <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-lg shadow-md mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">News Articles</h2>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm">2</span>
+          <h2 className="text-2xl font-bold text-gray-800">News Articles</h2>
+        </div>
         <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
           <p className="text-red-800 font-medium">{error}</p>
         </div>
@@ -351,7 +357,10 @@ const NewsDisplay: React.FC = () => {
   if (!news || !news.articles || news.articles.length === 0) {
     return (
       <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-lg shadow-md mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">News Articles</h2>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm">2</span>
+          <h2 className="text-2xl font-bold text-gray-800">News Articles</h2>
+        </div>
         <div className="text-center py-8">
           <p className="text-gray-600 text-lg">
             {location?.name
@@ -366,7 +375,8 @@ const NewsDisplay: React.FC = () => {
   return (
     <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-lg shadow-md mb-6">
       <div className="flex items-center justify-between mb-4">
-        <div>
+        <div className="flex items-center gap-3">
+          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm">2</span>
           <h2 className="text-2xl font-bold text-gray-800">News Articles</h2>
           {news.topic && (
             <p className="text-sm text-gray-600 mt-1">Topic: {news.topic}</p>

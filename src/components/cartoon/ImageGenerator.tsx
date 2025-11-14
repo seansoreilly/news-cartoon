@@ -102,7 +102,10 @@ const ImageGenerator: React.FC = React.memo(() => {
 
   return (
     <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-6 rounded-lg shadow-md mb-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Generated Cartoon</h2>
+      <div className="flex items-center gap-3 mb-4">
+        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-600 text-white font-bold text-sm">4</span>
+        <h2 className="text-2xl font-bold text-gray-800">Generated Cartoon</h2>
+      </div>
 
       {!imagePath ? (
         <div className="space-y-4">
