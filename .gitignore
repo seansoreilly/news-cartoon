@@ -1,28 +1,22 @@
+# Dependencies
+node_modules/
+node_modules/.tmp/
+
+# Build outputs
+dist/
+dist-ssr/
+*.local
+.vercel
+
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
-node_modules
-node_modules/.tmp/
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+dev-debug.log
 
 # Environment variables
 .env
@@ -30,17 +24,35 @@ dist-ssr
 .env.production
 .env.local
 
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+
+# OS specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Testing
+coverage/
+*.lcov
+.nyc_output/
+
 # Local state
 memories.json
 
-dev-debug.log
-# Dependency directories
-node_modules/
-.vscode
-# OS specific
-
-.vercel
-
-# Task files
+# Task Master (commented out for version control)
 # tasks.json
-# tasks/ 
+# tasks/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/ 
