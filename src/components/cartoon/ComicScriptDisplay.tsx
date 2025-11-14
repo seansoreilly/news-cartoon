@@ -5,32 +5,16 @@ import type { ComicPanel, ComicScriptPanel } from '../../types/cartoon';
 const ComicScriptDisplay: React.FC = () => {
   const { comicScript, setComicScript } = useCartoonStore();
   const [isEditing, setIsEditing] = useState(false);
-  const [editDescription, setEditDescription] = useState(comicScript?.description || '');
-  const [editPanels, setEditPanels] = useState<string[]>(
-    comicScript?.panels?.map((panel: string | ComicPanel | ComicScriptPanel) => {
-      if (typeof panel === 'string') return panel;
-      if ('visualDescription' in panel) return (panel as ComicScriptPanel).visualDescription;
-      return (panel as ComicPanel).description;
-    }) || []
-  );
+  const [editDescription, setEditDescription] = useState('');
+  const [editPanels, setEditPanels] = useState<string[]>([]);
 
   if (!comicScript) {
     return null;
   }
 
-  const handleSaveEdits = () => {
-    if (editDescription.trim()) {
-      setComicScript({
-        ...comicScript,
-        description: editDescription,
-        panels: editPanels.filter(p => p.trim()),
-      });
-      setIsEditing(false);
-    }
-  };
-
-  const handleCancelEdits = () => {
-    setEditDescription(comicScript.description);
+  // Initialize edit state when entering edit mode
+  const handleStartEdit = () => {
+    setEditDescription(comicScript.description || '');
     setEditPanels(
       comicScript.panels?.map((panel: string | ComicPanel | ComicScriptPanel) => {
         if (typeof panel === 'string') return panel;
@@ -38,6 +22,25 @@ const ComicScriptDisplay: React.FC = () => {
         return (panel as ComicPanel).description;
       }) || []
     );
+    setIsEditing(true);
+  };
+
+  const handleSaveEdits = () => {
+    // Only save if we have valid content
+    if (editDescription.trim() || editPanels.some(p => p.trim())) {
+      setComicScript({
+        ...comicScript,
+        description: editDescription.trim(),
+        panels: editPanels.filter(p => p.trim()),
+      });
+      setIsEditing(false);
+    }
+  };
+
+  const handleCancelEdits = () => {
+    // Reset edit states when canceling
+    setEditDescription('');
+    setEditPanels([]);
     setIsEditing(false);
   };
 
@@ -81,7 +84,7 @@ const ComicScriptDisplay: React.FC = () => {
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-lg">Cartoon Script</h3>
         <button
-          onClick={() => setIsEditing(true)}
+          onClick={handleStartEdit}
           className="text-sm px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
         >
           ✏️ Edit
