@@ -162,7 +162,7 @@ const ImageGenerator: React.FC = React.memo(() => {
         <div className="space-y-4">
           <div className="bg-white p-4 rounded-lg border-2 border-green-200">
             <h3 className="font-semibold text-gray-800 mb-3">
-              Generated Cartoon: {selectedConcept.title}
+              Generate Cartoon: {selectedConcept.title}
             </h3>
 
             <div className="mb-4 border rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center min-h-64">

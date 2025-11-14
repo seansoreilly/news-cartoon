@@ -46,7 +46,7 @@ test.describe('Cartoon Concepts Generation and Selection', () => {
 
     // TEST CASE 1: Verify loading state displays (with increased timeout for AI generation)
     // Note: Loading state might be very quick, so we check for the result instead
-    
+
     // TEST CASE 2: Verify that 5 concepts were generated and count is displayed
     await expect(page.getByText('Generated 5 concepts')).toBeVisible({ timeout: 30000 });
 
@@ -62,14 +62,14 @@ test.describe('Cartoon Concepts Generation and Selection', () => {
 
     // TEST CASE 7: Verify concept content quality - check for premise text
     await expect(page.getByText(/A classic Freudian analyst's office/)).toBeVisible();
-    
+
     // TEST CASE 3: Click first concept card to select it
     await page.getByText('Shrink\'s Couch RebootA').click();
 
     // TEST CASE 3: Verify 'Selected' badge appears on the selected concept card
     await expect(page.getByText('Selected')).toBeVisible();
 
-    // TEST CASE 4: Verify selected card shows in "Generated Cartoon" section
+    // TEST CASE 4: Verify selected card shows in "Generate Cartoon" section
     await expect(page.getByRole('heading', { name: 'Selected Concept: Shrink\'s Couch Reboot' })).toBeVisible();
 
     // TEST CASE 3: Click second concept card to test that previous selection is deselected
@@ -174,10 +174,10 @@ test.describe('Cartoon Concepts Generation and Selection', () => {
     // TEST CASE 2: Verify each concept has all required fields
     // Title
     await expect(page.getByRole('heading', { name: 'Shrink\'s Couch Reboot' })).toBeVisible();
-    
+
     // Premise/description
     await expect(page.getByText(/A classic Freudian analyst's office/)).toBeVisible();
-    
+
     // "Why it's funny" explanation
     await expect(page.getByText(/Why it's funny:/)).toBeVisible();
   });
