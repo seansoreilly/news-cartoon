@@ -106,16 +106,16 @@ const ConceptDisplay: React.FC = () => {
             </div>
           )}
 
-          <div className="mb-4 bg-white p-4 rounded-lg border-2 border-purple-200">
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
+          <div className="mb-4 bg-white p-3 sm:p-4 rounded-lg border-2 border-purple-200">
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-3">
               Number of Panels:
             </label>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {[1, 2, 3, 4].map((panelNum) => (
                 <button
                   key={panelNum}
                   onClick={() => setSelectedPanelCount(panelNum)}
-                  className={`px-3 py-2 rounded-lg font-medium transition-all ${
+                  className={`px-2 sm:px-3 py-2 text-sm sm:text-base rounded-lg font-medium transition-all ${
                     selectedPanelCount === panelNum
                       ? 'bg-purple-600 text-white shadow-md'
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300'

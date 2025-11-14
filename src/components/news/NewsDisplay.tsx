@@ -90,23 +90,23 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, selected, onSelect }) => {
   return (
     <div
       onClick={onSelect}
-      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+      className={`p-2 sm:p-3 md:p-4 rounded-lg border-2 cursor-pointer transition-all ${
         selected
           ? 'bg-blue-50 border-blue-500 shadow-md'
           : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
       }`}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2 sm:gap-3">
         <input
           type="checkbox"
           checked={selected}
           onChange={onSelect}
-          className="mt-1 w-5 h-5 cursor-pointer"
+          className="mt-1 w-4 sm:w-5 h-4 sm:h-5 cursor-pointer flex-shrink-0"
           aria-label={`Select article: ${article.title}`}
         />
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-semibold text-gray-800 line-clamp-2 text-base flex-1">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2">
+            <h3 className="font-semibold text-gray-800 line-clamp-2 text-sm sm:text-base flex-1">
               {article.title}
             </h3>
             <div className="flex-shrink-0">
@@ -122,11 +122,11 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, selected, onSelect }) => {
               No summary available
             </p>
           ) : shouldShowSummary ? (
-            <p className="text-sm text-gray-600 mt-2 line-clamp-4">
+            <p className="text-xs sm:text-sm text-gray-600 mt-2 line-clamp-2 sm:line-clamp-4">
               {cleanedSummary}
             </p>
           ) : null}
-          <div className="flex items-center justify-between mt-2 gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-2 gap-1 sm:gap-2">
             <p className="text-xs text-gray-500">Source: {article.source?.name}</p>
             <a
               href={article.url}
@@ -326,14 +326,14 @@ const NewsDisplay: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-lg shadow-md mb-6">
-        <div className="flex items-center gap-3 mb-4">
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-3 sm:p-4 md:p-6 rounded-lg shadow-md mb-6">
+        <div className="flex items-center gap-2 sm:gap-3 mb-4">
           <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm">2</span>
-          <h2 className="text-2xl font-bold text-gray-800">News Articles</h2>
+          <h2 className="text-lg sm:text-2xl font-bold text-gray-800">News Articles</h2>
         </div>
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="bg-gray-200 animate-pulse h-24 rounded-lg" />
+            <div key={i} className="bg-gray-200 animate-pulse h-20 sm:h-24 rounded-lg" />
           ))}
         </div>
       </div>
@@ -342,10 +342,10 @@ const NewsDisplay: React.FC = () => {
 
   if (error) {
     return (
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-lg shadow-md mb-6">
-        <div className="flex items-center gap-3 mb-4">
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-3 sm:p-4 md:p-6 rounded-lg shadow-md mb-6">
+        <div className="flex items-center gap-2 sm:gap-3 mb-4">
           <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm">2</span>
-          <h2 className="text-2xl font-bold text-gray-800">News Articles</h2>
+          <h2 className="text-lg sm:text-2xl font-bold text-gray-800">News Articles</h2>
         </div>
         <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
           <p className="text-red-800 font-medium">{error}</p>
@@ -356,13 +356,13 @@ const NewsDisplay: React.FC = () => {
 
   if (!news || !news.articles || news.articles.length === 0) {
     return (
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-lg shadow-md mb-6">
-        <div className="flex items-center gap-3 mb-4">
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-3 sm:p-4 md:p-6 rounded-lg shadow-md mb-6">
+        <div className="flex items-center gap-2 sm:gap-3 mb-4">
           <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm">2</span>
-          <h2 className="text-2xl font-bold text-gray-800">News Articles</h2>
+          <h2 className="text-lg sm:text-2xl font-bold text-gray-800">News Articles</h2>
         </div>
-        <div className="text-center py-8">
-          <p className="text-gray-600 text-lg">
+        <div className="text-center py-6 sm:py-8">
+          <p className="text-gray-600 text-base sm:text-lg">
             {location?.name
               ? 'No news articles found for your search'
               : 'Enter search keywords to see news articles'}
@@ -373,16 +373,18 @@ const NewsDisplay: React.FC = () => {
   }
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-lg shadow-md mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm">2</span>
-          <h2 className="text-2xl font-bold text-gray-800">News Articles</h2>
-          {news.topic && (
-            <p className="text-sm text-gray-600 mt-1">Topic: {news.topic}</p>
-          )}
+    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-3 sm:p-4 md:p-6 rounded-lg shadow-md mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm flex-shrink-0">2</span>
+          <div>
+            <h2 className="text-lg sm:text-2xl font-bold text-gray-800">News Articles</h2>
+            {news.topic && (
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">Topic: {news.topic}</p>
+            )}
+          </div>
         </div>
-        <div className="text-sm font-medium text-gray-700 bg-white px-3 py-1 rounded-full">
+        <div className="text-xs sm:text-sm font-medium text-gray-700 bg-white px-3 py-1 rounded-full whitespace-nowrap">
           {selectedArticles.length} selected
         </div>
       </div>
@@ -401,8 +403,8 @@ const NewsDisplay: React.FC = () => {
       </div>
 
       {selectedArticles.length > 0 && (
-        <div className="mt-4 p-3 bg-blue-100 border border-blue-300 rounded-lg">
-          <p className="text-blue-800 text-sm font-medium">
+        <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-blue-100 border border-blue-300 rounded-lg">
+          <p className="text-blue-800 text-xs sm:text-sm font-medium">
             Selected {selectedArticles.length} article{selectedArticles.length !== 1 ? 's' : ''} for cartoon generation
           </p>
         </div>

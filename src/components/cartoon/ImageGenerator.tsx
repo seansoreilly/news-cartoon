@@ -107,10 +107,10 @@ const ImageGenerator: React.FC = React.memo(() => {
   }
 
   return (
-    <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-6 rounded-lg shadow-md mb-6">
-      <div className="flex items-center gap-3 mb-4">
+    <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-3 sm:p-4 md:p-6 rounded-lg shadow-md mb-6">
+      <div className="flex items-center gap-2 sm:gap-3 mb-4">
         <span className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-600 text-white font-bold text-sm">4</span>
-        <h2 className="text-2xl font-bold text-gray-800">Generated Cartoon</h2>
+        <h2 className="text-lg sm:text-2xl font-bold text-gray-800">Generated Cartoon</h2>
       </div>
 
       {!imagePath ? (
@@ -149,21 +149,21 @@ const ImageGenerator: React.FC = React.memo(() => {
               Generate Cartoon: {selectedConcept.title}
             </h3>
 
-            <div className="mb-4 border rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center min-h-64">
+            <div className="mb-4 border rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center min-h-48 sm:min-h-56 md:min-h-64">
               <img src={imagePath} alt={selectedConcept.title} className="max-w-full h-auto" />
             </div>
 
-            <div className="flex gap-3 flex-wrap">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               <button
                 onClick={handleDownload}
-                className="flex-1 min-w-[150px] bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                className="w-full bg-blue-600 text-white px-3 sm:px-6 py-2 text-sm sm:text-base rounded-lg font-medium hover:bg-blue-700 transition-colors"
               >
                 Download Cartoon
               </button>
 
               <button
                 onClick={handleRegenerateImage}
-                className="flex-1 min-w-[150px] bg-gray-200 text-gray-800 px-6 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                className="w-full bg-gray-200 text-gray-800 px-3 sm:px-6 py-2 text-sm sm:text-base rounded-lg font-medium hover:bg-gray-300 transition-colors"
               >
                 Generate New Cartoon
               </button>

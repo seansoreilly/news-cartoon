@@ -59,21 +59,21 @@ const LocationDetector: React.FC = () => {
   };
 
   return (
-    <div className="p-6 rounded-lg shadow-md mb-6">
-      <div className="flex items-center gap-3 mb-4">
+    <div className="p-3 sm:p-4 md:p-6 rounded-lg shadow-md mb-6">
+      <div className="flex items-center gap-2 sm:gap-3 mb-4">
         <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm">1</span>
-        <h2 className="text-2xl font-bold text-gray-800">Search Keywords</h2>
+        <h2 className="text-lg sm:text-2xl font-bold text-gray-800">Search Keywords</h2>
       </div>
 
       {location ? (
-        <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg border-2 border-green-200">
-          <div className="flex items-center justify-between">
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-3 sm:p-4 rounded-lg border-2 border-green-200">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <p className="text-lg font-semibold text-gray-800">{location.name}</p>
+              <p className="text-base sm:text-lg font-semibold text-gray-800">{location.name}</p>
             </div>
             <button
               onClick={handleChangeLocation}
-              className="text-sm bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+              className="text-xs sm:text-sm bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 whitespace-nowrap"
               aria-label="Change search keywords"
             >
               Change
@@ -81,7 +81,7 @@ const LocationDetector: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg space-y-4">
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-3 sm:p-4 rounded-lg space-y-4">
           <button
             onClick={handleAutoDetect}
             disabled={isLoading}
@@ -102,21 +102,21 @@ const LocationDetector: React.FC = () => {
           </div>
 
           <form onSubmit={handleManualSubmit}>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 id="manual-location"
                 type="text"
                 value={manualLocation}
                 onChange={(e) => setManualLocation(e.target.value)}
                 placeholder="Enter search keywords (e.g., technology, sports)"
-                className="flex-1 border-2 border-gray-300 rounded-lg px-4 py-3 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-20 transition-all"
+                className="flex-1 border-2 border-gray-300 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-20 transition-all"
                 disabled={isLoading}
                 aria-label="Enter search keywords"
               />
               <button
                 type="submit"
                 disabled={isLoading || !manualLocation.trim()}
-                className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md"
+                className="bg-green-600 text-white px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md whitespace-nowrap"
                 aria-label="Set search keywords"
               >
                 Search
