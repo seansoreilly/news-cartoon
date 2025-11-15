@@ -1,0 +1,92 @@
+/* Editorial Newspaper Color Palette */
+
+:root {
+  /* Primary Colors - Newspaper Theme */
+  --color-newsprint: #F8F5F0;        /* Off-white newsprint background */
+  --color-newsprint-light: #FDFCFA;  /* Lighter variant */
+  --color-newsprint-dark: #F0EDE6;   /* Darker variant */
+
+  --color-ink: #1A1A1A;              /* Rich black ink */
+  --color-ink-light: #333333;        /* Lighter ink */
+  --color-ink-faded: #666666;        /* Faded ink */
+  --color-ink-subtle: #999999;       /* Very faded ink */
+
+  --color-editorial-red: #CC2936;    /* Editorial red accent */
+  --color-editorial-dark: #A01E28;   /* Darker red */
+  --color-editorial-light: #E63946;  /* Brighter red */
+
+  --color-press-yellow: #FFE66D;     /* Press/highlight yellow */
+  --color-press-gold: #F4A261;       /* Golden accent */
+  --color-press-amber: #E9C46A;      /* Amber highlight */
+
+  /* Semantic Colors */
+  --color-breaking: var(--color-editorial-red);
+  --color-highlight: var(--color-press-yellow);
+  --color-exclusive: var(--color-press-gold);
+
+  /* Background Colors */
+  --bg-primary: var(--color-newsprint);
+  --bg-secondary: var(--color-newsprint-light);
+  --bg-accent: var(--color-newsprint-dark);
+  --bg-paper: #FFFFFF;
+
+  /* Text Colors */
+  --text-primary: var(--color-ink);
+  --text-secondary: var(--color-ink-light);
+  --text-muted: var(--color-ink-faded);
+  --text-subtle: var(--color-ink-subtle);
+  --text-headline: var(--color-ink);
+  --text-accent: var(--color-editorial-red);
+
+  /* Border Colors */
+  --border-primary: var(--color-ink);
+  --border-secondary: var(--color-ink-faded);
+  --border-subtle: #E0DDD6;
+  --border-accent: var(--color-editorial-red);
+
+  /* Shadow Colors */
+  --shadow-ink: rgba(26, 26, 26, 0.1);
+  --shadow-deep: rgba(26, 26, 26, 0.2);
+  --shadow-soft: rgba(26, 26, 26, 0.05);
+
+  /* Comic Book Colors */
+  --comic-red: #FF0000;
+  --comic-blue: #0033FF;
+  --comic-yellow: #FFCC00;
+  --comic-black: #000000;
+  --comic-white: #FFFFFF;
+
+  /* Special Effects */
+  --halftone-dot: var(--color-ink-faded);
+  --paper-texture: rgba(240, 237, 230, 0.3);
+  --ink-bleed: rgba(26, 26, 26, 0.02);
+}
+
+/* Utility Classes */
+.bg-newsprint { background-color: var(--color-newsprint); }
+.bg-newsprint-light { background-color: var(--color-newsprint-light); }
+.bg-newsprint-dark { background-color: var(--color-newsprint-dark); }
+
+.text-ink { color: var(--color-ink); }
+.text-ink-light { color: var(--color-ink-light); }
+.text-ink-faded { color: var(--color-ink-faded); }
+.text-editorial { color: var(--color-editorial-red); }
+
+.border-ink { border-color: var(--color-ink); }
+.border-editorial { border-color: var(--color-editorial-red); }
+
+/* Gradient Utilities */
+.gradient-newsprint {
+  background: linear-gradient(180deg,
+    var(--color-newsprint-light) 0%,
+    var(--color-newsprint) 50%,
+    var(--color-newsprint-dark) 100%
+  );
+}
+
+.gradient-ink-fade {
+  background: linear-gradient(180deg,
+    var(--color-ink) 0%,
+    var(--color-ink-faded) 100%
+  );
+}

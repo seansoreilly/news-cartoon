@@ -59,46 +59,85 @@ const LocationDetector: React.FC = () => {
   };
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 rounded-lg shadow-md mb-6">
+    <div className="vintage-border p-3 sm:p-4 md:p-6 mb-6" style={{
+      background: 'var(--color-newsprint-light)',
+      position: 'relative'
+    }}>
+      <div className="breaking-news" style={{
+        position: 'absolute',
+        top: '-12px',
+        left: '20px',
+        fontSize: 'var(--text-xs)'
+      }}>
+        BREAKING NEWS SEARCH
+      </div>
+
       <div className="flex items-center gap-2 sm:gap-3 mb-4">
-        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm">1</span>
-        <h2 className="text-lg sm:text-2xl font-bold text-gray-800">Search Keywords</h2>
+        <span className="flex items-center justify-center w-8 h-8" style={{
+          background: 'var(--color-editorial-red)',
+          color: 'var(--color-newsprint-light)',
+          fontFamily: 'var(--font-ui)',
+          fontWeight: 'var(--font-bold)',
+          borderRadius: '50%',
+          border: '2px solid var(--color-ink)'
+        }}>1</span>
+        <h2 className="headline-article" style={{ color: 'var(--color-ink)', margin: 0 }}>
+          NEWS BUREAU DESK
+        </h2>
       </div>
 
       {location ? (
-        <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-3 sm:p-4 rounded-lg border-2 border-green-200">
+        <div className="comic-panel p-3 sm:p-4" style={{ background: 'var(--color-press-yellow)' }}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <p className="text-base sm:text-lg font-semibold text-gray-800">{location.name}</p>
+              <p className="label" style={{ color: 'var(--color-ink)', marginBottom: '0.25rem' }}>
+                CURRENT BEAT:
+              </p>
+              <p className="headline-article" style={{
+                color: 'var(--color-editorial-red)',
+                fontSize: 'var(--text-xl)',
+                margin: 0
+              }}>
+                {location.name}
+              </p>
             </div>
             <button
               onClick={handleChangeLocation}
-              className="text-xs sm:text-sm bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 whitespace-nowrap"
+              className="btn-secondary"
+              style={{
+                padding: '0.5rem 1rem',
+                fontSize: 'var(--text-sm)'
+              }}
               aria-label="Change search keywords"
             >
-              Change
+              CHANGE BEAT
             </button>
           </div>
         </div>
       ) : (
-        <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-3 sm:p-4 rounded-lg space-y-4">
+        <div className="paper-texture p-3 sm:p-4 space-y-4" style={{
+          background: 'var(--gradient-newsprint)',
+          border: '1px dashed var(--border-secondary)'
+        }}>
           <button
             onClick={handleAutoDetect}
             disabled={isLoading}
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 shadow-lg"
+            className="w-full btn-primary"
+            style={{
+              padding: '0.75rem 1.5rem',
+              fontSize: 'var(--text-base)'
+            }}
             aria-label="Detect my location automatically"
             aria-busy={isLoading}
           >
-            {isLoading ? '🔍 Detecting your location...' : '📍 Detect My Location'}
+            {isLoading ? 'SEARCHING WIRE SERVICE...' : '📍 AUTO-DETECT LOCATION'}
           </button>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center" aria-hidden="true">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gradient-to-br from-purple-50 to-pink-50 text-gray-500">OR</span>
-            </div>
+          <div className="newspaper-divider">
+            <span style={{
+              background: 'var(--gradient-newsprint)',
+              fontSize: 'var(--text-xs)'
+            }}>OR</span>
           </div>
 
           <form onSubmit={handleManualSubmit}>
@@ -108,25 +147,48 @@ const LocationDetector: React.FC = () => {
                 type="text"
                 value={manualLocation}
                 onChange={(e) => setManualLocation(e.target.value)}
-                placeholder="Enter search keywords (e.g., technology, sports)"
-                className="flex-1 border-2 border-gray-300 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-20 transition-all"
+                placeholder="Type keywords (e.g., technology, sports, politics)"
+                className="flex-1"
+                style={{
+                  border: '2px solid var(--border-primary)',
+                  borderRadius: '0',
+                  padding: '0.75rem 1rem',
+                  fontSize: 'var(--text-base)',
+                  fontFamily: 'var(--font-ui)',
+                  background: 'var(--bg-paper)',
+                  color: 'var(--text-primary)'
+                }}
                 disabled={isLoading}
                 aria-label="Enter search keywords"
               />
               <button
                 type="submit"
                 disabled={isLoading || !manualLocation.trim()}
-                className="bg-green-600 text-white px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md whitespace-nowrap"
+                className="btn-primary"
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  fontSize: 'var(--text-base)'
+                }}
                 aria-label="Set search keywords"
               >
-                Search
+                SEARCH
               </button>
             </div>
           </form>
 
           {error && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-              <p className="text-red-800 font-medium">⚠️ {error}</p>
+            <div className="speech-bubble" style={{
+              background: 'var(--color-newsprint-light)',
+              borderColor: 'var(--color-editorial-red)',
+              padding: '1rem'
+            }}>
+              <p className="body-text" style={{
+                color: 'var(--color-editorial-red)',
+                margin: 0,
+                fontWeight: 'var(--font-bold)'
+              }}>
+                ⚠️ {error}
+              </p>
             </div>
           )}
         </div>

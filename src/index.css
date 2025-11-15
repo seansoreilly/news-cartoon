@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@import "./styles/typography.css";
+@import "./styles/colors.css";
+@import "./styles/newspaper.css";
 
 @keyframes shimmer {
   0% {
@@ -11,7 +14,7 @@
 
 @layer components {
   .gradient-primary {
-    background: linear-gradient(to right, #8b5cf6, #ec4899);
+    background: var(--gradient-newsprint);
   }
 
   .container-app {
@@ -19,14 +22,25 @@
   }
 
   .btn-primary {
-    @apply px-6 py-2 rounded-lg font-medium transition-all duration-200;
-    background: linear-gradient(to right, #8b5cf6, #ec4899);
-    @apply text-white hover:opacity-90 hover:shadow-lg active:scale-95;
+    @apply px-6 py-2 font-medium transition-all duration-200;
+    background: var(--color-editorial-red);
+    color: var(--color-newsprint-light);
+    border: 2px solid var(--color-editorial-red);
+    font-family: var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    @apply hover:shadow-lg active:scale-95;
   }
 
   .btn-secondary {
-    @apply px-6 py-2 rounded-lg font-medium transition-all duration-200;
-    @apply bg-gray-200 text-gray-900 hover:bg-gray-300 active:scale-95;
+    @apply px-6 py-2 font-medium transition-all duration-200;
+    background: var(--color-newsprint);
+    color: var(--color-ink);
+    border: 2px solid var(--color-ink);
+    font-family: var(--font-ui);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    @apply hover:shadow-md active:scale-95;
   }
 }
 

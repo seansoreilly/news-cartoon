@@ -1,0 +1,119 @@
+/* Editorial Newspaper Typography System */
+
+/* Font Imports */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Crimson+Text:wght@400;600;700&family=Courier+Prime:wght@400;700&display=swap');
+
+/* Typography CSS Variables */
+:root {
+  /* Font Families */
+  --font-headline: 'Playfair Display', Georgia, serif;
+  --font-body: 'Crimson Text', 'Times New Roman', serif;
+  --font-ui: 'Courier Prime', 'Courier New', monospace;
+  --font-sans: system-ui, -apple-system, sans-serif;
+
+  /* Font Sizes - Newspaper Scale */
+  --text-xs: 0.75rem;     /* 12px */
+  --text-sm: 0.875rem;    /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-lg: 1.125rem;    /* 18px */
+  --text-xl: 1.25rem;     /* 20px */
+  --text-2xl: 1.5rem;     /* 24px */
+  --text-3xl: 2rem;       /* 32px */
+  --text-4xl: 2.5rem;     /* 40px */
+  --text-5xl: 3rem;       /* 48px */
+  --text-headline: 4rem;  /* 64px */
+
+  /* Line Heights */
+  --leading-tight: 1.15;
+  --leading-snug: 1.25;
+  --leading-normal: 1.45;
+  --leading-relaxed: 1.65;
+  --leading-loose: 1.85;
+
+  /* Font Weights */
+  --font-normal: 400;
+  --font-medium: 600;
+  --font-bold: 700;
+  --font-black: 900;
+
+  /* Letter Spacing */
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.02em;
+  --tracking-wider: 0.04em;
+  --tracking-widest: 0.08em;
+}
+
+/* Typography Classes */
+.headline-primary {
+  font-family: var(--font-headline);
+  font-weight: var(--font-black);
+  font-size: var(--text-headline);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  text-transform: uppercase;
+}
+
+.headline-secondary {
+  font-family: var(--font-headline);
+  font-weight: var(--font-bold);
+  font-size: var(--text-4xl);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+}
+
+.headline-article {
+  font-family: var(--font-headline);
+  font-weight: var(--font-bold);
+  font-size: var(--text-2xl);
+  line-height: var(--leading-snug);
+}
+
+.body-text {
+  font-family: var(--font-body);
+  font-weight: var(--font-normal);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+}
+
+.body-large {
+  font-family: var(--font-body);
+  font-weight: var(--font-normal);
+  font-size: var(--text-lg);
+  line-height: var(--leading-relaxed);
+}
+
+.byline {
+  font-family: var(--font-ui);
+  font-weight: var(--font-normal);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.label {
+  font-family: var(--font-ui);
+  font-weight: var(--font-bold);
+  font-size: var(--text-xs);
+  line-height: var(--leading-normal);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+}
+
+.date-stamp {
+  font-family: var(--font-ui);
+  font-weight: var(--font-normal);
+  font-size: var(--text-sm);
+  line-height: var(--leading-tight);
+}
+
+/* Mobile Responsive Typography */
+@media (max-width: 640px) {
+  :root {
+    --text-headline: 2.5rem;
+    --text-4xl: 2rem;
+    --text-3xl: 1.75rem;
+    --text-2xl: 1.25rem;
+  }
+}

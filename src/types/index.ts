@@ -56,6 +56,8 @@ export interface UserPreferences {
   theme: 'light' | 'dark' | 'auto';
   sortBy: 'popularity' | 'recency';
   autoGenerate: boolean;
+  autoRefresh: boolean;
+  newsCount: number;
 }
 
 // Rate limiting type
