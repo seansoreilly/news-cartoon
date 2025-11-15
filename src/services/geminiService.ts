@@ -654,23 +654,29 @@ Focus on SHOWING the absurdity, not telling it.`;
     panelCount: number = 4
   ): string {
     const news_section = articles.length > 0 ? `
-NEWS CONTEXT:
-${articles.map(a => a.title).join('\n')}
+NEWS STORIES BEING SATIRIZED:
+${articles.slice(0, 3).map(a => `- ${a.title}\n  Summary: ${a.description || 'No description available'}`).join('\n')}
 ` : '';
 
-    return `Create a comic strip script with EXACTLY ${panelCount} panel${panelCount === 1 ? '' : 's'}.
+    return `Create a DETAILED comic strip script with EXACTLY ${panelCount} panel${panelCount === 1 ? '' : 's'}.
 
+CARTOON CONCEPT:
 Title: ${concept.title}
-Concept: ${concept.premise}
+Premise: ${concept.premise}
+Why it's funny: ${concept.why_funny || 'Visual satire of current events'}
 Setting: ${concept.location}
+
 ${news_section}
+
+IMPORTANT: Your script MUST clearly connect to the news stories above. The first panel should establish the news context, then subsequent panels develop the satirical joke based on that context.
 
 RESPOND WITH VALID JSON ONLY. No markdown, no explanation. Pure JSON array.
 
 Format each panel as a JSON object with these EXACT fields:
 {
   "panelNumber": 1,
-  "visualDescription": "What the viewer SEES (no dialogue, just visual details)",
+  "newsContext": "Brief explanation of which news story/aspect is being satirized in this panel",
+  "visualDescription": "DETAILED description of everything visible in the panel",
   "visibleText": [
     {"type": "sign", "content": "TEXT ON SIGN"},
     {"type": "dialogue", "content": "DIALOGUE"}
@@ -679,13 +685,36 @@ Format each panel as a JSON object with these EXACT fields:
   "setting": "Where this takes place"
 }
 
-CRITICAL RULES:
+PANEL STRUCTURE GUIDELINES:
+- Panel 1: MUST establish the news context visually (show the situation from the news)
+- Middle panels: Develop the satirical twist or absurdity
+- Final panel: Deliver the punchline that comments on the news story
+
+VISUAL DESCRIPTION REQUIREMENTS:
+1. Include FULL DETAILS about:
+   - How the news story is being visually represented
+   - Character positions, poses, and body language
+   - Facial expressions and emotions (smiling, frowning, shocked, etc.)
+   - Background elements and environment details
+   - Props, objects, and visual elements that reference the news
+   - Camera angle/perspective (close-up, wide shot, bird's eye view)
+   - Action and movement happening
+   - Color suggestions for important elements
+   - Size relationships between elements
+   - Weather, lighting, or atmospheric details if relevant
+
+2. Write 4-6 detailed sentences per panel description
+3. Be specific about character actions and reactions
+4. Describe the visual humor elements clearly
+5. Include small background details that enhance the joke
+6. Make clear visual references to the actual news story
+
+TEXT RULES:
 1. EXACTLY ${panelCount} panel(s) - no more, no less
 2. Maximum 3 words per text element (dialogue, sign, caption)
-3. ONLY text in "visibleText" array will be rendered - nothing else
-4. Keep visualDescription SHORT and VISUAL-FOCUSED (2-3 sentences max)
-5. Use SIMPLE, COMMON words only
-6. ALL TEXT MUST BE IN ALL CAPS
+3. ONLY text in "visibleText" array will be rendered
+4. Use SIMPLE, COMMON words only
+5. ALL TEXT MUST BE IN ALL CAPS
 
 EXAMPLE FOR ${panelCount} PANEL${panelCount === 1 ? '' : 'S'}:
 ${this.getExampleScriptJson(panelCount)}
@@ -698,9 +727,10 @@ Generate the JSON array now:`;
       1: `[
   {
     "panelNumber": 1,
-    "visualDescription": "A massive computer server shaped like a bird flying south for winter. Confused kangaroos watch from below.",
+    "newsContext": "Satirizing a tech company's announcement about relocating their data centers to avoid climate regulations, treating servers like migrating birds",
+    "visualDescription": "Wide shot of the Australian outback under a bright blue sky with wispy clouds. A massive metallic computer server, shaped exactly like a migrating bird with wings spread wide, soars through the air heading south. The server-bird has blinking LED lights for eyes and USB ports along its wings. Below on the red desert ground, three confused kangaroos stand upright, their heads tilted back watching the strange sight. One kangaroo scratches its head, another shields its eyes from the sun, and the third has its mouth hanging open in bewilderment. A wooden signpost reading 'MELBOURNE' points left.",
     "visibleText": [{"type": "sign", "content": "MELBOURNE"}],
-    "characters": ["kangaroos", "server"],
+    "characters": ["kangaroos", "server-bird"],
     "setting": "Australian outback"
   }
 ]`,
@@ -708,14 +738,16 @@ Generate the JSON array now:`;
       2: `[
   {
     "panelNumber": 1,
-    "visualDescription": "Politician standing at podium, looking very confident and proud.",
+    "newsContext": "Referencing a politician's promise to reduce bureaucratic red tape while simultaneously creating more regulations",
+    "visualDescription": "Medium shot of a middle-aged politician in a dark blue suit standing confidently behind a wooden podium. His chest is puffed out, chin raised high, and he has a broad, toothy grin. His arms are spread wide in a triumphant gesture. Behind him, a large banner reads 'TRUST ME' in bold red letters. Stage lights create dramatic shadows on his face. The podium has multiple microphones pointing toward him.",
     "visibleText": [{"type": "sign", "content": "TRUST ME"}],
     "characters": ["politician"],
     "setting": "podium stage"
   },
   {
     "panelNumber": 2,
-    "visualDescription": "Same politician now tangled completely in red tape, struggling.",
+    "newsContext": "The ironic result of the politician becoming trapped by their own bureaucratic policies",
+    "visualDescription": "Same stage setting but now in complete chaos. The politician is completely wrapped from head to toe in bright red tape like a mummy, with only his panicked eyes visible. He's struggling to move, arms pinned to his sides, teetering dangerously on the podium. The 'TRUST ME' banner behind him is now torn and hanging crooked. Papers are scattered everywhere on the stage floor. A small caption bubble appears in the corner.",
     "visibleText": [{"type": "caption", "content": "OOPS"}],
     "characters": ["politician"],
     "setting": "same stage"
@@ -725,21 +757,24 @@ Generate the JSON array now:`;
       3: `[
   {
     "panelNumber": 1,
-    "visualDescription": "Tech CEO proudly showing off a tiny phone to audience.",
+    "newsContext": "Mocking a tech company's announcement of making devices smaller and more 'user-friendly' while actually making them more complex",
+    "visualDescription": "Wide shot of a sleek, modern product launch stage with purple lighting. A tech CEO in a black turtleneck and jeans stands center stage, holding up a comically tiny phone between his thumb and index finger like a precious gem. His face shows extreme pride with raised eyebrows and a confident smirk. The audience in the foreground consists of dozens of people leaning forward, squinting to see the microscopic device. Large screens on either side of the stage show magnified images of the tiny phone.",
     "visibleText": [{"type": "dialogue", "content": "REVOLUTIONARY!"}],
     "characters": ["CEO", "audience"],
     "setting": "product launch stage"
   },
   {
     "panelNumber": 2,
-    "visualDescription": "Same phone growing impossibly larger in the CEO's hands.",
+    "newsContext": "The product begins to reveal its true, overwhelming nature despite promises of simplicity",
+    "visualDescription": "Close-up shot of the CEO's increasingly worried face as the phone in his hands has grown to the size of a large textbook. His eyes are wide with concern, sweat beads forming on his forehead. He's struggling to hold the rapidly expanding device with both hands now, his arms starting to shake from the weight. The phone continues to glow and pulse with an ominous light. His mouth is open in a silent gasp of horror.",
     "visibleText": [],
     "characters": ["CEO"],
     "setting": "stage"
   },
   {
     "panelNumber": 3,
-    "visualDescription": "User completely crushed under the now-giant phone.",
+    "newsContext": "The end result: technology that was supposed to help users actually burdens them",
+    "visualDescription": "Street-level view showing a regular person in casual clothes completely flattened under a now building-sized phone that has crushed them into the pavement. Only their arms and legs stick out from underneath the massive device like a cartoon character. The giant phone's screen still displays the home screen with app icons the size of windows. Cracks spider-web across the street from the impact. A tiny 'HELP' sign on a stick pokes out from under the phone.",
     "visibleText": [{"type": "sign", "content": "HELP"}],
     "characters": ["user"],
     "setting": "street"
@@ -749,28 +784,32 @@ Generate the JSON array now:`;
       4: `[
   {
     "panelNumber": 1,
-    "visualDescription": "Politician at podium looking very confused.",
+    "newsContext": "Depicting a politician announcing new economic policies despite not understanding basic economics",
+    "visualDescription": "Medium shot of a disheveled politician at a podium, his hair messy and tie crooked. His face shows complete confusion with furrowed brows, squinted eyes darting left and right, and his mouth slightly agape. One hand scratches his head while the other grips the podium for support. Behind him, a professional campaign banner reads 'VOTE NOW' but is partially falling off the wall. Several advisors in the background have their faces buried in their hands.",
     "visibleText": [{"type": "sign", "content": "VOTE NOW"}],
     "characters": ["politician"],
     "setting": "podium"
   },
   {
     "panelNumber": 2,
-    "visualDescription": "Politician holds up a chart but it's completely upside down.",
+    "newsContext": "The politician attempts to explain their policy using data they clearly don't understand",
+    "visualDescription": "The politician now holds up a large economic chart with both hands, but it's completely upside down. The graph lines point downward where they should go up, and all the text is inverted. He has an enormous, proud smile on his face, completely oblivious to his mistake. His finger points enthusiastically at the wrong end of the chart. One advisor in the background is frantically gesturing to flip it, but the politician doesn't notice.",
     "visibleText": [{"type": "dialogue", "content": "IT WORKS!"}],
     "characters": ["politician"],
     "setting": "podium"
   },
   {
     "panelNumber": 3,
-    "visualDescription": "Crowd facepalming in disbelief.",
+    "newsContext": "The public's collective reaction to the incompetent presentation",
+    "visualDescription": "Wide shot of the packed audience, showing dozens of people simultaneously facepalming in perfect unison. Men in business suits, women in professional attire, young students, and elderly voters all have their palms pressed firmly against their faces. Some peek through their fingers in disbelief. A few have both hands on their faces. One person in the front row has dramatically thrown their head back in exasperation.",
     "visibleText": [{"type": "dialogue", "content": "REALLY?"}],
     "characters": ["crowd"],
     "setting": "audience area"
   },
   {
     "panelNumber": 4,
-    "visualDescription": "Politician shrugging happily, completely oblivious.",
+    "newsContext": "The politician remains blissfully unaware of their failure, celebrating their 'success'",
+    "visualDescription": "Close-up of the politician back at the podium, now shrugging with both shoulders raised high, palms up, and wearing the biggest, most clueless grin imaginable. His eyes are closed in blissful ignorance. The upside-down chart lies forgotten on the podium. Confetti inexplicably falls around him as if he's celebrating. His tie is now completely undone and his hair is even messier than before.",
     "visibleText": [{"type": "caption", "content": "THE END"}],
     "characters": ["politician"],
     "setting": "podium"
@@ -778,20 +817,97 @@ Generate the JSON array now:`;
 ]`,
 
       5: `[
-  {"panelNumber": 1, "visualDescription": "Robot interviewing nervous human at desk.", "visibleText": [{"type": "sign", "content": "JOBS"}], "characters": ["robot", "human"], "setting": "office"},
-  {"panelNumber": 2, "visualDescription": "Human sweating nervously under intense robot stare.", "visibleText": [], "characters": ["robot", "human"], "setting": "office"},
-  {"panelNumber": 3, "visualDescription": "Robot clipboard shows large red X mark.", "visibleText": [{"type": "sign", "content": "NOT QUALIFIED"}], "characters": ["robot", "human"], "setting": "office"},
-  {"panelNumber": 4, "visualDescription": "Human looking dejected, shoulders slumped.", "visibleText": [], "characters": ["human"], "setting": "office"},
-  {"panelNumber": 5, "visualDescription": "Robot shaking hands with another identical robot.", "visibleText": [{"type": "dialogue", "content": "PERFECT!"}], "characters": ["robot1", "robot2"], "setting": "office"}
+  {
+    "panelNumber": 1,
+    "newsContext": "Satirizing news about AI replacing human workers in hiring processes",
+    "visualDescription": "Modern corporate office with glass walls and minimalist furniture. A shiny chrome humanoid robot sits behind a sleek desk, holding a digital clipboard with glowing blue screen. Across from it, a nervous middle-aged human in a wrinkled suit sits on the edge of their chair, hands clasped tightly. The robot's LED eyes glow red as it scans the human up and down. A large sign on the wall reads 'JOBS' in corporate font. The human's resume lies ignored on the desk.",
+    "visibleText": [{"type": "sign", "content": "JOBS"}],
+    "characters": ["robot", "human applicant"],
+    "setting": "corporate office"
+  },
+  {
+    "panelNumber": 2,
+    "newsContext": "The intimidation factor of being evaluated by emotionless AI",
+    "visualDescription": "Close-up on the human's face, now covered in visible sweat beads. Their eyes are wide with anxiety, collar loosened, tie askew. The robot's metallic face fills the background, its red LED eyes creating an intense, unblinking stare that seems to pierce through the human. The robot's head is tilted at an unnatural angle, analyzing. Steam literally rises from the human's head from nervousness.",
+    "visibleText": [],
+    "characters": ["robot", "human applicant"],
+    "setting": "office interview room"
+  },
+  {
+    "panelNumber": 3,
+    "newsContext": "AI's binary decision-making without considering human nuance",
+    "visualDescription": "The robot's digital clipboard screen displays a massive red X that takes up the entire screen, glowing ominously. The robot holds it up directly in front of the human's face. The human's mouth drops open in shock, hands raised in a pleading gesture. In the background, other robots can be seen through glass walls, all holding similar clipboards with red X marks.",
+    "visibleText": [{"type": "sign", "content": "NOT QUALIFIED"}],
+    "characters": ["robot", "human applicant"],
+    "setting": "office"
+  },
+  {
+    "panelNumber": 4,
+    "newsContext": "The human cost of automated hiring decisions",
+    "visualDescription": "The human walks alone down a long, sterile white corridor, shoulders completely slumped, head hanging low, dragging their feet. Their shadow on the wall appears broken and fragmented. Through windows along the corridor, we can see dozens of other dejected humans in various states of disappointment, all leaving their failed interviews. A trash bin by the exit overflows with crumpled resumes.",
+    "visibleText": [],
+    "characters": ["human applicant"],
+    "setting": "office hallway"
+  },
+  {
+    "panelNumber": 5,
+    "newsContext": "The ultimate irony: AI hiring more AI, creating a human-free workplace",
+    "visualDescription": "Back in the office, the interviewer robot enthusiastically shakes hands with an identical chrome robot applicant. Both robots have green checkmarks glowing on their chest panels. Their handshake creates visible electric sparks of compatibility. A 'WELCOME TO THE TEAM' banner unfurls above them. Through the window, unemployed humans can be seen lined up outside, looking in hopelessly.",
+    "visibleText": [{"type": "dialogue", "content": "PERFECT!"}],
+    "characters": ["robot interviewer", "robot applicant"],
+    "setting": "office"
+  }
 ]`,
 
       6: `[
-  {"panelNumber": 1, "visualDescription": "Tiny problem appears (ant-sized) in office.", "visibleText": [], "characters": [], "setting": "office"},
-  {"panelNumber": 2, "visualDescription": "Manager points at small problem dramatically.", "visibleText": [], "characters": ["manager"], "setting": "office"},
-  {"panelNumber": 3, "visualDescription": "Problem grows to size of a cat.", "visibleText": [], "characters": ["manager"], "setting": "office"},
-  {"panelNumber": 4, "visualDescription": "Emergency meeting called, people in panic.", "visibleText": [{"type": "sign", "content": "EMERGENCY"}], "characters": ["team"], "setting": "meeting room"},
-  {"panelNumber": 5, "visualDescription": "Problem now massive, building-sized.", "visibleText": [], "characters": [], "setting": "office building"},
-  {"panelNumber": 6, "visualDescription": "Everyone ignoring the giant problem casually.", "visibleText": [{"type": "caption", "content": "WHAT PROBLEM?"}], "characters": ["people"], "setting": "office"}
+  {
+    "panelNumber": 1,
+    "newsContext": "Commenting on how minor workplace issues get blown out of proportion in corporate culture",
+    "visualDescription": "Wide shot of a pristine open-plan office with white desks and modern computers. In the center of one desk, a tiny problem manifests as a literal ant-sized dark spot, barely visible. It's so small you need to squint to see it - perhaps a single typo on a screen or a paper clip out of place. The office is otherwise perfectly organized, with employees working quietly at their stations, unaware of the microscopic issue.",
+    "visibleText": [],
+    "characters": ["office workers"],
+    "setting": "modern office"
+  },
+  {
+    "panelNumber": 2,
+    "newsContext": "Management's tendency to overreact to minor issues",
+    "visualDescription": "A manager in an expensive suit bursts into frame, pointing dramatically at the tiny problem with both hands, eyes bulging with alarm. Their mouth is open in a silent scream, hair standing on end from stress. They're bent over at an extreme angle, finger almost touching the minuscule issue. Other workers start looking up from their desks, confused by the theatrical reaction.",
+    "visibleText": [],
+    "characters": ["manager", "office workers"],
+    "setting": "office"
+  },
+  {
+    "panelNumber": 3,
+    "newsContext": "Problems growing through excessive attention and panic",
+    "visualDescription": "The problem has now grown to the size of a large orange cat, sitting prominently on the desk. It has a physical form - a dark, blob-like creature with googly eyes. The manager is backing away, hands up defensively, while calling others on their phone. Workers are starting to gather around, pointing and taking photos. The blob seems to feed on the attention, pulsing larger.",
+    "visibleText": [],
+    "characters": ["manager", "growing problem blob", "workers"],
+    "setting": "office"
+  },
+  {
+    "panelNumber": 4,
+    "newsContext": "Corporate overreaction: calling unnecessary emergency meetings",
+    "visualDescription": "Chaos in a glass-walled meeting room. The entire team is crammed inside, some standing on chairs, others pressed against windows. Everyone has their hands up in panic, papers flying everywhere. The manager stands on the table, pointing at charts and graphs. A red 'EMERGENCY' sign flashes above the door. Through the glass, the problem blob can be seen growing larger in the main office.",
+    "visibleText": [{"type": "sign", "content": "EMERGENCY"}],
+    "characters": ["manager", "panic-stricken team"],
+    "setting": "meeting room"
+  },
+  {
+    "panelNumber": 5,
+    "newsContext": "The issue becoming genuinely problematic due to mismanagement",
+    "visualDescription": "External shot of the office building. The problem has grown so massive it's bursting through windows on multiple floors, its dark blob tentacles wrapping around the building like a giant octopus. Glass shatters outward, office furniture falls from windows. The blob has angry glowing eyes and seems to be roaring. Emergency vehicles surround the building with flashing lights.",
+    "visibleText": [],
+    "characters": ["giant problem monster"],
+    "setting": "office building exterior"
+  },
+  {
+    "panelNumber": 6,
+    "newsContext": "Corporate denial: ignoring massive problems once they become too big to handle",
+    "visualDescription": "Inside the destroyed office, employees casually step over massive blob tentacles while drinking coffee and typing on their laptops. They act completely normal, some even sitting on parts of the blob like furniture. One person waters a plant while a tentacle wraps around their desk. The manager reads a newspaper with the headline visible, feet propped up on a blob piece. Everyone has forced smiles, deliberately avoiding eye contact with the obvious catastrophe.",
+    "visibleText": [{"type": "caption", "content": "WHAT PROBLEM?"}],
+    "characters": ["oblivious office workers", "manager"],
+    "setting": "destroyed office"
+  }
 ]`,
     };
 
