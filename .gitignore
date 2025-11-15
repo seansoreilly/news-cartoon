@@ -49,10 +49,17 @@ coverage/
 memories.json
 
 # Task Master (commented out for version control)
-# tasks.json
-# tasks/
 
 # Temporary files
 *.tmp
 *.temp
 .cache/ 
+
+logs
+# Dependency directories
+.idea
+.vscode
+
+# Task files
+# tasks.json
+# tasks/ 
