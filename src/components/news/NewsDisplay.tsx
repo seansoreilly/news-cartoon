@@ -54,6 +54,35 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, selected, onSelect }) => {
     cleanedSummary.length > 10 &&
     !isTitleDuplicate(article.title, cleanedSummary);
 
+  // Render authority badge for top sources
+  const renderAuthorityBadge = () => {
+    if (!article.isAuthoritative && !article.rankPosition) return null;
+
+    if (article.isAuthoritative) {
+      return (
+        <div className="flex items-center gap-1">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+            <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            Top Source
+          </span>
+          {article.rankPosition && (
+            <span className="text-xs text-gray-500">
+              #{article.rankPosition}
+            </span>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <span className="text-xs text-gray-500">
+        #{article.rankPosition}
+      </span>
+    );
+  };
+
   // Determine what to show in the humor score area
   const renderHumorScore = () => {
     if (article.summaryError) {
@@ -128,7 +157,10 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, selected, onSelect }) => {
             </p>
           ) : null}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-2 gap-1 sm:gap-2">
-            <p className="text-xs text-gray-500">Source: {article.source?.name}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-gray-500">Source: {article.source?.name}</p>
+              {renderAuthorityBadge()}
+            </div>
             <a
               href={article.url}
               target="_blank"

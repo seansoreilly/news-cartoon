@@ -12,6 +12,10 @@ const CACHE_DURATION_MS = 5 * 60 * 1000;
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
 
+// Number of top results to consider as "authoritative"
+// Google News ranks by authority/relevance, so first results are most trustworthy
+const AUTHORITATIVE_RESULTS_LIMIT = 5;
+
 class NewsService {
   private cache: CacheStore = {};
   private baseUrl = import.meta.env.PROD ? '/api/news' : 'http://localhost:3001/api/news';
@@ -22,26 +26,33 @@ class NewsService {
 
   async fetchNewsByLocation(
     location: string,
-    limit = parseInt(import.meta.env.VITE_DEFAULT_NEWS_LIMIT || '10')
+    limit = parseInt(import.meta.env.VITE_DEFAULT_NEWS_LIMIT || '10'),
+    onlyAuthoritative = true
   ): Promise<NewsResponse> {
     if (!location || location.trim() === '') {
       throw createNewsError('Location cannot be empty');
     }
 
     try {
+      // Fetch more results to ensure we get enough authoritative sources
+      const fetchLimit = onlyAuthoritative ? Math.max(limit * 2, 20) : limit;
+
       const articles = await this.fetchWithCache(
-        `location-${location}-limit-${limit}`,
+        `location-${location}-limit-${limit}-auth-${onlyAuthoritative}`,
         async () => {
           const params = new URLSearchParams({
             q: location,
-            max: limit.toString(),
-            sortby: 'publishedAt',
+            max: fetchLimit.toString(),
+            scoring: 'r', // Use relevance/authority ranking
           });
 
           const queryString = params.toString();
-          return this.fetchWithRetry(
+          const results = await this.fetchWithRetry(
             `${this.baseUrl}/search?${queryString}`
           );
+
+          // Add authority ranking based on position
+          return this.addAuthorityRanking(results, limit, onlyAuthoritative);
         }
       );
 
@@ -62,26 +73,33 @@ class NewsService {
 
   async fetchNewsByKeyword(
     keyword: string,
-    limit = parseInt(import.meta.env.VITE_DEFAULT_NEWS_LIMIT || '10')
+    limit = parseInt(import.meta.env.VITE_DEFAULT_NEWS_LIMIT || '10'),
+    onlyAuthoritative = true
   ): Promise<NewsResponse> {
     if (!keyword || keyword.trim() === '') {
       throw createNewsError('Keyword cannot be empty');
     }
 
     try {
+      // Fetch more results to ensure we get enough authoritative sources
+      const fetchLimit = onlyAuthoritative ? Math.max(limit * 2, 20) : limit;
+
       const articles = await this.fetchWithCache(
-        `keyword-${keyword}-limit-${limit}`,
+        `keyword-${keyword}-limit-${limit}-auth-${onlyAuthoritative}`,
         async () => {
           const params = new URLSearchParams({
             q: keyword,
-            max: limit.toString(),
-            sortby: 'publishedAt',
+            max: fetchLimit.toString(),
+            scoring: 'r', // Use relevance/authority ranking
           });
 
           const queryString = params.toString();
-          return this.fetchWithRetry(
+          const results = await this.fetchWithRetry(
             `${this.baseUrl}/search?${queryString}`
           );
+
+          // Add authority ranking based on position
+          return this.addAuthorityRanking(results, limit, onlyAuthoritative);
         }
       );
 
@@ -238,6 +256,52 @@ class NewsService {
 
   private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Add authority ranking to articles based on their position in Google News results.
+   * Google News orders results by relevance/authority, so position indicates trustworthiness.
+   */
+  private addAuthorityRanking(
+    articles: NewsArticle[],
+    limit: number,
+    onlyAuthoritative: boolean
+  ): NewsArticle[] {
+    // Add authority score based on position (1st = highest authority)
+    const rankedArticles = articles.map((article, index) => ({
+      ...article,
+      authorityScore: this.calculateAuthorityScore(index + 1),
+      isAuthoritative: index < AUTHORITATIVE_RESULTS_LIMIT,
+      rankPosition: index + 1,
+    }));
+
+    if (onlyAuthoritative) {
+      // Return only the top authoritative sources
+      return rankedArticles
+        .filter(article => article.isAuthoritative)
+        .slice(0, Math.min(limit, AUTHORITATIVE_RESULTS_LIMIT));
+    }
+
+    // Return all articles up to limit, but with authority indicators
+    return rankedArticles.slice(0, limit);
+  }
+
+  /**
+   * Calculate authority score based on position in results.
+   * Higher position = higher score (exponential decay).
+   */
+  private calculateAuthorityScore(position: number): number {
+    // Score from 100 (first result) to 0 (last result) with exponential decay
+    const maxScore = 100;
+    const decayFactor = 0.8; // How quickly authority drops off
+
+    if (position === 1) return maxScore;
+
+    // Exponential decay based on position
+    const score = maxScore * Math.pow(decayFactor, position - 1);
+
+    // Ensure score doesn't go below 10 for any result in the feed
+    return Math.max(Math.round(score), 10);
   }
 }
 

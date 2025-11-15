@@ -868,5 +868,352 @@
       "updated": "2025-11-15T13:50:14.325Z",
       "description": "Complete UI redesign implementing Editorial Newspaper aesthetic with comic elements"
     }
+  },
+  "news-source-filtering": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Design and Implement a Location-to-News-Source Data Structure",
+        "description": "Develop a data structure that leverages Google News's built-in authority ranking to identify top mainstream news sources for major world cities, storing source names, domain names, and authority rankings for filtering and display.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "details": "1. Implement a strategy that leverages Google News RSS's built-in authority ranking (using the 'scoring=r' parameter) which already prioritizes authoritative sources for each location.\n\n2. For each city (Melbourne, Sydney, Brisbane, Perth, Adelaide, Canberra, New York, Los Angeles, Chicago, San Francisco, London, Manchester, and other major world cities), capture the first 5-10 Google News results as these represent the most authoritative sources for that location.\n\n3. For each news source, collect the display name (e.g., 'The Age'), the canonical domain name (e.g., 'theage.com.au'), and add a position indicator (1st = most authoritative, 2nd = second most authoritative, etc.) based on Google News ranking.\n\n4. Design the data structure for efficient lookup and filtering. Recommended best practice is to use a nested dictionary or map, where the top-level key is the city name (normalized), and the value is a list of objects containing 'sourceName', 'domain', and 'authorityRank'. For example:\n\n```json\n{\n  \"Melbourne\": [\n    { \"sourceName\": \"The Age\", \"domain\": \"theage.com.au\", \"authorityRank\": 1 },\n    ...\n  ],\n  ...\n}\n```\n\n5. Store the data in a format suitable for both backend (e.g., JSON, YAML) and frontend consumption. Ensure the structure is extensible for future cities or sources.\n\n6. Document the data schema and provide clear guidelines for updating or extending the list. Consider internationalization and encoding issues for non-English city/source names.\n\n7. Include unit tests or validation scripts to check for missing fields, duplicate domains, and correct mapping.",
+        "testStrategy": "1. Verify that each specified city is present in the data structure and mapped to at least 5 authoritative news sources.\n\n2. For each source, confirm that 'sourceName', 'domain', and 'authorityRank' fields are present, non-empty, and correctly formatted.\n\n3. Run automated scripts to check for duplicate domains within and across cities.\n\n4. Validate that the sources are properly ranked according to Google News results (1st position = highest authority).\n\n5. Test that the data structure can be loaded and queried efficiently in both backend and frontend environments.\n\n6. Verify the structure supports filtering by authority rank (e.g., only showing top 3 sources).\n\n7. Test extensibility by adding a new city and verifying the update process is straightforward and error-free.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Google News RSS Authority Ranking Strategy",
+            "description": "Develop a method to query Google News RSS with the 'scoring=r' parameter for each major city to obtain the most authoritative news sources based on Google's built-in ranking algorithm.",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Create a script that queries Google News RSS feeds for each target city (Melbourne, Sydney, Brisbane, Perth, Adelaide, Canberra, New York, Los Angeles, Chicago, San Francisco, London, Manchester, and other major world cities) using the 'scoring=r' parameter. Extract the first 5-10 results for each location as these represent the most authoritative sources according to Google's algorithm.",
+            "testStrategy": "Verify that the script successfully retrieves Google News RSS results for each city, and that the 'scoring=r' parameter is correctly applied to prioritize authoritative sources."
+          },
+          {
+            "id": 2,
+            "title": "Extract and Normalize News Source Data with Authority Rankings",
+            "description": "For each news source identified from Google News results, extract the display name, canonical domain, and add an authority rank based on its position in the Google News results.",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "Process the Google News results to extract source information. For each result, capture the 'sourceName' (e.g., 'The Age'), the 'domain' (e.g., 'theage.com.au'), and assign an 'authorityRank' based on its position in the results (1st position = rank 1, 2nd position = rank 2, etc.). Normalize domains to lowercase and ensure all fields are properly formatted.",
+            "testStrategy": "Run validation scripts to check that each source has a valid name, domain, and authority rank. Verify that authority ranks correctly reflect the order of sources in Google News results."
+          },
+          {
+            "id": 3,
+            "title": "Design and Implement the Location-to-News-Source Data Structure",
+            "description": "Design a data structure for efficient lookup and filtering, mapping normalized city names to lists of news source objects containing 'sourceName', 'domain', and 'authorityRank'. Implement the structure in a format suitable for backend and frontend use.",
+            "status": "pending",
+            "dependencies": [
+              2
+            ],
+            "details": "Use a nested dictionary or map, with the top-level key as the normalized city name and the value as a list of objects. Each object should contain 'sourceName', 'domain', and 'authorityRank' fields. Ensure the structure is extensible for future cities or sources and supports both JSON and YAML serialization.",
+            "testStrategy": "Test lookup and filtering performance, and verify that the structure supports addition of new cities and sources without breaking existing mappings. Test filtering by authority rank."
+          },
+          {
+            "id": 4,
+            "title": "Document Data Schema and Update Guidelines",
+            "description": "Create comprehensive documentation for the data schema, including field definitions, normalization rules, and clear guidelines for updating or extending the list. Address internationalization and encoding for non-English names.",
+            "status": "pending",
+            "dependencies": [
+              3
+            ],
+            "details": "Provide schema definitions, example entries, and step-by-step instructions for adding new cities or sources. Include notes on handling non-English characters and encoding issues. Document the Google News RSS authority ranking approach and how to refresh the data periodically.",
+            "testStrategy": "Review documentation for completeness and clarity. Have a third party follow the guidelines to add a new city and verify correctness."
+          },
+          {
+            "id": 5,
+            "title": "Implement Automated Validation and Testing Scripts",
+            "description": "Develop unit tests and validation scripts to check for missing fields, duplicate domains, correct mappings, and proper authority rankings. Include tests for filtering by authority rank.",
+            "status": "pending",
+            "dependencies": [
+              3
+            ],
+            "details": "Scripts should validate the integrity of the data structure, ensure all required fields are present and correctly formatted, and verify that authority rankings are consistent with Google News result positions. Test filtering capabilities to ensure users can limit results by authority rank (e.g., only top 3 sources).",
+            "testStrategy": "Achieve >90% test coverage for validation logic. Run tests on the full data set and confirm that all errors and inconsistencies are flagged and can be resolved efficiently."
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Implement News Source Filtering and Ranking Logic in newsService.ts",
+        "description": "Develop robust filtering and ranking logic in newsService.ts to process news articles based on a configurable mainstream sources mapping, supporting both strict and soft filtering modes.",
+        "details": "1. **Domain Extraction**: Implement a utility method to reliably extract the canonical domain from article URLs, handling common edge cases (e.g., subdomains, tracking parameters, internationalized domains). Use established libraries (such as the 'tldts' or 'psl' npm packages) for accuracy and maintainability.\n\n2. **Mainstream Source Matching**: Integrate the city-to-mainstream-sources mapping (from Task 1) and implement a method to check if an article's domain matches any whitelisted mainstream domains for the relevant city. Ensure case-insensitive and normalized matching.\n\n3. **Filtering Modes**:\n   - **Strict Filtering**: Only include articles from whitelisted mainstream sources.\n   - **Soft Ranking**: Return all articles, but rank those from mainstream sources higher. Implement a ranking function that prioritizes mainstream sources, optionally using a secondary sort by source prominence (e.g., order in the mapping or external traffic rank if available).\n   - Add a configuration option (e.g., in a config file or environment variable) to toggle between strict and soft modes at runtime.\n\n4. **No Mainstream Sources Handling**: If no articles from mainstream sources are found, return a fallback list of non-mainstream articles, clearly flagged in the response. Optionally, log or track these cases for analytics.\n\n5. **Extensibility and Testing**: Structure the code for easy extension (e.g., supporting additional filtering criteria or ranking signals in the future). Write clear JSDoc comments and ensure all methods are unit-testable.\n\n6. **Best Practices**: Follow SOLID principles, keep filtering logic isolated from data-fetching, and use dependency injection for configuration and source mappings. Ensure all code is TypeScript-typed for safety and maintainability.",
+        "testStrategy": "1. **Unit Tests**: Write comprehensive unit tests for domain extraction, including edge cases (e.g., www prefixes, subdomains, international domains).\n\n2. **Source Matching**: Test that articles from whitelisted domains are correctly identified as mainstream, and that non-mainstream articles are excluded in strict mode.\n\n3. **Ranking Logic**: In soft mode, verify that mainstream articles are always ranked above non-mainstream ones, and that secondary ranking (if implemented) is correct.\n\n4. **Configuration Toggle**: Test that switching between strict and soft modes via configuration produces the expected filtering behavior without requiring a service restart.\n\n5. **No Mainstream Case**: Simulate scenarios where no mainstream articles are present and verify that fallback logic is triggered and flagged appropriately.\n\n6. **Integration**: Mock the city-to-source mapping and test end-to-end filtering/ranking for a variety of city/article combinations.\n\n7. **Type Safety**: Ensure TypeScript type checks pass and that all public methods are properly documented.",
+        "status": "pending",
+        "dependencies": [
+          1
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Canonical Domain Extraction Utility",
+            "description": "Develop a robust utility function to extract the canonical domain from article URLs, handling subdomains, tracking parameters, and internationalized domains using established libraries such as 'tldts' or 'psl'.",
+            "dependencies": [],
+            "details": "Ensure the utility normalizes domains (e.g., strips 'www', handles unicode domains) and is resilient to malformed or atypical URLs. Integrate comprehensive error handling and document edge cases.",
+            "status": "pending",
+            "testStrategy": "Write unit tests covering standard, subdomain, internationalized, and malformed URLs. Verify normalization and extraction accuracy for all edge cases."
+          },
+          {
+            "id": 2,
+            "title": "Integrate Mainstream Source Matching Logic",
+            "description": "Incorporate the city-to-mainstream-sources mapping and implement logic to check if an article's domain matches any whitelisted mainstream domains for the relevant city, ensuring case-insensitive and normalized comparison.",
+            "dependencies": [
+              "2.1"
+            ],
+            "details": "Design a matching function that accepts an article domain and city, returning whether the source is mainstream. Ensure the mapping is easily updatable and supports future expansion.",
+            "status": "pending",
+            "testStrategy": "Test with a variety of city/source combinations, including case and format variations. Confirm correct identification of mainstream and non-mainstream sources."
+          },
+          {
+            "id": 3,
+            "title": "Develop Filtering and Ranking Modes with Configurability",
+            "description": "Implement strict filtering (only mainstream sources) and soft ranking (prioritize mainstream sources but include all), with a configuration option to toggle modes at runtime.",
+            "dependencies": [
+              "2.2"
+            ],
+            "details": "Create a ranking function that boosts mainstream sources and optionally sorts by source prominence. Expose a configuration setting (via config file or environment variable) to switch modes without code changes.",
+            "status": "pending",
+            "testStrategy": "Write tests to verify correct filtering/ranking in both modes, including configuration toggling and secondary sorting logic."
+          },
+          {
+            "id": 4,
+            "title": "Handle Fallback When No Mainstream Articles Are Found",
+            "description": "Implement logic to return a clearly flagged fallback list of non-mainstream articles if no mainstream sources are available, and optionally log or track these cases for analytics.",
+            "dependencies": [
+              "2.3"
+            ],
+            "details": "Ensure the response structure clearly indicates fallback status. Integrate logging or analytics hooks to monitor fallback occurrences for future review.",
+            "status": "pending",
+            "testStrategy": "Test fallback behavior by simulating scenarios with and without mainstream articles. Verify correct flagging and logging."
+          },
+          {
+            "id": 5,
+            "title": "Ensure Extensibility, SOLID Design, and Comprehensive Testing",
+            "description": "Refactor and document the codebase for extensibility (future filtering/ranking criteria), adhere to SOLID principles, isolate filtering logic, and ensure all methods are TypeScript-typed and unit-testable.",
+            "dependencies": [
+              "2.4"
+            ],
+            "details": "Use dependency injection for configuration and mappings. Add JSDoc comments and structure code for easy extension. Maintain strict TypeScript typing throughout.",
+            "status": "pending",
+            "testStrategy": "Review code for SOLID compliance, extensibility, and type safety. Achieve high unit test coverage for all filtering and ranking logic."
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Enhance Express Backend for Location-Aware Google News Queries",
+        "description": "Update the Express backend (dev-server.js) to support Google News RSS queries that adapt to user location, using the 'gl' (country code) and 'hl' (language) parameters, and implement logic to detect country codes from city names.",
+        "details": "1. **Parameter Handling**: Refactor the news query endpoint in dev-server.js to accept location input (city name, country, or coordinates) via query parameters or request body. \n\n2. **Location Detection Logic**: Implement a robust mapping from city names to country codes (for 'gl') and language codes (for 'hl'). Use the location-to-news-source data structure from Task 1 as a foundation, and supplement with a reliable geocoding library (such as 'node-geocoder' or 'city-to-country' npm packages) to handle edge cases and international cities. Ensure the mapping covers all cities supported by the frontend and gracefully handles unknown or ambiguous locations by defaulting to a global or English setting.\n\n3. **Google News RSS URL Construction**: Update the logic that builds the Google News RSS URL to dynamically insert the detected 'gl' and 'hl' parameters. For example: `https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en`. Validate that the constructed URLs conform to Google News RSS requirements.\n\n4. **Integration and Error Handling**: Ensure the backend gracefully handles invalid or missing location data, returning meaningful error messages or fallback results. Log location resolution steps for debugging and analytics.\n\n5. **Best Practices**: Use async/await for all network and geocoding operations. Validate and sanitize all user input to prevent injection or malformed requests. Structure code for testability and maintainability, separating location resolution logic into its own module or service.\n\n6. **Documentation**: Document the new endpoint parameters, expected input formats, and example requests/responses in the backend API docs.",
+        "testStrategy": "1. **Unit Tests**: Write tests for the location detection module, covering a wide range of city names (including ambiguous, misspelled, and international cases) and verifying correct country and language code resolution.\n\n2. **Integration Tests**: Test the news query endpoint with various location inputs, ensuring the constructed Google News RSS URLs contain the correct 'gl' and 'hl' parameters and return relevant news results.\n\n3. **Error Handling**: Simulate invalid, missing, or unsupported location inputs and verify that the backend responds with appropriate error messages or fallback behavior.\n\n4. **API Documentation Verification**: Confirm that documentation is up-to-date and accurately reflects the new location-aware query capabilities.\n\n5. **Code Quality**: Use static analysis tools (e.g., ESLint) and code reviews to ensure maintainability, security, and adherence to best practices.",
+        "status": "pending",
+        "dependencies": [
+          1
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Refactor News Query Endpoint for Location Input",
+            "description": "Update the Express backend (dev-server.js) news query endpoint to accept location input via query parameters or request body, supporting city name, country, or coordinates.",
+            "dependencies": [],
+            "details": "Modify the endpoint to parse and validate location-related parameters from incoming requests, ensuring compatibility with both GET and POST methods. Ensure input formats are flexible and well-documented.",
+            "status": "pending",
+            "testStrategy": "Write endpoint tests to verify correct parsing and validation of location inputs, including edge cases and malformed requests."
+          },
+          {
+            "id": 2,
+            "title": "Implement Location Detection and Mapping Logic",
+            "description": "Develop robust logic to map city names to country codes ('gl') and language codes ('hl'), leveraging the location-to-news-source data structure and geocoding libraries.",
+            "dependencies": [
+              "3.1"
+            ],
+            "details": "Integrate a geocoding library (e.g., 'node-geocoder' or 'city-to-country') to resolve city names to country and language codes. Handle ambiguous or unknown locations by defaulting to global or English settings. Ensure coverage for all frontend-supported cities.",
+            "status": "pending",
+            "testStrategy": "Create unit tests for the location detection module, covering a wide range of city names, ambiguous cases, and verifying correct code resolution."
+          },
+          {
+            "id": 3,
+            "title": "Construct Google News RSS URLs with Location Parameters",
+            "description": "Update backend logic to dynamically build Google News RSS URLs using detected 'gl' and 'hl' parameters, ensuring compliance with Google News RSS requirements.",
+            "dependencies": [
+              "3.2"
+            ],
+            "details": "Implement URL construction logic that inserts the resolved country and language codes into the RSS query string. Validate URLs against Google News RSS documentation and test with sample requests.",
+            "status": "pending",
+            "testStrategy": "Write integration tests to verify that constructed URLs are valid and return expected RSS feeds for various location inputs."
+          },
+          {
+            "id": 4,
+            "title": "Integrate Error Handling and Logging for Location Resolution",
+            "description": "Ensure the backend gracefully handles invalid or missing location data, providing meaningful error messages or fallback results, and logs location resolution steps for debugging and analytics.",
+            "dependencies": [
+              "3.3"
+            ],
+            "details": "Implement error handling for all stages of location resolution and RSS URL construction. Log resolution attempts, errors, and fallback actions for monitoring and debugging.",
+            "status": "pending",
+            "testStrategy": "Test error scenarios including invalid, missing, or ambiguous location inputs, and verify appropriate error responses and logging."
+          },
+          {
+            "id": 5,
+            "title": "Apply Best Practices and Document API Changes",
+            "description": "Refactor code to use async/await for network and geocoding operations, validate and sanitize user input, and document new endpoint parameters and example requests/responses.",
+            "dependencies": [
+              "3.4"
+            ],
+            "details": "Ensure all asynchronous operations use async/await. Validate and sanitize all user inputs to prevent injection and malformed requests. Separate location resolution logic into its own module or service. Update backend API documentation with details on new parameters and usage.",
+            "status": "pending",
+            "testStrategy": "Review code for async/await usage, input validation, and modularity. Verify documentation accuracy and completeness with example requests and responses."
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Implement UI Indicators for News Source Credibility in NewsDisplay Component",
+        "description": "Add visual indicators in the NewsDisplay component to show when articles are from mainstream/trusted sources, including badges next to article titles and a filter toggle to show all sources or only mainstream sources.",
+        "details": "1. **Badge Component Creation**: Design and implement a reusable `SourceBadge` component that can be conditionally rendered next to article titles. This component should:\n   - Accept props for source credibility status (mainstream/trusted vs. other)\n   - Support different visual styles based on source type\n   - Include appropriate icons (checkmark, shield, or verification symbol)\n   - Have hover tooltips explaining the badge meaning\n\n2. **NewsDisplay Integration**: Modify the NewsDisplay component to:\n   - Import and utilize the mainstream source detection logic from newsService.ts\n   - For each article, check if its source domain is in the trusted sources list\n   - Conditionally render the appropriate badge component next to article titles\n   - Apply subtle visual differentiation to articles from mainstream sources (e.g., background tint)\n\n3. **Filter Toggle Implementation**:\n   - Add a toggle switch or button group in the NewsDisplay header\n   - Implement state management for the filter preference (all sources vs. mainstream only)\n   - Connect the filter state to the article rendering logic\n   - Ensure the filter state persists across component re-renders\n   - Add smooth transitions when filtering changes the displayed articles\n\n4. **UI/UX Considerations**:\n   - Ensure badges are visually distinct but not distracting\n   - Use appropriate color coding (e.g., green for trusted, neutral for others)\n   - Implement responsive design for badges across different screen sizes\n   - Add accessibility attributes (aria-labels, etc.) for screen readers\n   - Include clear visual feedback when filter state changes\n\n5. **Performance Optimization**:\n   - Memoize source credibility checks to avoid redundant processing\n   - Implement efficient re-rendering when filter state changes\n   - Consider lazy loading for badge icons to minimize initial load time",
+        "testStrategy": "1. **Unit Tests**:\n   - Test the `SourceBadge` component in isolation with various props combinations\n   - Verify that the mainstream source detection logic correctly identifies trusted sources\n   - Test filter toggle state management and persistence\n   - Ensure proper conditional rendering based on filter state\n\n2. **Integration Tests**:\n   - Verify that badges appear correctly next to articles from mainstream sources\n   - Test that the filter toggle correctly shows/hides non-mainstream sources\n   - Check that the UI updates appropriately when new articles are loaded\n   - Verify that the filter state is maintained when other UI interactions occur\n\n3. **Visual Regression Tests**:\n   - Capture screenshots of the NewsDisplay with various combinations of mainstream and non-mainstream sources\n   - Verify badge positioning and styling across different viewport sizes\n   - Ensure filter toggle is visually consistent across browsers\n\n4. **User Acceptance Testing**:\n   - Verify that badges are intuitive and their meaning is clear to users\n   - Test that the filter toggle behavior matches user expectations\n   - Ensure the UI remains clean and uncluttered with badges present\n   - Check that accessibility requirements are met for all new UI elements\n\n5. **Performance Testing**:\n   - Measure render time with and without badges to ensure minimal impact\n   - Test filtering performance with large sets of articles\n   - Verify smooth transitions when filter state changes",
+        "status": "pending",
+        "dependencies": [
+          1,
+          2
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design and Implement SourceBadge Component",
+            "description": "Create a reusable SourceBadge component that visually indicates the credibility status of a news source, supporting different styles and icons for mainstream/trusted versus other sources, and providing explanatory tooltips.",
+            "dependencies": [],
+            "details": "The component should accept props for source credibility, render appropriate icons (such as checkmark, shield, or verification symbol), and display a tooltip on hover explaining the badge's meaning. Ensure the component is visually distinct but not distracting, and supports responsive design.",
+            "status": "pending",
+            "testStrategy": "Write unit tests for the SourceBadge component with various prop combinations, verifying correct rendering, icon selection, tooltip display, and accessibility attributes."
+          },
+          {
+            "id": 2,
+            "title": "Integrate SourceBadge and Credibility Logic into NewsDisplay",
+            "description": "Modify the NewsDisplay component to utilize the mainstream source detection logic, conditionally render the SourceBadge next to article titles, and visually differentiate articles from mainstream sources.",
+            "dependencies": [
+              "4.1"
+            ],
+            "details": "Import credibility detection logic from newsService.ts. For each article, check if its source is in the trusted list and render the SourceBadge accordingly. Apply subtle visual cues (e.g., background tint) to articles from mainstream sources.",
+            "status": "pending",
+            "testStrategy": "Test that NewsDisplay correctly identifies and marks mainstream sources, conditionally renders badges, and applies visual differentiation. Verify integration with the detection logic."
+          },
+          {
+            "id": 3,
+            "title": "Implement Filter Toggle for Source Credibility",
+            "description": "Add a toggle control in the NewsDisplay header to filter articles by source credibility, manage filter state, and ensure smooth transitions and state persistence.",
+            "dependencies": [
+              "4.2"
+            ],
+            "details": "Implement a toggle switch or button group allowing users to select between all sources and mainstream-only. Manage filter state within the component, connect it to article rendering, and persist state across re-renders. Ensure UI transitions are smooth when the filter changes.",
+            "status": "pending",
+            "testStrategy": "Test filter toggle UI, state management, persistence, and correct filtering of articles. Verify smooth transitions and user feedback when toggling."
+          },
+          {
+            "id": 4,
+            "title": "Enhance UI/UX for Credibility Indicators and Filtering",
+            "description": "Refine the visual and interactive aspects of badges and filtering, ensuring clarity, accessibility, and responsiveness across devices.",
+            "dependencies": [
+              "4.1",
+              "4.2",
+              "4.3"
+            ],
+            "details": "Ensure badges are distinct but not distracting, use appropriate color coding (e.g., green for trusted), and are responsive. Add accessibility features such as aria-labels and clear visual feedback for filter changes.",
+            "status": "pending",
+            "testStrategy": "Conduct UI/UX reviews and accessibility audits. Test badge visibility, color contrast, responsiveness, and screen reader compatibility. Verify visual feedback for filter state changes."
+          },
+          {
+            "id": 5,
+            "title": "Optimize Performance of Credibility Indicators and Filtering",
+            "description": "Improve the efficiency of credibility checks and UI updates by memoizing computations, optimizing re-renders, and lazy loading badge assets.",
+            "dependencies": [
+              "4.2",
+              "4.3"
+            ],
+            "details": "Memoize source credibility checks to avoid redundant processing, optimize component re-renders when filter state changes, and implement lazy loading for badge icons to reduce initial load time.",
+            "status": "pending",
+            "testStrategy": "Profile component performance, verify memoization effectiveness, measure re-render counts, and test lazy loading of assets under various scenarios."
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Create Comprehensive Unit Tests for News Source Filtering Functionality",
+        "description": "Develop and implement a complete test suite for the news source filtering system, covering domain extraction, source matching, ranking algorithms, fallback behavior, and caching mechanisms.",
+        "details": "1. **Domain Extraction Testing**:\n   - Create unit tests for the domain extraction utility that verify correct handling of various URL formats\n   - Test edge cases including subdomains, tracking parameters, query strings, and internationalized domain names\n   - Verify that www prefixes are properly normalized\n   - Test extraction from malformed or unusual URLs\n\n2. **Source Matching Algorithm Tests**:\n   - Develop tests that verify articles from whitelisted domains are correctly identified as mainstream\n   - Test the matching logic against the city-to-mainstream-sources mapping\n   - Include tests for case insensitivity and domain variations\n   - Verify behavior with domains that are substrings of other domains\n\n3. **Ranking System Verification**:\n   - Test that articles are properly ranked according to the implemented ranking criteria\n   - Verify that mainstream sources receive appropriate ranking boosts\n   - Test sorting behavior with mixed mainstream and non-mainstream sources\n   - Ensure consistent ranking behavior across different queries\n\n4. **Fallback Behavior Tests**:\n   - Create tests that simulate scenarios where no mainstream sources are found\n   - Verify the system correctly falls back to showing all sources when no mainstream sources match\n   - Test threshold behavior - when exactly should fallback occur\n   - Ensure user is properly notified when fallback occurs\n\n5. **Cache Behavior Testing**:\n   - Implement tests for the caching mechanism with filtered results\n   - Verify cache hit/miss behavior works correctly\n   - Test cache invalidation and refresh logic\n   - Measure and verify performance improvements from caching\n\n6. **Integration Test Suite**:\n   - Create end-to-end tests that verify the complete filtering pipeline\n   - Test the interaction between UI components and backend filtering logic\n   - Verify filter toggle functionality correctly affects displayed results\n   - Test persistence of filter preferences across sessions",
+        "testStrategy": "1. **Unit Test Coverage Verification**:\n   - Use Jest or similar testing framework to achieve >90% code coverage for all filtering-related functions\n   - Implement snapshot testing for predictable components of the filtering system\n   - Create a comprehensive test matrix covering all identified edge cases\n   - Verify tests pass consistently across different environments\n\n2. **Mocking Strategy**:\n   - Create mock data sets representing various news source scenarios\n   - Implement mock responses for external API calls\n   - Use dependency injection to isolate components during testing\n   - Create fixtures for common test scenarios\n\n3. **Integration Testing Approach**:\n   - Set up automated integration tests using Cypress or similar tool\n   - Create test scenarios that simulate real user interactions with filters\n   - Test the complete flow from UI selection to filtered results display\n   - Verify visual indicators correctly reflect mainstream source status\n\n4. **Performance Testing**:\n   - Measure and benchmark filtering performance with large article sets\n   - Test cache hit rates and response time improvements\n   - Verify system performance under load with many concurrent filtering requests\n   - Document performance characteristics and optimization opportunities\n\n5. **Regression Testing**:\n   - Establish baseline tests that can detect regressions in filtering behavior\n   - Automate test runs on each code change affecting the filtering system\n   - Create documentation for manual testing procedures for complex scenarios\n   - Implement CI/CD pipeline integration for continuous test verification",
+        "status": "pending",
+        "dependencies": [
+          1,
+          2
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Develop Unit Tests for Domain Extraction Utility",
+            "description": "Create unit tests to verify the domain extraction utility correctly handles various URL formats, including subdomains, tracking parameters, query strings, internationalized domain names, www prefixes, and malformed URLs.",
+            "dependencies": [],
+            "details": "Design test cases covering standard and edge-case URLs. Ensure normalization of www prefixes and robust handling of malformed or unusual URLs.",
+            "status": "pending",
+            "testStrategy": "Use a testing framework (e.g., Jest or Vitest) to achieve high coverage. Include both positive and negative test cases for all URL scenarios."
+          },
+          {
+            "id": 2,
+            "title": "Implement Unit Tests for Source Matching Algorithm",
+            "description": "Develop tests to verify that the source matching algorithm correctly identifies articles from whitelisted domains as mainstream, handles city-to-mainstream-source mappings, supports case insensitivity, and manages domain substring edge cases.",
+            "dependencies": [
+              "5.1"
+            ],
+            "details": "Test matching logic with a variety of domain and city mapping scenarios, including domains that are substrings of others and variations in case.",
+            "status": "pending",
+            "testStrategy": "Ensure all mapping and matching logic is covered. Include tests for both successful and unsuccessful matches, and verify correct handling of ambiguous cases."
+          },
+          {
+            "id": 3,
+            "title": "Verify Ranking System with Unit Tests",
+            "description": "Create unit tests to ensure articles are ranked according to the implemented criteria, mainstream sources receive ranking boosts, sorting is correct for mixed sources, and ranking is consistent across queries.",
+            "dependencies": [
+              "5.2"
+            ],
+            "details": "Test ranking logic with diverse article sets, including combinations of mainstream and non-mainstream sources, and verify deterministic output.",
+            "status": "pending",
+            "testStrategy": "Use snapshot and assertion-based tests to confirm ranking order and boosts. Test with varying input data to ensure consistent results."
+          },
+          {
+            "id": 4,
+            "title": "Test Fallback Behavior in Filtering Logic",
+            "description": "Develop unit tests to simulate scenarios where no mainstream sources are found, verify fallback to all sources, test threshold behavior, and ensure user notification on fallback.",
+            "dependencies": [
+              "5.3"
+            ],
+            "details": "Simulate edge cases where filtering yields no mainstream results. Test fallback triggers and user notification mechanisms.",
+            "status": "pending",
+            "testStrategy": "Assert correct fallback activation and user messaging. Include tests for threshold boundaries and edge-case scenarios."
+          },
+          {
+            "id": 5,
+            "title": "Unit Test Caching Mechanisms for Filtered Results",
+            "description": "Implement unit tests for the caching layer, verifying cache hit/miss logic, invalidation, refresh behavior, and performance improvements.",
+            "dependencies": [
+              "5.4"
+            ],
+            "details": "Test cache population, retrieval, invalidation, and refresh under various filtering scenarios. Measure and assert performance gains from caching.",
+            "status": "pending",
+            "testStrategy": "Use mocks and spies to simulate cache operations. Include timing and correctness assertions for cache-related behaviors."
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-11-15T23:39:56.102Z",
+      "updated": "2025-11-15T23:41:47.964Z",
+      "description": "Implement mainstream news source prioritization and filtering for better content quality"
+    }
   }
 }

@@ -17,6 +17,9 @@ export interface NewsArticle {
   contentFetched?: boolean; // Track if we've attempted to fetch full content
   summaryLoading?: boolean; // Track if summary/humorScore is being loaded
   summaryError?: boolean; // Track if summary/humorScore failed to load
+  authorityScore?: number; // 0-100 score based on position in Google News results
+  isAuthoritative?: boolean; // True if in top 5 results (most authoritative)
+  rankPosition?: number; // Position in Google News results (1 = most authoritative)
 }
 
 export interface NewsResponse {

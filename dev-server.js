@@ -84,7 +84,11 @@ const parseGoogleNewsRss = (rssData, limit) => {
 
 // News search endpoint (location or keyword)
 app.get('/api/news/search', async (req, res) => {
-  const { q, max = process.env.VITE_DEFAULT_NEWS_LIMIT || '10' } = req.query;
+  const {
+    q,
+    max = process.env.VITE_DEFAULT_NEWS_LIMIT || '10',
+    scoring = 'r' // default to relevance/authority ranking
+  } = req.query;
 
   if (!q) {
     return res.status(400).json({ error: 'Query parameter "q" is required' });
@@ -93,7 +97,9 @@ app.get('/api/news/search', async (req, res) => {
   try {
     // Encode query for Google News RSS
     const encodedQuery = encodeURIComponent(q);
-    const rssUrl = `https://news.google.com/rss/search?q=${encodedQuery}&hl=en-US&gl=US&ceid=US:en`;
+    // Use scoring=r for relevance/authority ranking (Google's default)
+    // This ensures the most authoritative sources appear first
+    const rssUrl = `https://news.google.com/rss/search?q=${encodedQuery}&hl=en-US&gl=US&ceid=US:en&scoring=${scoring}`;
 
     const response = await fetch(rssUrl);
     if (!response.ok) {
