@@ -59,11 +59,11 @@ const LocationDetector: React.FC = () => {
   };
 
   return (
-    <div className="vintage-border p-3 sm:p-4 md:p-6 mb-6" style={{
+    <div className="vintage-border p-3 sm:p-4 md:p-6 mb-6 newspaper-roll-in" style={{
       background: 'var(--color-newsprint-light)',
       position: 'relative'
     }}>
-      <div className="breaking-news" style={{
+      <div className="breaking-news ink-splatter" style={{
         position: 'absolute',
         top: '-12px',
         left: '20px',

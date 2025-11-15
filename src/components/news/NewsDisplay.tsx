@@ -45,7 +45,7 @@ const isTitleDuplicate = (title: string, description: string): boolean => {
   return matchedWords / titleWords.length > 0.7;
 };
 
-const NewsCard: React.FC<NewsCardProps> = ({ article, selected, onSelect }) => {
+const NewsCard: React.FC<NewsCardProps & { index: number }> = ({ article, selected, onSelect, index }) => {
   // Clean HTML from summary
   const cleanedSummary = article.summary ? cleanDescription(article.summary) : undefined;
 
@@ -54,12 +54,12 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, selected, onSelect }) => {
     cleanedSummary.length > 10 &&
     !isTitleDuplicate(article.title, cleanedSummary);
 
-  // Determine what to show in the humor score area
-  const renderHumorScore = () => {
+  // Render cartoon potential as editorial stars
+  const renderCartoonPotential = () => {
     if (article.summaryError) {
       return (
-        <span className="inline-block px-2 py-1 rounded-full text-xs font-bold bg-gray-200 text-gray-600">
-          —
+        <span className="label" style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>
+          NO RATING
         </span>
       );
     }
@@ -69,74 +69,161 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, selected, onSelect }) => {
     }
 
     if (article.humorScore !== undefined) {
+      const stars = Math.ceil((article.humorScore / 100) * 5);
       return (
-        <span className={`inline-block px-2 py-1 rounded-full text-xs font-bold ${
-          article.humorScore >= 70 ? 'bg-green-200 text-green-800' :
-          article.humorScore >= 40 ? 'bg-amber-200 text-amber-800' :
-          'bg-gray-200 text-gray-700'
-        }`}>
-          {article.humorScore}
-        </span>
+        <div className="flex items-center gap-1">
+          <span className="label" style={{
+            color: 'var(--color-editorial-red)',
+            marginRight: '0.25rem',
+            fontSize: 'var(--text-xs)'
+          }}>
+            TOON:
+          </span>
+          {[...Array(5)].map((_, i) => (
+            <span
+              key={i}
+              style={{
+                color: i < stars ? 'var(--color-press-gold)' : 'var(--color-ink-subtle)',
+                fontSize: 'var(--text-sm)'
+              }}
+            >
+              ★
+            </span>
+          ))}
+        </div>
       );
     }
 
     // Default case: show spinner (should be rare)
     return (
       <div className="inline-flex items-center justify-center w-8 h-8">
-        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600" />
+        <div className="animate-spin rounded-full h-5 w-5" style={{ borderBottom: '2px solid var(--color-editorial-red)' }} />
       </div>
     );
   };
 
+  const publishedDate = article.publishedAt
+    ? new Date(article.publishedAt).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    : 'Today';
+
   return (
     <div
       onClick={onSelect}
-      className={`p-2 sm:p-3 md:p-4 rounded-lg border-2 cursor-pointer transition-all ${
-        selected
-          ? 'bg-blue-50 border-blue-500 shadow-md'
-          : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
-      }`}
+      className={`newspaper-article-card vintage-border ${selected ? 'stamp-impact' : 'printing-press-reveal'}`}
+      style={{
+        position: 'relative',
+        background: selected ? 'var(--color-press-yellow)' : 'var(--color-newsprint-light)',
+        border: selected ? '3px solid var(--color-editorial-red)' : '2px solid var(--border-primary)',
+        padding: '1rem',
+        marginBottom: '1rem',
+        cursor: 'pointer',
+        boxShadow: selected ? '3px 3px 0 var(--color-ink)' : '1px 1px 0 var(--shadow-ink)',
+        transition: 'all 0.2s ease',
+        animationDelay: `${index * 0.1}s`
+      }}
     >
+      {/* Article number badge */}
+      <div style={{
+        position: 'absolute',
+        top: '-12px',
+        right: '20px',
+        background: 'var(--color-ink)',
+        color: 'var(--color-newsprint-light)',
+        padding: '0.25rem 0.75rem',
+        fontSize: 'var(--text-xs)',
+        fontFamily: 'var(--font-ui)',
+        fontWeight: 'var(--font-bold)',
+        letterSpacing: 'var(--tracking-wider)',
+      }}>
+        ARTICLE {index + 1}
+      </div>
+
       <div className="flex items-start gap-2 sm:gap-3">
         <input
           type="checkbox"
           checked={selected}
           onChange={onSelect}
-          className="mt-1 w-4 sm:w-5 h-4 sm:h-5 cursor-pointer flex-shrink-0"
+          style={{
+            width: '20px',
+            height: '20px',
+            marginTop: '0.25rem',
+            accentColor: 'var(--color-editorial-red)',
+            cursor: 'pointer'
+          }}
           aria-label={`Select article: ${article.title}`}
         />
         <div className="flex-1 min-w-0">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2">
-            <h3 className="font-semibold text-gray-800 line-clamp-2 text-sm sm:text-base flex-1">
-              {article.title}
-            </h3>
-            <div className="flex-shrink-0">
-              {renderHumorScore()}
-            </div>
+          {/* Headline */}
+          <h3 className="headline-article" style={{
+            color: 'var(--color-ink)',
+            marginBottom: '0.5rem',
+            lineHeight: 'var(--leading-tight)',
+            fontSize: 'var(--text-xl)'
+          }}>
+            {article.title}
+          </h3>
+
+          {/* Byline and Date */}
+          <div className="byline" style={{
+            color: 'var(--text-muted)',
+            marginBottom: '0.5rem',
+            fontSize: 'var(--text-xs)'
+          }}>
+            {article.source?.name && (
+              <span>BY {article.source.name.toUpperCase()}</span>
+            )}
+            {article.source?.name && publishedDate && <span> • </span>}
+            {publishedDate && <span>{publishedDate.toUpperCase()}</span>}
           </div>
+
+          {/* Summary/Lead */}
           {article.summaryLoading ? (
             <div className="mt-2">
               <LoadingSkeleton variant="article" />
             </div>
           ) : article.summaryError ? (
-            <p className="text-xs text-gray-400 mt-2 italic">
-              No summary available
+            <p className="body-text" style={{
+              color: 'var(--text-subtle)',
+              fontStyle: 'italic',
+              margin: '0.5rem 0'
+            }}>
+              [Summary unavailable]
             </p>
           ) : shouldShowSummary ? (
-            <p className="text-xs sm:text-sm text-gray-600 mt-2 line-clamp-2 sm:line-clamp-4">
+            <p className="body-text" style={{
+              color: 'var(--text-secondary)',
+              margin: '0.5rem 0',
+              lineHeight: 'var(--leading-normal)'
+            }}>
               {cleanedSummary}
             </p>
           ) : null}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-2 gap-1 sm:gap-2">
-            <p className="text-xs text-gray-500">Source: {article.source?.name}</p>
+
+          {/* Footer with rating and link */}
+          <div className="flex items-center justify-between mt-3 pt-2" style={{
+            borderTop: '1px dotted var(--border-secondary)'
+          }}>
+            {renderCartoonPotential()}
             <a
               href={article.url}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="text-xs text-blue-600 hover:text-blue-800 hover:underline font-medium whitespace-nowrap"
+              className="label"
+              style={{
+                color: 'var(--color-editorial-red)',
+                textDecoration: 'none',
+                fontSize: 'var(--text-xs)'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
+              onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
             >
-              Article →
+              READ FULL STORY →
             </a>
           </div>
         </div>
@@ -328,14 +415,21 @@ const NewsDisplay: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-3 sm:p-4 md:p-6 rounded-lg shadow-md mb-6">
-        <div className="flex items-center gap-2 sm:gap-3 mb-4">
-          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm">2</span>
-          <h2 className="text-lg sm:text-2xl font-bold text-gray-800">News Articles</h2>
+      <div className="vintage-border p-3 sm:p-4 md:p-6 mb-6" style={{
+        background: 'var(--color-newsprint-light)',
+        position: 'relative'
+      }}>
+        <div className="breaking-news typewriter-text" style={{ marginBottom: '1rem', width: 'auto' }}>
+          LOADING WIRE SERVICE...
         </div>
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="bg-gray-200 animate-pulse h-20 sm:h-24 rounded-lg" />
+            <div key={i} className="printing-press-reveal" style={{
+              background: 'var(--color-newsprint)',
+              height: '100px',
+              animation: 'pulse 1.5s ease-in-out infinite',
+              animationDelay: `${i * 0.2}s`
+            }} />
           ))}
         </div>
       </div>
@@ -344,13 +438,30 @@ const NewsDisplay: React.FC = () => {
 
   if (error) {
     return (
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-3 sm:p-4 md:p-6 rounded-lg shadow-md mb-6">
+      <div className="vintage-border p-3 sm:p-4 md:p-6 mb-6" style={{
+        background: 'var(--color-newsprint-light)',
+        position: 'relative'
+      }}>
         <div className="flex items-center gap-2 sm:gap-3 mb-4">
-          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm">2</span>
-          <h2 className="text-lg sm:text-2xl font-bold text-gray-800">News Articles</h2>
+          <span className="flex items-center justify-center w-8 h-8" style={{
+            background: 'var(--color-editorial-red)',
+            color: 'var(--color-newsprint-light)',
+            fontFamily: 'var(--font-ui)',
+            fontWeight: 'var(--font-bold)',
+            borderRadius: '50%',
+            border: '2px solid var(--color-ink)'
+          }}>2</span>
+          <h2 className="headline-article" style={{ color: 'var(--color-ink)', margin: 0 }}>
+            NEWS WIRE
+          </h2>
         </div>
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-          <p className="text-red-800 font-medium">{error}</p>
+        <div className="speech-bubble" style={{
+          background: 'var(--color-newsprint)',
+          borderColor: 'var(--color-editorial-red)'
+        }}>
+          <p className="body-text" style={{ color: 'var(--color-editorial-red)', fontWeight: 'var(--font-bold)' }}>
+            {error}
+          </p>
         </div>
       </div>
     );
@@ -358,16 +469,28 @@ const NewsDisplay: React.FC = () => {
 
   if (!news || !news.articles || news.articles.length === 0) {
     return (
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-3 sm:p-4 md:p-6 rounded-lg shadow-md mb-6">
+      <div className="vintage-border p-3 sm:p-4 md:p-6 mb-6" style={{
+        background: 'var(--color-newsprint-light)',
+        position: 'relative'
+      }}>
         <div className="flex items-center gap-2 sm:gap-3 mb-4">
-          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm">2</span>
-          <h2 className="text-lg sm:text-2xl font-bold text-gray-800">News Articles</h2>
+          <span className="flex items-center justify-center w-8 h-8" style={{
+            background: 'var(--color-editorial-red)',
+            color: 'var(--color-newsprint-light)',
+            fontFamily: 'var(--font-ui)',
+            fontWeight: 'var(--font-bold)',
+            borderRadius: '50%',
+            border: '2px solid var(--color-ink)'
+          }}>2</span>
+          <h2 className="headline-article" style={{ color: 'var(--color-ink)', margin: 0 }}>
+            NEWS WIRE
+          </h2>
         </div>
         <div className="text-center py-6 sm:py-8">
-          <p className="text-gray-600 text-base sm:text-lg">
+          <p className="body-large" style={{ color: 'var(--text-muted)' }}>
             {location?.name
-              ? 'No news articles found for your search'
-              : 'Enter search keywords to see news articles'}
+              ? 'No articles found for your search'
+              : 'Select keywords to load news articles'}
           </p>
         </div>
       </div>
@@ -375,27 +498,57 @@ const NewsDisplay: React.FC = () => {
   }
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-3 sm:p-4 md:p-6 rounded-lg shadow-md mb-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm flex-shrink-0">2</span>
-          <div>
-            <h2 className="text-lg sm:text-2xl font-bold text-gray-800">News Articles</h2>
-            {news.topic && (
-              <p className="text-xs sm:text-sm text-gray-600 mt-1">Topic: {news.topic}</p>
-            )}
+    <div className="vintage-border torn-edge-top p-3 sm:p-4 md:p-6 mb-6" style={{
+      background: 'var(--color-newsprint-light)',
+      position: 'relative'
+    }}>
+      {/* Header with Latest Edition styling */}
+      <div className="paper-flip-enter" style={{
+        borderBottom: '3px double var(--border-primary)',
+        paddingBottom: '1rem',
+        marginBottom: '1.5rem'
+      }}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+            <span className="flex items-center justify-center w-8 h-8 stamp-impact" style={{
+              background: 'var(--color-editorial-red)',
+              color: 'var(--color-newsprint-light)',
+              fontFamily: 'var(--font-ui)',
+              fontWeight: 'var(--font-bold)',
+              borderRadius: '50%',
+              border: '2px solid var(--color-ink)'
+            }}>2</span>
+            <div>
+              <h2 className="headline-secondary" style={{
+                color: 'var(--color-ink)',
+                margin: 0,
+                fontSize: 'var(--text-3xl)'
+              }}>
+                LATEST EDITION
+              </h2>
+              {news.topic && (
+                <p className="label" style={{
+                  color: 'var(--text-muted)',
+                  marginTop: '0.25rem'
+                }}>
+                  BEAT: {news.topic.toUpperCase()}
+                </p>
+              )}
+            </div>
           </div>
-        </div>
-        <div className="text-xs sm:text-sm font-medium text-gray-700 bg-white px-3 py-1 rounded-full whitespace-nowrap">
-          {selectedArticles.length} selected
+          <div className="date-stamp-box">
+            {selectedArticles.length} SELECTED FOR TOON
+          </div>
         </div>
       </div>
 
+      {/* News articles */}
       <div className="grid grid-cols-1 gap-3">
         {news.articles.map((article, idx) => (
           <NewsCard
             key={`${article.title}-${idx}`}
             article={article}
+            index={idx}
             selected={selectedArticles.some(
               (a) => a.title === article.title && a.url === article.url
             )}
@@ -404,10 +557,22 @@ const NewsDisplay: React.FC = () => {
         ))}
       </div>
 
+      {/* Selected articles indicator */}
       {selectedArticles.length > 0 && (
-        <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-blue-100 border border-blue-300 rounded-lg">
-          <p className="text-blue-800 text-xs sm:text-sm font-medium">
-            Selected {selectedArticles.length} article{selectedArticles.length !== 1 ? 's' : ''} for cartoon generation
+        <div className="comic-panel mt-4" style={{
+          background: 'var(--color-press-yellow)',
+          padding: '1rem',
+          textAlign: 'center'
+        }}>
+          <p className="headline-article action-text" style={{
+            color: 'var(--color-editorial-red)',
+            fontSize: 'var(--text-xl)',
+            margin: 0,
+            fontFamily: 'var(--font-ui)',
+            textTransform: 'uppercase',
+            letterSpacing: 'var(--tracking-wider)'
+          }}>
+            {selectedArticles.length} {selectedArticles.length === 1 ? 'STORY' : 'STORIES'} READY FOR EDITORIAL CARTOON!
           </p>
         </div>
       )}
