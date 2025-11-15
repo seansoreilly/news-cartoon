@@ -30,7 +30,7 @@ class NewsService {
 
     try {
       const articles = await this.fetchWithCache(
-        `location-${location}`,
+        `location-${location}-limit-${limit}`,
         async () => {
           const params = new URLSearchParams({
             q: location,
@@ -70,7 +70,7 @@ class NewsService {
 
     try {
       const articles = await this.fetchWithCache(
-        `keyword-${keyword}`,
+        `keyword-${keyword}-limit-${limit}`,
         async () => {
           const params = new URLSearchParams({
             q: keyword,

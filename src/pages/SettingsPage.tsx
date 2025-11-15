@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocationStore } from '../store/locationStore';
+import { usePreferencesStore } from '../store/preferencesStore';
 import type { LocationData } from '../types';
 
 const SettingsPage: React.FC = () => {
@@ -7,10 +8,18 @@ const SettingsPage: React.FC = () => {
   const [defaultLocation, setDefaultLocation] = useState(location?.name || '');
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
-  // In a real implementation, these would be stored in a preferences store
-  const [darkMode, setDarkMode] = useState(false);
-  const [autoRefresh, setAutoRefresh] = useState(false);
-  const [newsCount, setNewsCount] = useState(10);
+  // Use preferences store for persistent settings
+  const {
+    autoRefresh,
+    newsCount,
+    setAutoRefresh,
+    setNewsCount
+  } = usePreferencesStore();
+
+  // Update local state when location changes
+  useEffect(() => {
+    setDefaultLocation(location?.name || '');
+  }, [location]);
 
   const handleSaveLocation = () => {
     if (defaultLocation.trim()) {
@@ -81,47 +90,23 @@ const SettingsPage: React.FC = () => {
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <label htmlFor="darkMode" className="text-gray-700">
-                Dark Mode
-              </label>
-              <div className="relative inline-block w-12 h-6">
-                <input
-                  id="darkMode"
-                  type="checkbox"
-                  checked={darkMode}
-                  onChange={(e) => setDarkMode(e.target.checked)}
-                  className="opacity-0 w-0 h-0"
-                />
-                <span
-                  className={`absolute cursor-pointer top-0 left-0 right-0 bottom-0 rounded-full transition-colors ${darkMode ? 'bg-purple-600' : 'bg-gray-300'}`}
-                >
-                  <span
-                    className={`absolute h-4 w-4 bg-white rounded-full transition-transform ${darkMode ? 'translate-x-6' : 'translate-x-1'} top-1`}
-                  />
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
               <label htmlFor="autoRefresh" className="text-gray-700">
                 Auto-refresh News
               </label>
-              <div className="relative inline-block w-12 h-6">
-                <input
-                  id="autoRefresh"
-                  type="checkbox"
-                  checked={autoRefresh}
-                  onChange={(e) => setAutoRefresh(e.target.checked)}
-                  className="opacity-0 w-0 h-0"
-                />
+              <button
+                id="autoRefresh"
+                type="button"
+                role="switch"
+                aria-checked={autoRefresh}
+                onClick={() => setAutoRefresh(!autoRefresh)}
+                className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+                style={{ backgroundColor: autoRefresh ? 'rgb(147, 51, 234)' : 'rgb(209, 213, 219)' }}
+              >
                 <span
-                  className={`absolute cursor-pointer top-0 left-0 right-0 bottom-0 rounded-full transition-colors ${autoRefresh ? 'bg-purple-600' : 'bg-gray-300'}`}
-                >
-                  <span
-                    className={`absolute h-4 w-4 bg-white rounded-full transition-transform ${autoRefresh ? 'translate-x-6' : 'translate-x-1'} top-1`}
-                  />
-                </span>
-              </div>
+                  className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                  style={{ transform: autoRefresh ? 'translateX(1.5rem)' : 'translateX(0.25rem)' }}
+                />
+              </button>
             </div>
 
             <div>
@@ -131,12 +116,16 @@ const SettingsPage: React.FC = () => {
               <input
                 id="newsCount"
                 type="range"
-                min="5"
-                max="20"
+                min="3"
+                max="10"
                 value={newsCount}
                 onChange={(e) => setNewsCount(parseInt(e.target.value))}
-                className="w-full"
+                className="w-full accent-purple-600"
               />
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>3</span>
+                <span>10</span>
+              </div>
             </div>
           </div>
         </div>
