@@ -7,6 +7,11 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const currentYear = new Date().getFullYear();
 
+  // Get build info - these are injected at build time by Vite
+  const gitHash = typeof __GIT_HASH__ !== 'undefined' ? __GIT_HASH__ : 'dev';
+  const gitBranch = typeof __GIT_BRANCH__ !== 'undefined' ? __GIT_BRANCH__ : 'local';
+  const buildTime = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-500 to-pink-500">
       {/* Header Banner */}
@@ -30,6 +35,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         <footer className="mt-8 text-center text-white text-sm opacity-80">
           <p>&copy; {currentYear} News Cartoon. All rights reserved.</p>
+          <p className="text-xs mt-2 opacity-70">
+            {gitBranch}/{gitHash}
+            {buildTime && (
+              <span className="ml-2">
+                • Built {new Date(buildTime).toLocaleDateString('en-GB', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric'
+                })}
+              </span>
+            )}
+          </p>
         </footer>
       </div>
     </div>

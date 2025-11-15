@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNewsStore } from '../../store/newsStore';
 import { useLocationStore } from '../../store/locationStore';
+import { usePreferencesStore } from '../../store/preferencesStore';
 import { newsService } from '../../services/newsService';
 import { geminiService } from '../../services/geminiService';
 import { AppErrorHandler } from '../../utils/errorHandler';
@@ -172,6 +173,7 @@ const calculateHumorScore = (title: string, description?: string): number => {
 
 const NewsDisplay: React.FC = () => {
   const { location } = useLocationStore();
+  const { newsCount } = usePreferencesStore();
   const {
     news,
     selectedArticles,
@@ -194,7 +196,7 @@ const NewsDisplay: React.FC = () => {
       setError(null);
 
       try {
-        const newsResponse = await newsService.fetchNewsByLocation(location.name);
+        const newsResponse = await newsService.fetchNewsByLocation(location.name, newsCount);
 
         // Set initial news data with local humor scores (instant feedback)
         // Mark articles as loading their summaries
@@ -262,7 +264,7 @@ const NewsDisplay: React.FC = () => {
     };
 
     fetchNews();
-  }, [location?.name, setLoading, setError, setNews]);
+  }, [location?.name, newsCount, setLoading, setError, setNews]);
 
   const handleSelectArticle = async (article: NewsArticle) => {
     const isSelected = selectedArticles.some(

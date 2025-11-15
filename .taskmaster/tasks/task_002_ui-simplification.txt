@@ -1,0 +1,43 @@
+# Task ID: 2
+# Title: Phase 2: Core Improvements
+# Status: pending
+# Dependencies: 1
+# Priority: medium
+# Description: Implement core UI improvements including wizard interface and workflow optimizations (3-5 days)
+# Details:
+Transform the multi-step process into a cleaner wizard interface, add Quick Cartoon mode, implement progressive disclosure, combine related actions, and improve error handling.
+
+# Test Strategy:
+End-to-end workflow testing, usability testing, error scenario testing
+
+# Subtasks:
+## 1. Implement Wizard Interface with Progress Tracking [pending]
+### Dependencies: None
+### Description: Create a step-by-step wizard interface that clearly shows the user's progress through the cartoon generation workflow. Include step indicators, progress bar, and navigation controls.
+### Details:
+Develop a wizard component with numbered steps and progress bar at the top. Each step should be a separate view with Next/Back buttons. Store the current step in state and implement navigation logic. Use CSS transitions for smooth step changes. Ensure the wizard is responsive and works on mobile devices.
+
+## 2. Add Quick Cartoon Mode for Trending News [pending]
+### Dependencies: 2.1
+### Description: Implement a one-click cartoon generation feature that automatically selects trending news topics and generates cartoons without requiring manual input for each step.
+### Details:
+Create an API endpoint to fetch trending news topics. Implement a 'Quick Cartoon' button on the dashboard that triggers automatic selection of a trending topic, generates a script, creates characters, and produces the final cartoon. Add a loading indicator during generation and display the result with options to edit or share.
+
+## 3. Implement Progressive Disclosure Pattern [pending]
+### Dependencies: 2.1
+### Description: Modify the UI to collapse completed sections and only show relevant information at each step, reducing cognitive load and simplifying the interface.
+### Details:
+Add collapsible sections for each completed step in the wizard. When a step is completed, automatically collapse it and show a summary. Add an expand/collapse toggle for users to review previous steps if needed. Store the expanded/collapsed state in the application state. Ensure smooth animations for collapse/expand actions.
+
+## 4. Combine Concept Selection with Script Generation [pending]
+### Dependencies: 2.1, 2.3
+### Description: Merge the concept selection and script generation steps to reduce the overall number of steps in the workflow and create a more streamlined experience.
+### Details:
+Redesign the concept selection UI to include script generation in the same view. As users select a concept, dynamically show script options or a script editor. Implement real-time script generation based on the selected concept. Add preview functionality to show how the script will look with the selected concept. Update the wizard navigation to reflect the combined step.
+
+## 5. Improve Error Handling with Inline Messages [pending]
+### Dependencies: 2.1, 2.2, 2.3, 2.4
+### Description: Enhance error handling throughout the application with contextual inline error messages and automatic retry functionality for common errors.
+### Details:
+Implement a consistent error handling system that displays inline error messages near the relevant UI elements. Create error message components with appropriate styling for different severity levels. Add automatic retry logic for network-related errors with exponential backoff. Implement a global error boundary to catch unhandled exceptions. Add user-friendly error messages with suggested actions for recovery.
+

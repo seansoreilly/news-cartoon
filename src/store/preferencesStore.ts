@@ -6,6 +6,8 @@ interface PreferencesState extends UserPreferences {
   setSortBy: (sortBy: 'popularity' | 'recency') => void;
   setTheme: (theme: 'light' | 'dark' | 'auto') => void;
   setAutoGenerate: (autoGenerate: boolean) => void;
+  setAutoRefresh: (autoRefresh: boolean) => void;
+  setNewsCount: (newsCount: number) => void;
   reset: () => void;
 }
 
@@ -13,6 +15,8 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   theme: 'auto',
   sortBy: 'popularity',
   autoGenerate: false,
+  autoRefresh: false,
+  newsCount: 5,
 };
 
 export const usePreferencesStore = create<
@@ -33,6 +37,14 @@ export const usePreferencesStore = create<
 
       setAutoGenerate: (autoGenerate: boolean) => {
         set({ autoGenerate });
+      },
+
+      setAutoRefresh: (autoRefresh: boolean) => {
+        set({ autoRefresh });
+      },
+
+      setNewsCount: (newsCount: number) => {
+        set({ newsCount });
       },
 
       reset: () => {

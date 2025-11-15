@@ -58,12 +58,28 @@ Object.defineProperty(globalThis.navigator, 'geolocation', {
 });
 
 /**
+ * Mock window.matchMedia
+ */
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(), // deprecated
+    removeListener: vi.fn(), // deprecated
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
+/**
  * Mock import.meta.env
  */
-if (!import.meta.env.VITE_GOOGLE_API_KEY) {
-  import.meta.env.VITE_GOOGLE_API_KEY = 'test-key';
-}
-
-if (!import.meta.env.VITE_GNEWS_API_KEY) {
-  import.meta.env.VITE_GNEWS_API_KEY = 'test-key';
-}
+// Set default test environment variables
+Object.assign(import.meta.env, {
+  VITE_GOOGLE_API_KEY: import.meta.env.VITE_GOOGLE_API_KEY || 'test-key',
+  VITE_GNEWS_API_KEY: import.meta.env.VITE_GNEWS_API_KEY || 'test-key',
+  VITE_DEFAULT_NEWS_LIMIT: import.meta.env.VITE_DEFAULT_NEWS_LIMIT || '10',
+});
