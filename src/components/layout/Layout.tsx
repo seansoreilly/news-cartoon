@@ -13,52 +13,33 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const buildTime = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '';
 
   return (
-    <div className="min-h-screen paper-texture" style={{ background: 'var(--color-newsprint)' }}>
-      {/* Newspaper Masthead */}
-      <header className="newspaper-masthead">
+    <div className="min-h-screen bg-gradient-to-br from-purple-500 to-pink-500">
+      {/* Header Banner */}
+      <header className="bg-gradient-to-r from-purple-600 to-purple-500 relative overflow-hidden">
         <div className="container mx-auto max-w-[900px] px-3 py-4 sm:px-4 sm:py-6 relative">
-          <div className="date-stamp-box" style={{ position: 'absolute', left: '1rem', top: '1rem', display: 'none' }}>
-            {new Date().toLocaleDateString('en-US', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            })}
-          </div>
           <div className="text-center">
-            <h1 className="headline-primary" style={{ color: 'var(--color-ink)', marginBottom: '0.5rem' }}>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white drop-shadow-lg">
               NewsCartoon.lol
             </h1>
-            <div className="tagline">
-              "All The News That's Fit To Draw" • Editorial Cartoon Generator • Est. 2024
-            </div>
-            <div className="edition-info">
-              <span>DIGITAL EDITION</span>
-              <span>•</span>
-              <span>VOL. I NO. {Math.floor(Math.random() * 365) + 1}</span>
-              <span>•</span>
-              <span>FREE</span>
-            </div>
+            <p className="text-white text-opacity-90 mt-1 text-xs sm:text-sm">
+              Generate editorial cartoons from news articles
+            </p>
           </div>
         </div>
       </header>
 
       <div className="container mx-auto max-w-[900px] px-2 sm:px-3 md:px-4 py-4 sm:py-6 md:py-8">
-        <main className="vintage-border torn-edge-bottom" style={{
-          background: 'var(--bg-paper)',
-          boxShadow: '0 4px 6px var(--shadow-ink), 0 10px 15px var(--shadow-soft)',
-          padding: '1.5rem'
-        }}>
+        <main className="bg-white rounded-lg shadow-2xl p-3 sm:p-4 md:p-6 lg:p-8">
           {children}
         </main>
 
-        <footer className="mt-8 text-center" style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)' }}>
-          <p>&copy; {currentYear} News Cartoon Press. All rights reserved.</p>
-          <p className="date-stamp" style={{ marginTop: '0.5rem' }}>
+        <footer className="mt-8 text-center text-white text-sm opacity-80">
+          <p>&copy; {currentYear} News Cartoon. All rights reserved.</p>
+          <p className="text-xs mt-2 opacity-70">
             {gitBranch}/{gitHash}
             {buildTime && (
               <span className="ml-2">
-                • Published {new Date(buildTime).toLocaleDateString('en-GB', {
+                • Built {new Date(buildTime).toLocaleDateString('en-GB', {
                   day: 'numeric',
                   month: 'short',
                   year: 'numeric'
