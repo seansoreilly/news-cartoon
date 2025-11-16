@@ -67,8 +67,8 @@ const ConceptDisplay: React.FC = () => {
               onClick={() => handleConceptClick(index)}
               className={`p-2 sm:p-3 md:p-4 rounded-lg border-2 cursor-pointer transition-all ${
                 isSelected
-                  ? 'bg-blue-50 border-blue-500 shadow-md'
-                  : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                  ? 'bg-gradient-to-br from-purple-100 via-pink-50 to-amber-50 border-purple-500 shadow-md'
+                  : 'bg-gradient-to-br from-gray-50 to-white border-gray-200 hover:border-purple-300 hover:shadow-md hover:from-purple-50 hover:to-pink-50'
               }`}
             >
               <div className="flex-1">
@@ -77,7 +77,7 @@ const ConceptDisplay: React.FC = () => {
                     {concept.title}
                   </h3>
                   {isSelected && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-600 text-white flex-shrink-0">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-600 text-white flex-shrink-0">
                       Selected
                     </span>
                   )}
