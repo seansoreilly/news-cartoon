@@ -107,20 +107,6 @@ const ConceptGenerator: React.FC = () => {
       </div>
 
       <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
-        <div className="mb-4">
-          <p className="text-gray-700 font-medium mb-2">
-            Ready to generate: {selectedArticles.length} article{selectedArticles.length !== 1 ? 's' : ''} selected
-          </p>
-          <div className="text-sm text-gray-600">
-            {selectedArticles.map((article, idx) => (
-              <div key={idx} className="flex items-start gap-2 mt-1">
-                <span className="text-purple-600">•</span>
-                <span className="line-clamp-1">{article.title}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
         <button
           onClick={handleGenerateConcepts}
           disabled={localLoading}
