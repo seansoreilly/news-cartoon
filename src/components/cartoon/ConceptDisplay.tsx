@@ -55,7 +55,6 @@ const ConceptDisplay: React.FC = () => {
 
   return (
     <div className="mt-8">
-      <h2 className="text-xl font-semibold mb-4">Concepts</h2>
       <p className="mb-4 text-gray-600">Select a concept to generate the cartoon:</p>
 
       <div className="space-y-4">
