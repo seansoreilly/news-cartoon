@@ -120,10 +120,10 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, selected, onSelect }) => {
   return (
     <div
       onClick={onSelect}
-      className={`p-2 sm:p-3 md:p-4 rounded-lg border-2 cursor-pointer transition-all ${
+      className={`p-2 sm:p-3 md:p-4 rounded-lg border-2 cursor-pointer transition-all duration-300 ${
         selected
-          ? 'bg-gradient-to-br from-blue-100 via-indigo-50 to-sky-50 border-blue-500 shadow-md'
-          : 'bg-gradient-to-br from-gray-50 to-white border-gray-200 hover:border-blue-300 hover:shadow-md hover:from-blue-50 hover:to-indigo-50'
+          ? 'bg-gradient-to-br from-blue-100 via-indigo-50 to-sky-50 border-blue-500 shadow-lg transform scale-[1.02]'
+          : 'bg-white border-gray-200 hover:border-blue-400 hover:shadow-md hover:bg-gradient-to-br hover:from-blue-50/30 hover:via-indigo-50/30 hover:to-sky-50/30'
       }`}
     >
       <div className="flex items-start gap-2 sm:gap-3">

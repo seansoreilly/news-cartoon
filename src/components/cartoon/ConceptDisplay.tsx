@@ -65,10 +65,10 @@ const ConceptDisplay: React.FC = () => {
             <div
               key={index}
               onClick={() => handleConceptClick(index)}
-              className={`p-2 sm:p-3 md:p-4 rounded-lg border-2 cursor-pointer transition-all ${
+              className={`p-2 sm:p-3 md:p-4 rounded-lg border-2 cursor-pointer transition-all duration-300 ${
                 isSelected
-                  ? 'bg-gradient-to-br from-purple-100 via-pink-50 to-amber-50 border-purple-500 shadow-md'
-                  : 'bg-gradient-to-br from-gray-50 to-white border-gray-200 hover:border-purple-300 hover:shadow-md hover:from-purple-50 hover:to-pink-50'
+                  ? 'bg-gradient-to-br from-purple-100 via-pink-50 to-amber-50 border-purple-500 shadow-lg transform scale-[1.02]'
+                  : 'bg-white border-gray-200 hover:border-purple-400 hover:shadow-md hover:bg-gradient-to-br hover:from-purple-50/30 hover:via-pink-50/30 hover:to-amber-50/30'
               }`}
             >
               <div className="flex-1">
