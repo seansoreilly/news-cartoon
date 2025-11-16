@@ -135,7 +135,7 @@ const ConceptDisplay: React.FC = () => {
             aria-label="Generate prompt"
             aria-busy={localLoading}
           >
-            {localLoading ? '✨ Generating Prompt...' : '✨ Generate Cartoon Prompt'}
+            {localLoading ? '✨ Generating Prompt...' : '✨ Generate Prompt'}
           </button>
         </div>
       )}
