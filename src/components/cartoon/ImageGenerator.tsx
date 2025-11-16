@@ -143,7 +143,13 @@ const ImageGenerator: React.FC = React.memo(() => {
             </h3>
 
             <div className="mb-4 border rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center min-h-48 sm:min-h-56 md:min-h-64">
-              <img src={imagePath} alt={selectedConcept.title} className="max-w-full h-auto" />
+              <img
+                src={imagePath}
+                alt={selectedConcept.title}
+                className="max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={() => window.open(imagePath, '_blank')}
+                title="Click to open in new tab"
+              />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
