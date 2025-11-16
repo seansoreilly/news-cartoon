@@ -125,16 +125,18 @@ const ImageGenerator: React.FC = React.memo(() => {
             <button
               onClick={handleGenerateImage}
               disabled={localLoading || timeRemaining > 0 || !comicScript}
-              className="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white px-6 py-3 rounded-lg font-medium hover:from-amber-700 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className={`w-full px-6 py-3 rounded-lg font-medium transition-all ${
+                !comicScript
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-700 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed'
+              }`}
               aria-busy={localLoading}
             >
               {localLoading
                 ? 'Generating Image...'
                 : timeRemaining > 0
                   ? `Wait ${timeRemaining}s`
-                  : !comicScript
-                    ? 'Generate Prompt First'
-                    : 'Generate Image'}
+                  : 'Generate Image'}
             </button>
 
             {localError && (
