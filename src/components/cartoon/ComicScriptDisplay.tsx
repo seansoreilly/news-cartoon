@@ -49,10 +49,10 @@ const ComicScriptDisplay: React.FC = () => {
   if (isEditing) {
     return (
       <div className="mt-6 p-4 bg-white rounded-lg border-2 border-purple-200">
-        <h3 className="font-semibold mb-4 text-lg">✏️ Edit Cartoon Script</h3>
+        <h3 className="font-semibold mb-4 text-lg">✏️ Edit Prompt</h3>
 
         <div className="mb-4">
-          <label className="font-semibold text-gray-700 block mb-2">Cartoon Script:</label>
+          <label className="font-semibold text-gray-700 block mb-2">Prompt:</label>
           <textarea
             value={editPanels.join('\n\n')}
             onChange={(e) => setEditPanels(e.target.value.split('\n\n'))}
@@ -82,7 +82,7 @@ const ComicScriptDisplay: React.FC = () => {
   return (
     <div className="mt-6 p-4 bg-gray-50 rounded-lg">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-lg">Cartoon Script</h3>
+        <h3 className="font-semibold text-lg">Prompt</h3>
         <button
           onClick={handleStartEdit}
           className="text-sm px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"

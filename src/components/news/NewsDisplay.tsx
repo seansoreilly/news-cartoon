@@ -220,15 +220,19 @@ const NewsDisplay: React.FC = () => {
 
   useEffect(() => {
     const fetchNews = async () => {
+      console.log('[NewsDisplay] Location changed:', location);
       if (!location?.name) {
+        console.log('[NewsDisplay] No location name, skipping news fetch');
         return;
       }
 
+      console.log('[NewsDisplay] Fetching news for:', location.name, 'with limit:', newsCount);
       setLoading(true);
       setError(null);
 
       try {
         const newsResponse = await newsService.fetchNewsByLocation(location.name, newsCount);
+        console.log('[NewsDisplay] News response:', newsResponse);
 
         // Set initial news data with local humor scores (instant feedback)
         // Mark articles as loading their summaries

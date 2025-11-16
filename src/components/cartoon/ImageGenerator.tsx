@@ -99,7 +99,7 @@ const ImageGenerator: React.FC = React.memo(() => {
     <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-3 sm:p-4 md:p-6 rounded-lg shadow-md mb-6">
       <div className="flex items-center gap-2 sm:gap-3 mb-4">
         <span className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-600 text-white font-bold text-sm">4</span>
-        <h2 className="text-lg sm:text-2xl font-bold text-gray-800">Generated Cartoon</h2>
+        <h2 className="text-lg sm:text-2xl font-bold text-gray-800">Cartoon</h2>
       </div>
 
       {!imagePath ? (
@@ -122,10 +122,10 @@ const ImageGenerator: React.FC = React.memo(() => {
               aria-busy={localLoading}
             >
               {localLoading
-                ? 'Generating Image...'
+                ? 'Generating Cartoon...'
                 : timeRemaining > 0
                   ? `Wait ${timeRemaining}s`
-                  : 'Generate Image'}
+                  : 'Generate Cartoon'}
             </button>
 
             {localError && (

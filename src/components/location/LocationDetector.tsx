@@ -47,6 +47,7 @@ const LocationDetector: React.FC = () => {
       timestamp: Date.now(),
     };
 
+    console.log('[LocationDetector] Setting location:', locationData);
     setLocation(locationData);
     setManualLocation('');
     setStoreError(null);

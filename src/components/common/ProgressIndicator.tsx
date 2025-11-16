@@ -38,7 +38,7 @@ const ProgressIndicator: React.FC = () => {
     },
     {
       id: 4,
-      label: 'Generate Image',
+      label: 'Generate Cartoon',
       completed: !!imagePath,
       current: !!imagePath
     }
