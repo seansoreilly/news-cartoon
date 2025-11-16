@@ -122,8 +122,8 @@ const NewsCard: React.FC<NewsCardProps> = ({ article, selected, onSelect }) => {
       onClick={onSelect}
       className={`p-2 sm:p-3 md:p-4 rounded-lg border-2 cursor-pointer transition-all duration-300 ${
         selected
-          ? 'bg-gradient-to-br from-blue-100 via-indigo-50 to-sky-50 border-blue-500 shadow-lg transform scale-[1.02]'
-          : 'bg-white border-gray-200 hover:border-blue-400 hover:shadow-md hover:bg-gradient-to-br hover:from-blue-50/30 hover:via-indigo-50/30 hover:to-sky-50/30'
+          ? 'bg-gradient-to-br from-purple-100 via-pink-50 to-amber-50 border-purple-500 shadow-lg transform scale-[1.02]'
+          : 'bg-white border-gray-200 hover:border-purple-400 hover:shadow-md hover:bg-gradient-to-br hover:from-purple-50/30 hover:via-pink-50/30 hover:to-amber-50/30'
       }`}
     >
       <div className="flex items-start gap-2 sm:gap-3">
@@ -364,7 +364,7 @@ const NewsDisplay: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-3 sm:p-4 md:p-6 rounded-lg shadow-md mb-6">
+      <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-3 sm:p-4 md:p-6 rounded-lg shadow-md mb-6">
         <div className="flex items-center gap-2 sm:gap-3 mb-4">
           <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm">2</span>
           <h2 className="text-lg sm:text-2xl font-bold text-gray-800">News Articles</h2>
@@ -380,7 +380,7 @@ const NewsDisplay: React.FC = () => {
 
   if (error) {
     return (
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-3 sm:p-4 md:p-6 rounded-lg shadow-md mb-6">
+      <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-3 sm:p-4 md:p-6 rounded-lg shadow-md mb-6">
         <div className="flex items-center gap-2 sm:gap-3 mb-4">
           <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm">2</span>
           <h2 className="text-lg sm:text-2xl font-bold text-gray-800">News Articles</h2>
@@ -394,7 +394,7 @@ const NewsDisplay: React.FC = () => {
 
   if (!news || !news.articles || news.articles.length === 0) {
     return (
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-3 sm:p-4 md:p-6 rounded-lg shadow-md mb-6">
+      <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-3 sm:p-4 md:p-6 rounded-lg shadow-md mb-6">
         <div className="flex items-center gap-2 sm:gap-3 mb-4">
           <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm">2</span>
           <h2 className="text-lg sm:text-2xl font-bold text-gray-800">News Articles</h2>
@@ -411,7 +411,7 @@ const NewsDisplay: React.FC = () => {
   }
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-3 sm:p-4 md:p-6 rounded-lg shadow-md mb-6">
+    <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-3 sm:p-4 md:p-6 rounded-lg shadow-md mb-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
           <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm flex-shrink-0">2</span>
