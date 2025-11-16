@@ -12,12 +12,12 @@ import { useCartoonStore } from '../store/cartoonStore';
 const HomePage: React.FC = () => {
   const { location } = useLocationStore();
   const { selectedArticles } = useNewsStore();
-  const { selectedConceptIndex, comicScript } = useCartoonStore();
+  const { selectedConceptIndex, comicPrompt } = useCartoonStore();
 
   const hasLocation = location?.name && location.name.trim() !== '';
   const hasSelectedArticles = selectedArticles.length > 0;
   const hasSelectedConcept = selectedConceptIndex !== null;
-  const hasComicScript = comicScript !== null;
+  const hasComicScript = comicPrompt !== null;
 
   return (
     <div className="space-y-8">

@@ -17,7 +17,7 @@ describe('cartoonStore', () => {
       const { result } = renderHook(() => useCartoonStore());
 
       expect(result.current.cartoon).toBeNull();
-      expect(result.current.comicScript).toBeNull();
+      expect(result.current.comicPrompt).toBeNull();
       expect(result.current.imagePath).toBeNull();
       expect(result.current.isLoading).toBe(false);
       expect(result.current.error).toBeNull();
@@ -85,7 +85,7 @@ describe('cartoonStore', () => {
     });
   });
 
-  describe('setComicScript', () => {
+  describe('setComicPrompt', () => {
     it('should set comic script data', () => {
       const { result } = renderHook(() => useCartoonStore());
       const mockScript: ComicScript = {
@@ -98,10 +98,10 @@ describe('cartoonStore', () => {
       };
 
       act(() => {
-        result.current.setComicScript(mockScript);
+        result.current.setComicPrompt(mockScript);
       });
 
-      expect(result.current.comicScript).toEqual(mockScript);
+      expect(result.current.comicPrompt).toEqual(mockScript);
     });
 
     it('should handle empty comic script', () => {
@@ -113,10 +113,10 @@ describe('cartoonStore', () => {
       };
 
       act(() => {
-        result.current.setComicScript(emptyScript);
+        result.current.setComicPrompt(emptyScript);
       });
 
-      expect(result.current.comicScript?.panels).toHaveLength(0);
+      expect(result.current.comicPrompt?.panels).toHaveLength(0);
     });
 
     it('should replace previous comic script', () => {
@@ -134,16 +134,16 @@ describe('cartoonStore', () => {
       };
 
       act(() => {
-        result.current.setComicScript(script1);
+        result.current.setComicPrompt(script1);
       });
 
-      expect((result.current.comicScript?.panels[0] as any)?.description).toBe('First script');
+      expect((result.current.comicPrompt?.panels[0] as any)?.description).toBe('First script');
 
       act(() => {
-        result.current.setComicScript(script2);
+        result.current.setComicPrompt(script2);
       });
 
-      expect((result.current.comicScript?.panels[0] as any)?.description).toBe('Second script');
+      expect((result.current.comicPrompt?.panels[0] as any)?.description).toBe('Second script');
     });
   });
 
@@ -278,13 +278,13 @@ describe('cartoonStore', () => {
 
       act(() => {
         result.current.setCartoon(cartoon);
-        result.current.setComicScript(script);
+        result.current.setComicPrompt(script);
         result.current.setImagePath('/image.png');
         result.current.setError('Some error');
       });
 
       expect(result.current.cartoon).not.toBeNull();
-      expect(result.current.comicScript).not.toBeNull();
+      expect(result.current.comicPrompt).not.toBeNull();
       expect(result.current.imagePath).not.toBeNull();
       expect(result.current.error).toBe('Some error');
 
@@ -293,7 +293,7 @@ describe('cartoonStore', () => {
       });
 
       expect(result.current.cartoon).toBeNull();
-      expect(result.current.comicScript).toBeNull();
+      expect(result.current.comicPrompt).toBeNull();
       expect(result.current.imagePath).toBeNull();
       expect(result.current.error).toBeNull();
     });
@@ -340,13 +340,13 @@ describe('cartoonStore', () => {
 
       act(() => {
         result.current.setCartoon(cartoon);
-        result.current.setComicScript(script);
+        result.current.setComicPrompt(script);
         result.current.setImagePath(imagePath);
         result.current.setLoading(false);
       });
 
       expect(result.current.cartoon?.topic).toBe('News Topic');
-      expect(result.current.comicScript?.panels).toHaveLength(2);
+      expect(result.current.comicPrompt?.panels).toHaveLength(2);
       expect(result.current.imagePath).toBe(imagePath);
       expect(result.current.isLoading).toBe(false);
     });

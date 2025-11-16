@@ -3,20 +3,20 @@ import { useCartoonStore } from '../../store/cartoonStore';
 import type { ComicPanel, ComicScriptPanel } from '../../types/cartoon';
 
 const ComicScriptDisplay: React.FC = () => {
-  const { comicScript, setComicScript } = useCartoonStore();
+  const { comicPrompt, setComicPrompt } = useCartoonStore();
   const [isEditing, setIsEditing] = useState(false);
   const [editDescription, setEditDescription] = useState('');
   const [editPanels, setEditPanels] = useState<string[]>([]);
 
-  if (!comicScript) {
+  if (!comicPrompt) {
     return null;
   }
 
   // Initialize edit state when entering edit mode
   const handleStartEdit = () => {
-    setEditDescription(comicScript.description || '');
+    setEditDescription(comicPrompt.description || '');
     setEditPanels(
-      comicScript.panels?.map((panel: string | ComicPanel | ComicScriptPanel) => {
+      comicPrompt.panels?.map((panel: string | ComicPanel | ComicScriptPanel) => {
         if (typeof panel === 'string') return panel;
         if ('visualDescription' in panel) return (panel as ComicScriptPanel).visualDescription;
         return (panel as ComicPanel).description;
@@ -28,8 +28,8 @@ const ComicScriptDisplay: React.FC = () => {
   const handleSaveEdits = () => {
     // Only save if we have valid content
     if (editDescription.trim() || editPanels.some(p => p.trim())) {
-      setComicScript({
-        ...comicScript,
+      setComicPrompt({
+        ...comicPrompt,
         description: editDescription.trim(),
         panels: editPanels.filter(p => p.trim()),
       });
@@ -93,21 +93,21 @@ const ComicScriptDisplay: React.FC = () => {
 
       <div className="mb-3">
         <span className="font-semibold">Description:</span>
-        <p className="text-lg">{comicScript.description}</p>
+        <p className="text-lg">{comicPrompt.description}</p>
       </div>
 
-      {comicScript.newsContext && (
+      {comicPrompt.newsContext && (
         <div className="mb-3">
           <span className="font-semibold">News Context:</span>
-          <p className="italic">{comicScript.newsContext}</p>
+          <p className="italic">{comicPrompt.newsContext}</p>
         </div>
       )}
 
-      {comicScript.panels && comicScript.panels.length > 0 && (
+      {comicPrompt.panels && comicPrompt.panels.length > 0 && (
         <div>
           <span className="font-semibold">Panels:</span>
           <ul className="list-disc list-inside mt-2 space-y-1">
-            {comicScript.panels.map((panel: string | ComicPanel | ComicScriptPanel, index: number) => {
+            {comicPrompt.panels.map((panel: string | ComicPanel | ComicScriptPanel, index: number) => {
               let panelText = '';
               if (typeof panel === 'string') {
                 panelText = panel;

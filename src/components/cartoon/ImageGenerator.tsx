@@ -6,7 +6,7 @@ import { ImageGenerationRateLimiter } from '../../utils/rateLimiter';
 import { AppErrorHandler } from '../../utils/errorHandler';
 
 const ImageGenerator: React.FC = React.memo(() => {
-  const { cartoon, comicScript, imagePath, setImagePath, setLoading, setError, selectedConceptIndex } = useCartoonStore();
+  const { cartoon, comicPrompt, imagePath, setImagePath, setLoading, setError, selectedConceptIndex } = useCartoonStore();
   const { selectedArticles } = useNewsStore();
   const [localLoading, setLocalLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -23,7 +23,7 @@ const ImageGenerator: React.FC = React.memo(() => {
       return;
     }
 
-    if (!comicScript) {
+    if (!comicPrompt) {
       setLocalError('No cartoon script generated');
       return;
     }
@@ -52,7 +52,7 @@ const ImageGenerator: React.FC = React.memo(() => {
       }
 
       // Extract panel count from the generated script
-      const panelCount = comicScript.panels ? comicScript.panels.length : 4;
+      const panelCount = comicPrompt.panels ? comicPrompt.panels.length : 4;
       const cartoonImage = await geminiService.generateCartoonImage(selectedConcept, selectedArticles, panelCount);
       const imageUrl = `data:${cartoonImage.mimeType};base64,${cartoonImage.base64Data}`;
       setImagePath(imageUrl);
@@ -87,7 +87,7 @@ const ImageGenerator: React.FC = React.memo(() => {
   };
 
   // Don't show this section until a prompt has been generated
-  if (!cartoon || !cartoon.ideas || cartoon.ideas.length === 0 || !comicScript) {
+  if (!cartoon || !cartoon.ideas || cartoon.ideas.length === 0 || !comicPrompt) {
     return null;
   }
 
@@ -113,9 +113,9 @@ const ImageGenerator: React.FC = React.memo(() => {
 
             <button
               onClick={handleGenerateImage}
-              disabled={localLoading || timeRemaining > 0 || !comicScript}
+              disabled={localLoading || timeRemaining > 0 || !comicPrompt}
               className={`w-full px-6 py-3 rounded-lg font-medium transition-all ${
-                !comicScript
+                !comicPrompt
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-700 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed'
               }`}
