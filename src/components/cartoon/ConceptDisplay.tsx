@@ -57,7 +57,7 @@ const ConceptDisplay: React.FC = () => {
     <div className="mt-8">
       <p className="mb-4 text-gray-600">Select a concept to generate the cartoon:</p>
 
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-3">
         {cartoon.ideas.map((concept: CartoonConcept, index: number) => {
           const isSelected = selectedConceptIndex === index;
 
@@ -65,33 +65,32 @@ const ConceptDisplay: React.FC = () => {
             <div
               key={index}
               onClick={() => handleConceptClick(index)}
-              className={`
-                relative overflow-hidden rounded-lg p-4 cursor-pointer transition-all duration-300
-                ${isSelected
-                  ? 'bg-gradient-to-br from-purple-100 via-pink-50 to-amber-50 border-2 border-purple-500 shadow-lg transform scale-[1.02]'
-                  : 'border border-gray-200 hover:border-purple-400 hover:shadow-md bg-white'
-                }
-              `}
+              className={`p-2 sm:p-3 md:p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                isSelected
+                  ? 'bg-blue-50 border-blue-500 shadow-md'
+                  : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
+              }`}
             >
-              {isSelected && (
-                <div className="absolute top-2 right-2">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-600 text-white">
-                    Selected
-                  </span>
+              <div className="flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="font-semibold text-gray-800 line-clamp-2 text-sm sm:text-base flex-1">
+                    {concept.title}
+                  </h3>
+                  {isSelected && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-600 text-white flex-shrink-0">
+                      Selected
+                    </span>
+                  )}
                 </div>
-              )}
-
-              <h3 className={`font-semibold text-lg mb-2 ${isSelected ? 'text-purple-800' : 'text-gray-800'}`}>
-                {concept.title}
-              </h3>
-              <p className={`mb-2 ${isSelected ? 'text-gray-700' : 'text-gray-600'}`}>
-                {concept.premise}
-              </p>
-              {concept.why_funny && (
-                <p className={`italic text-sm ${isSelected ? 'text-purple-700' : 'text-gray-500'}`}>
-                  <span className="font-medium">Why it's funny:</span> {concept.why_funny}
+                <p className="text-xs sm:text-sm text-gray-600 mt-2 line-clamp-2 sm:line-clamp-4">
+                  {concept.premise}
                 </p>
-              )}
+                {concept.why_funny && (
+                  <p className="text-xs text-gray-500 mt-2 italic">
+                    Why it's funny: {concept.why_funny}
+                  </p>
+                )}
+              </div>
             </div>
           );
         })}

@@ -86,24 +86,13 @@ const ImageGenerator: React.FC = React.memo(() => {
     setLocalError(null);
   };
 
-  if (!cartoon || !cartoon.ideas || cartoon.ideas.length === 0) {
+  // Don't show this section until a prompt has been generated
+  if (!cartoon || !cartoon.ideas || cartoon.ideas.length === 0 || !comicScript) {
     return null;
   }
 
   if (!selectedConcept) {
-    return (
-      <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-6 rounded-lg shadow-md mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Generated Cartoon</h2>
-        <div className="text-center py-8">
-          <p className="text-gray-600 text-lg mb-2">
-            👆 Please select a cartoon concept above
-          </p>
-          <p className="text-sm text-gray-500">
-            Click on any concept to generate the cartoon
-          </p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
