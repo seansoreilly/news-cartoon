@@ -135,14 +135,6 @@ const ConceptGenerator: React.FC = () => {
             <p className="text-red-800 font-medium">{localError}</p>
           </div>
         )}
-
-        {localLoading && (
-          <div className="mt-4 bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-            <p className="text-blue-800 text-sm">
-              Analyzing and creating concepts...
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );
