@@ -124,15 +124,17 @@ const ImageGenerator: React.FC = React.memo(() => {
 
             <button
               onClick={handleGenerateImage}
-              disabled={localLoading || timeRemaining > 0}
+              disabled={localLoading || timeRemaining > 0 || !comicScript}
               className="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white px-6 py-3 rounded-lg font-medium hover:from-amber-700 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               aria-busy={localLoading}
             >
               {localLoading
-                ? 'Generating...'
+                ? 'Generating Image...'
                 : timeRemaining > 0
                   ? `Wait ${timeRemaining}s`
-                  : 'Generate'}
+                  : !comicScript
+                    ? 'Generate Prompt First'
+                    : 'Generate Image'}
             </button>
 
             {localError && (
@@ -163,7 +165,8 @@ const ImageGenerator: React.FC = React.memo(() => {
 
               <button
                 onClick={handleRegenerateImage}
-                className="w-full bg-gray-200 text-gray-800 px-3 sm:px-6 py-2 text-sm sm:text-base rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                disabled={localLoading}
+                className="w-full bg-gray-200 text-gray-800 px-3 sm:px-6 py-2 text-sm sm:text-base rounded-lg font-medium hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Generate New Cartoon
               </button>
