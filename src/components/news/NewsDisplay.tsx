@@ -435,14 +435,6 @@ const NewsDisplay: React.FC = () => {
           />
         ))}
       </div>
-
-      {selectedArticles.length > 0 && (
-        <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-blue-100 border border-blue-300 rounded-lg">
-          <p className="text-blue-800 text-xs sm:text-sm font-medium">
-            Selected {selectedArticles.length} article{selectedArticles.length !== 1 ? 's' : ''} for cartoon generation
-          </p>
-        </div>
-      )}
     </div>
   );
 };
