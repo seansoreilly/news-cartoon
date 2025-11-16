@@ -6,7 +6,7 @@ import { AppErrorHandler } from '../../utils/errorHandler';
 import type { CartoonConcept } from '../../types/cartoon';
 
 const ConceptDisplay: React.FC = () => {
-  const { cartoon, selectedConceptIndex, setSelectedConceptIndex, setComicScript, setError, setLoading } = useCartoonStore();
+  const { cartoon, selectedConceptIndex, setSelectedConceptIndex, setComicPrompt, setError, setLoading } = useCartoonStore();
   const { selectedArticles } = useNewsStore();
   const [localError, setLocalError] = useState<string | null>(null);
   const [localLoading, setLocalLoading] = useState(false);
@@ -21,7 +21,7 @@ const ConceptDisplay: React.FC = () => {
     setLocalError(null);
   };
 
-  const handleGenerateScript = async () => {
+  const handleGeneratePrompt = async () => {
     if (selectedConceptIndex === null || !cartoon.ideas[selectedConceptIndex]) {
       setLocalError('Please select a concept first');
       return;
@@ -34,13 +34,13 @@ const ConceptDisplay: React.FC = () => {
     setLoading(true);
 
     try {
-      console.log('[ConceptDisplay] Generating cartoon script for concept:', selectedConcept.title);
-      const script = await geminiService.generateComicScript(
+      console.log('[ConceptDisplay] Generating cartoon prompt for concept:', selectedConcept.title);
+      const prompt = await geminiService.generateComicPrompt(
         selectedConcept,
         selectedArticles,
         selectedPanelCount
       );
-      setComicScript(script);
+      setComicPrompt(prompt);
       setLocalError(null);
     } catch (err) {
       const appError = AppErrorHandler.handleError(err);
@@ -55,7 +55,7 @@ const ConceptDisplay: React.FC = () => {
 
   return (
     <div className="mt-8">
-      <h2 className="text-xl font-semibold mb-4">Cartoon Concepts</h2>
+      <h2 className="text-xl font-semibold mb-4">Concepts</h2>
       <p className="mb-4 text-gray-600">Select a concept to generate the cartoon:</p>
 
       <div className="space-y-4">
@@ -129,13 +129,13 @@ const ConceptDisplay: React.FC = () => {
           </div>
 
           <button
-            onClick={handleGenerateScript}
+            onClick={handleGeneratePrompt}
             disabled={localLoading}
             className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 shadow-lg"
-            aria-label="Generate cartoon script"
+            aria-label="Generate prompt"
             aria-busy={localLoading}
           >
-            {localLoading ? '✨ Generating Script...' : '✨ Generate Cartoon Script'}
+            {localLoading ? '✨ Generating Prompt...' : '✨ Generate Cartoon Prompt'}
           </button>
         </div>
       )}

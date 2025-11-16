@@ -98,7 +98,7 @@ describe('AppErrorHandler', () => {
       const message = AppErrorHandler.getUserMessage(error);
 
       expect(message).toBe(
-        'We could not generate cartoon concepts. Please try again.'
+        'We could not generate concepts. Please try again.'
       );
     });
 

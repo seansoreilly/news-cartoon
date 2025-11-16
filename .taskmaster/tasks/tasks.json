@@ -875,7 +875,7 @@
         "id": 1,
         "title": "Design and Implement a Location-to-News-Source Data Structure",
         "description": "Develop a data structure that leverages Google News's built-in authority ranking to identify top mainstream news sources for major world cities, storing source names, domain names, and authority rankings for filtering and display.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [],
         "priority": "medium",
         "details": "1. Implement a strategy that leverages Google News RSS's built-in authority ranking (using the 'scoring=r' parameter) which already prioritizes authoritative sources for each location.\n\n2. For each city (Melbourne, Sydney, Brisbane, Perth, Adelaide, Canberra, New York, Los Angeles, Chicago, San Francisco, London, Manchester, and other major world cities), capture the first 5-10 Google News results as these represent the most authoritative sources for that location.\n\n3. For each news source, collect the display name (e.g., 'The Age'), the canonical domain name (e.g., 'theage.com.au'), and add a position indicator (1st = most authoritative, 2nd = second most authoritative, etc.) based on Google News ranking.\n\n4. Design the data structure for efficient lookup and filtering. Recommended best practice is to use a nested dictionary or map, where the top-level key is the city name (normalized), and the value is a list of objects containing 'sourceName', 'domain', and 'authorityRank'. For example:\n\n```json\n{\n  \"Melbourne\": [\n    { \"sourceName\": \"The Age\", \"domain\": \"theage.com.au\", \"authorityRank\": 1 },\n    ...\n  ],\n  ...\n}\n```\n\n5. Store the data in a format suitable for both backend (e.g., JSON, YAML) and frontend consumption. Ensure the structure is extensible for future cities or sources.\n\n6. Document the data schema and provide clear guidelines for updating or extending the list. Consider internationalization and encoding issues for non-English city/source names.\n\n7. Include unit tests or validation scripts to check for missing fields, duplicate domains, and correct mapping.",
@@ -885,7 +885,7 @@
             "id": 1,
             "title": "Implement Google News RSS Authority Ranking Strategy",
             "description": "Develop a method to query Google News RSS with the 'scoring=r' parameter for each major city to obtain the most authoritative news sources based on Google's built-in ranking algorithm.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "details": "Create a script that queries Google News RSS feeds for each target city (Melbourne, Sydney, Brisbane, Perth, Adelaide, Canberra, New York, Los Angeles, Chicago, San Francisco, London, Manchester, and other major world cities) using the 'scoring=r' parameter. Extract the first 5-10 results for each location as these represent the most authoritative sources according to Google's algorithm.",
             "testStrategy": "Verify that the script successfully retrieves Google News RSS results for each city, and that the 'scoring=r' parameter is correctly applied to prioritize authoritative sources."
@@ -894,7 +894,7 @@
             "id": 2,
             "title": "Extract and Normalize News Source Data with Authority Rankings",
             "description": "For each news source identified from Google News results, extract the display name, canonical domain, and add an authority rank based on its position in the Google News results.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               1
             ],
@@ -905,7 +905,7 @@
             "id": 3,
             "title": "Design and Implement the Location-to-News-Source Data Structure",
             "description": "Design a data structure for efficient lookup and filtering, mapping normalized city names to lists of news source objects containing 'sourceName', 'domain', and 'authorityRank'. Implement the structure in a format suitable for backend and frontend use.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               2
             ],
@@ -916,7 +916,7 @@
             "id": 4,
             "title": "Document Data Schema and Update Guidelines",
             "description": "Create comprehensive documentation for the data schema, including field definitions, normalization rules, and clear guidelines for updating or extending the list. Address internationalization and encoding for non-English names.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               3
             ],
@@ -927,7 +927,7 @@
             "id": 5,
             "title": "Implement Automated Validation and Testing Scripts",
             "description": "Develop unit tests and validation scripts to check for missing fields, duplicate domains, correct mappings, and proper authority rankings. Include tests for filtering by authority rank.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               3
             ],
@@ -1212,7 +1212,7 @@
     ],
     "metadata": {
       "created": "2025-11-15T23:39:56.102Z",
-      "updated": "2025-11-15T23:41:47.964Z",
+      "updated": "2025-11-15T23:57:03.884Z",
       "description": "Implement mainstream news source prioritization and filtering for better content quality"
     }
   }

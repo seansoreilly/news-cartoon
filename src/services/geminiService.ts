@@ -87,47 +87,47 @@ class GeminiService {
     }
   }
 
-  async generateComicScript(
+  async generateComicPrompt(
     concept: CartoonConcept,
     articles: NewsArticle[],
     panelCount: number = 4
   ): Promise<ComicScript> {
-    console.log('[generateComicScript] Starting comic script generation...');
-    console.log('[generateComicScript] Concept title:', concept.title);
-    console.log('[generateComicScript] Articles count:', articles.length);
-    console.log('[generateComicScript] Panel count requested:', panelCount);
+    console.log('[generateComicPrompt] Starting comic prompt generation...');
+    console.log('[generateComicPrompt] Concept title:', concept.title);
+    console.log('[generateComicPrompt] Articles count:', articles.length);
+    console.log('[generateComicPrompt] Panel count requested:', panelCount);
 
-    const prompt = this.buildScriptPrompt(concept, articles, panelCount);
-    console.log('[generateComicScript] Script prompt length:', prompt.length);
+    const prompt = this.buildPromptText(concept, articles, panelCount);
+    console.log('[generateComicPrompt] Prompt text length:', prompt.length);
 
     try {
-      console.log('[generateComicScript] Calling Gemini API for script...');
+      console.log('[generateComicPrompt] Calling Gemini API for prompt...');
       const response = await this.callGeminiApi(prompt);
-      console.log('[generateComicScript] Received response from Gemini');
+      console.log('[generateComicPrompt] Received response from Gemini');
 
-      console.log('[generateComicScript] Parsing script response...');
-      const panels = this.parseScriptResponse(response, panelCount);
-      console.log('[generateComicScript] Parsed panels count:', panels.length);
+      console.log('[generateComicPrompt] Parsing prompt response...');
+      const panels = this.parsePromptResponse(response, panelCount);
+      console.log('[generateComicPrompt] Parsed panels count:', panels.length);
 
-      const script = {
+      const comicPrompt = {
         panels,
-        description: `Comic script for: ${concept.title}`,
+        description: `Comic prompt for: ${concept.title}`,
         generatedAt: Date.now(),
         newsContext: articles.map((a) => a.title).join('; '),
       };
 
-      console.log('[generateComicScript] ✅ Comic script generated successfully');
-      return script;
+      console.log('[generateComicPrompt] ✅ Comic prompt generated successfully');
+      return comicPrompt;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       const errorStack = error instanceof Error ? error.stack : undefined;
-      console.error('[generateComicScript] ❌ Comic script generation failed:', {
+      console.error('[generateComicPrompt] ❌ Comic prompt generation failed:', {
         message: errorMessage,
         stack: errorStack,
         error,
       });
       throw createCartoonError(
-        'Failed to generate comic script',
+        'Failed to generate comic prompt',
         { originalError: errorMessage, stack: errorStack }
       );
     }
@@ -159,21 +159,21 @@ class GeminiService {
     }
     console.log('No cached image found, generating new one...');
 
-    console.log('Generating comic script...');
-    const script = await this.generateComicScript(concept, articles, panelCount);
-    console.log('Comic script generated:', script);
+    console.log('Generating comic prompt...');
+    const prompt = await this.generateComicPrompt(concept, articles, panelCount);
+    console.log('Comic prompt generated:', prompt);
     console.log('Panel count being used for image generation:', panelCount);
 
     // Extract and validate text elements before building prompt
-    const textElements = this.extractTextElements(script);
+    const textElements = this.extractTextElements(prompt);
     this.validateTextElements(textElements);
 
-    const prompt = this.buildImagePrompt(concept, script, panelCount);
-    console.log('Image prompt length:', prompt.length, 'characters');
+    const imagePrompt = this.buildImagePrompt(concept, prompt, panelCount);
+    console.log('Image prompt length:', imagePrompt.length, 'characters');
 
     try {
       console.log('Calling Vision API...');
-      const response = await this.callVisionApi(prompt);
+      const response = await this.callVisionApi(imagePrompt);
       console.log('Vision API response received');
 
       console.log('Parsing image response...');
@@ -648,7 +648,7 @@ Generate exactly 5 concepts as JSON array with these fields:
 Focus on SHOWING the absurdity, not telling it.`;
   }
 
-  private buildScriptPrompt(
+  private buildPromptText(
     concept: CartoonConcept,
     articles: NewsArticle[],
     panelCount: number = 4
@@ -1001,18 +1001,18 @@ Generate the JSON array now:`;
     }
   }
 
-  private parseScriptResponse(response: GeminiResponse, expectedPanelCount: number = 4): ComicScriptPanel[] {
-    console.log('[parseScriptResponse] Starting to parse new JSON script format...');
-    console.log('[parseScriptResponse] Expected panel count:', expectedPanelCount);
+  private parsePromptResponse(response: GeminiResponse, expectedPanelCount: number = 4): ComicScriptPanel[] {
+    console.log('[parsePromptResponse] Starting to parse new JSON prompt format...');
+    console.log('[parsePromptResponse] Expected panel count:', expectedPanelCount);
 
     const text = response.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    console.log('[parseScriptResponse] Response text length:', text.length);
-    console.log('[parseScriptResponse] Response text preview:', text.substring(0, 500));
+    console.log('[parsePromptResponse] Response text length:', text.length);
+    console.log('[parsePromptResponse] Response text preview:', text.substring(0, 500));
 
     // Try to parse as JSON array (new format)
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (jsonMatch) {
-      console.log('[parseScriptResponse] Found JSON array, parsing new format...');
+      console.log('[parsePromptResponse] Found JSON array, parsing new format...');
       try {
         const parsed = JSON.parse(jsonMatch[0]) as Array<{
           panelNumber?: number;
@@ -1023,10 +1023,10 @@ Generate the JSON array now:`;
         }>;
 
         if (Array.isArray(parsed) && parsed.length > 0) {
-          console.log('[parseScriptResponse] Successfully parsed JSON array with', parsed.length, 'panels');
+          console.log('[parsePromptResponse] Successfully parsed JSON array with', parsed.length, 'panels');
 
           const panels: ComicScriptPanel[] = parsed.slice(0, expectedPanelCount).map((panel, index) => {
-            console.log(`[parseScriptResponse] Panel ${index + 1}:`, {
+            console.log(`[parsePromptResponse] Panel ${index + 1}:`, {
               hasVisualDescription: !!panel.visualDescription,
               textElementCount: panel.visibleText?.length || 0,
             });
@@ -1047,16 +1047,16 @@ Generate the JSON array now:`;
             };
           });
 
-          console.log('[parseScriptResponse] Successfully extracted', panels.length, 'panels with structured data');
+          console.log('[parsePromptResponse] Successfully extracted', panels.length, 'panels with structured data');
           return panels;
         }
       } catch (error) {
-        console.warn('[parseScriptResponse] JSON parsing failed:', error);
+        console.warn('[parsePromptResponse] JSON parsing failed:', error);
       }
     }
 
     // Fallback: Create default panels if parsing completely fails
-    console.warn('[parseScriptResponse] Could not parse JSON, using default panels');
+    console.warn('[parsePromptResponse] Could not parse JSON, using default panels');
     const defaultPanels: ComicScriptPanel[] = [];
     for (let i = 1; i <= expectedPanelCount; i++) {
       defaultPanels.push({

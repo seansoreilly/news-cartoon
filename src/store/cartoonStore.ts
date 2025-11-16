@@ -3,13 +3,13 @@ import type { CartoonData, ComicScript } from '../types';
 
 interface CartoonState {
   cartoon: CartoonData | null;
-  comicScript: ComicScript | null;
+  comicPrompt: ComicScript | null;
   imagePath: string | null;
   selectedConceptIndex: number | null;
   isLoading: boolean;
   error: string | null;
   setCartoon: (cartoon: CartoonData) => void;
-  setComicScript: (script: ComicScript) => void;
+  setComicPrompt: (prompt: ComicScript) => void;
   setImagePath: (path: string) => void;
   setSelectedConceptIndex: (index: number) => void;
   clearCartoon: () => void;
@@ -19,7 +19,7 @@ interface CartoonState {
 
 export const useCartoonStore = create<CartoonState>((set) => ({
   cartoon: null,
-  comicScript: null,
+  comicPrompt: null,
   imagePath: null,
   selectedConceptIndex: null,
   isLoading: false,
@@ -29,8 +29,8 @@ export const useCartoonStore = create<CartoonState>((set) => ({
     set({ cartoon, error: null, selectedConceptIndex: null });
   },
 
-  setComicScript: (comicScript: ComicScript) => {
-    set({ comicScript });
+  setComicPrompt: (comicPrompt: ComicScript) => {
+    set({ comicPrompt });
   },
 
   setImagePath: (imagePath: string) => {
@@ -38,13 +38,13 @@ export const useCartoonStore = create<CartoonState>((set) => ({
   },
 
   setSelectedConceptIndex: (selectedConceptIndex: number) => {
-    set({ selectedConceptIndex, imagePath: null, comicScript: null });
+    set({ selectedConceptIndex, imagePath: null, comicPrompt: null });
   },
 
   clearCartoon: () => {
     set({
       cartoon: null,
-      comicScript: null,
+      comicPrompt: null,
       imagePath: null,
       selectedConceptIndex: null,
       error: null,

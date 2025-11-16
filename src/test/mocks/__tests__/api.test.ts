@@ -102,7 +102,7 @@ describe('MSW API Handlers', () => {
               {
                 parts: [
                   {
-                    text: 'Generate cartoon concepts',
+                    text: 'Generate concepts',
                   },
                 ],
               },

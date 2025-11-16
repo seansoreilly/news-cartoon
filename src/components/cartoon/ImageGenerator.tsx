@@ -129,10 +129,10 @@ const ImageGenerator: React.FC = React.memo(() => {
               aria-busy={localLoading}
             >
               {localLoading
-                ? 'Generating Cartoon...'
+                ? 'Generating...'
                 : timeRemaining > 0
                   ? `Wait ${timeRemaining}s`
-                  : 'Generate Cartoon'}
+                  : 'Generate'}
             </button>
 
             {localError && (

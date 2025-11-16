@@ -50,7 +50,7 @@ const ConceptGenerator: React.FC = () => {
       <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-lg shadow-md mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">Cartoon Concepts</h2>
+            <h2 className="text-2xl font-bold text-gray-800">Concepts</h2>
             <p className="text-sm text-gray-600 mt-1">
               Generated {cartoon.ideas.length} concept{cartoon.ideas.length !== 1 ? 's' : ''}
             </p>
@@ -70,7 +70,7 @@ const ConceptGenerator: React.FC = () => {
   if (!location?.name) {
     return (
       <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-lg shadow-md mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Generate Cartoon Concepts</h2>
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">Generate Concepts</h2>
         <div className="text-center py-8">
           <p className="text-gray-600 text-lg mb-2">
             Please enter search keywords first
@@ -86,10 +86,10 @@ const ConceptGenerator: React.FC = () => {
   if (selectedArticles.length === 0) {
     return (
       <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-lg shadow-md mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Generate Cartoon Concepts</h2>
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">Generate Concepts</h2>
         <div className="text-center py-8">
           <p className="text-gray-600 text-lg mb-2">
-            Please select articles above to generate cartoon concepts
+            Please select articles above to generate concepts
           </p>
           <p className="text-sm text-gray-500">
             Choose one or more articles to turn into a cartoon
@@ -103,7 +103,7 @@ const ConceptGenerator: React.FC = () => {
     <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-lg shadow-md mb-6">
       <div className="flex items-center gap-3 mb-4">
         <span className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white font-bold text-sm">3</span>
-        <h2 className="text-2xl font-bold text-gray-800">Generate Cartoon Concepts</h2>
+        <h2 className="text-2xl font-bold text-gray-800">Generate Concepts</h2>
       </div>
 
       <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
@@ -127,7 +127,7 @@ const ConceptGenerator: React.FC = () => {
           className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           aria-busy={localLoading}
         >
-          {localLoading ? 'Generating Concepts...' : 'Generate Cartoon Concepts'}
+          {localLoading ? 'Generating Concepts...' : 'Generate Concepts'}
         </button>
 
         {localError && (
@@ -139,7 +139,7 @@ const ConceptGenerator: React.FC = () => {
         {localLoading && (
           <div className="mt-4 bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
             <p className="text-blue-800 text-sm">
-              AI is analyzing the news and creating funny cartoon concepts...
+              Analyzing and creating concepts...
             </p>
           </div>
         )}
