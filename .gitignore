@@ -64,3 +64,9 @@ logs
 # Task files
 # tasks.json
 # tasks/ 
+
+# Claude
+.claude/settings.local.json
+
+# Playwright
+test-results/
