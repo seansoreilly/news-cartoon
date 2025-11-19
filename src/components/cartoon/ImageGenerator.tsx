@@ -117,7 +117,7 @@ const ImageGenerator: React.FC = React.memo(() => {
               className={`w-full px-6 py-3 rounded-lg font-medium transition-all ${
                 !comicPrompt
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-700 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed'
+                  : 'bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-700 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed animate-flash-green'
               }`}
               aria-busy={localLoading}
             >

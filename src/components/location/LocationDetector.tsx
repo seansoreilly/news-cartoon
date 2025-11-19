@@ -6,6 +6,7 @@ import type { LocationData } from '../../types/location';
 
 const LocationDetector: React.FC = () => {
   const { location, setLocation, clearLocation, setError: setStoreError } = useLocationStore();
+  const hasLocation = !!location?.name;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [manualLocation, setManualLocation] = useState('');
@@ -86,7 +87,7 @@ const LocationDetector: React.FC = () => {
           <button
             onClick={handleAutoDetect}
             disabled={isLoading}
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 shadow-lg"
+            className={`w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 shadow-lg ${isLoading ? 'animate-flash-amber' : (!hasLocation ? 'animate-flash-green' : '')}`}
             aria-label="Detect my location automatically"
             aria-busy={isLoading}
           >

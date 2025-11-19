@@ -110,7 +110,7 @@ const ConceptGenerator: React.FC = () => {
         <button
           onClick={handleGenerateConcepts}
           disabled={localLoading}
-          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          className={`w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 shadow-lg ${localLoading ? 'animate-flash-amber' : 'animate-flash-green'}`}
           aria-busy={localLoading}
         >
           {localLoading ? 'Generating Concepts...' : 'Generate Concepts'}
