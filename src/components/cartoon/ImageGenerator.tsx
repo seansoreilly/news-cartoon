@@ -79,6 +79,18 @@ const ImageGenerator: React.FC = React.memo(() => {
     document.body.removeChild(link);
   };
 
+  const handleImageClick = () => {
+    if (!imagePath) return;
+
+    const link = document.createElement('a');
+    link.href = imagePath;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleRegenerateImage = () => {
     // Clear the image cache so a new image will be generated
     geminiService.clearImageCache();
@@ -147,7 +159,7 @@ const ImageGenerator: React.FC = React.memo(() => {
                 src={imagePath}
                 alt={selectedConcept.title}
                 className="max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
-                onClick={() => window.open(imagePath, '_blank')}
+                onClick={handleImageClick}
                 title="Click to open in new tab"
               />
             </div>
