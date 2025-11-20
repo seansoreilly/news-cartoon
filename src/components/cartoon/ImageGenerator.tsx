@@ -82,13 +82,24 @@ const ImageGenerator: React.FC = React.memo(() => {
   const handleImageClick = () => {
     if (!imagePath) return;
 
-    const link = document.createElement('a');
-    link.href = imagePath;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Convert base64 data URL to Blob for better browser compatibility
+    const byteString = atob(imagePath.split(',')[1]);
+    const mimeString = imagePath.split(',')[0].split(':')[1].split(';')[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    const blob = new Blob([ab], { type: mimeString });
+    const blobUrl = URL.createObjectURL(blob);
+
+    // Open in new tab
+    const newWindow = window.open(blobUrl, '_blank');
+
+    // Clean up the blob URL after a short delay
+    if (newWindow) {
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+    }
   };
 
   const handleRegenerateImage = () => {
