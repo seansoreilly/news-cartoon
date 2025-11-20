@@ -79,28 +79,6 @@ const ImageGenerator: React.FC = React.memo(() => {
     document.body.removeChild(link);
   };
 
-  const handleImageClick = () => {
-    if (!imagePath) return;
-
-    // Convert base64 data URL to Blob for better browser compatibility
-    const byteString = atob(imagePath.split(',')[1]);
-    const mimeString = imagePath.split(',')[0].split(':')[1].split(';')[0];
-    const ab = new ArrayBuffer(byteString.length);
-    const ia = new Uint8Array(ab);
-    for (let i = 0; i < byteString.length; i++) {
-      ia[i] = byteString.charCodeAt(i);
-    }
-    const blob = new Blob([ab], { type: mimeString });
-    const blobUrl = URL.createObjectURL(blob);
-
-    // Open in new tab
-    const newWindow = window.open(blobUrl, '_blank');
-
-    // Clean up the blob URL after a short delay
-    if (newWindow) {
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
-    }
-  };
 
   const handleRegenerateImage = () => {
     // Clear the image cache so a new image will be generated
@@ -166,13 +144,13 @@ const ImageGenerator: React.FC = React.memo(() => {
             </h3>
 
             <div className="mb-4 border rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center min-h-48 sm:min-h-56 md:min-h-64">
-              <img
-                src={imagePath}
-                alt={selectedConcept.title}
-                className="max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
-                onClick={handleImageClick}
-                title="Click to open in new tab"
-              />
+              <a href={imagePath} target="_blank" rel="noopener noreferrer" title="Click to open in new tab">
+                <img
+                  src={imagePath}
+                  alt={selectedConcept.title}
+                  className="max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
+                />
+              </a>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
