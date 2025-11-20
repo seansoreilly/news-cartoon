@@ -11,11 +11,52 @@ const ImageGenerator: React.FC = React.memo(() => {
   const [localLoading, setLocalLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
   const selectedConcept = cartoon && selectedConceptIndex !== null && cartoon.ideas[selectedConceptIndex] ? {
     ...cartoon.ideas[selectedConceptIndex],
     location: cartoon.location,
   } : undefined;
+
+  // Convert base64 data URL to Blob URL when image changes
+  React.useEffect(() => {
+    if (!imagePath) {
+      if (blobUrl) {
+        URL.revokeObjectURL(blobUrl);
+        setBlobUrl(null);
+      }
+      return;
+    }
+
+    try {
+      // Convert base64 to Blob
+      const byteString = atob(imagePath.split(',')[1]);
+      const mimeString = imagePath.split(',')[0].split(':')[1].split(';')[0];
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      const blob = new Blob([ab], { type: mimeString });
+      const url = URL.createObjectURL(blob);
+
+      // Clean up previous blob URL
+      if (blobUrl) {
+        URL.revokeObjectURL(blobUrl);
+      }
+
+      setBlobUrl(url);
+    } catch (error) {
+      console.error('[ImageGenerator] Failed to create blob URL:', error);
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (blobUrl) {
+        URL.revokeObjectURL(blobUrl);
+      }
+    };
+  }, [imagePath]);
 
   const handleGenerateImage = async () => {
     if (!selectedConcept) {
@@ -144,7 +185,7 @@ const ImageGenerator: React.FC = React.memo(() => {
             </h3>
 
             <div className="mb-4 border rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center min-h-48 sm:min-h-56 md:min-h-64">
-              <a href={imagePath} target="_blank" rel="noopener noreferrer" title="Click to open in new tab">
+              <a href={blobUrl || imagePath} target="_blank" rel="noopener noreferrer" title="Click to open in new tab">
                 <img
                   src={imagePath}
                   alt={selectedConcept.title}
