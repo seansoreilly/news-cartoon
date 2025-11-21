@@ -90,7 +90,7 @@ describe('MSW API Handlers', () => {
   describe('Gemini API Handlers', () => {
     it('should return concept response from Gemini', async () => {
       const response = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent',
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent',
         {
           method: 'POST',
           headers: {
@@ -120,7 +120,7 @@ describe('MSW API Handlers', () => {
 
     it('should return 401 when API key is missing', async () => {
       const response = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent',
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent',
         {
           method: 'POST',
           headers: {
@@ -147,7 +147,7 @@ describe('MSW API Handlers', () => {
 
     it('should return 429 for rate limit simulation', async () => {
       const response = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent',
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent',
         {
           method: 'POST',
           headers: {
@@ -175,7 +175,7 @@ describe('MSW API Handlers', () => {
 
     it('should return script response from Gemini', async () => {
       const response = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent',
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent',
         {
           method: 'POST',
           headers: {
@@ -204,7 +204,7 @@ describe('MSW API Handlers', () => {
 
     it('should return image response from vision API', async () => {
       const response = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent',
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent',
         {
           method: 'POST',
           headers: {
@@ -237,7 +237,7 @@ describe('MSW API Handlers', () => {
 
     it('should return 400 for invalid image data', async () => {
       const response = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent',
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent',
         {
           method: 'POST',
           headers: {
