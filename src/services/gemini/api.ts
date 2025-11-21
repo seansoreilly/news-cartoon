@@ -2,8 +2,14 @@ import { createCartoonError } from '../../types/error';
 import type { GeminiRequest, GeminiResponse } from './types';
 
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || '';
-const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
-const VISION_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent';
+// Default to latest Google Generative Language models; override via env when needed
+const TEXT_MODEL =
+  import.meta.env.VITE_GEMINI_TEXT_MODEL || 'gemini-3-pro-preview';
+// "Nano Banana Pro" codename maps to Gemini 3 Pro Image preview model
+const IMAGE_MODEL =
+  import.meta.env.VITE_GEMINI_IMAGE_MODEL || 'gemini-3-pro-image-preview';
+const BASE_URL = `https://generativelanguage.googleapis.com/v1beta/models/${TEXT_MODEL}:generateContent`;
+const VISION_BASE_URL = `https://generativelanguage.googleapis.com/v1beta/models/${IMAGE_MODEL}:generateContent`;
 const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 1000;
 

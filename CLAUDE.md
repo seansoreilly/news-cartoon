@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Three-layer architecture:**
 1. **Services** (`src/services/`): External API integration and business logic
    - `newsService`: Fetches news via Express backend proxy (port 3001) to Google News RSS, with 5-min TTL caching and exponential backoff
-   - `geminiService`: Three-step pipeline (concepts → script → image) using Gemini 2.0 Flash and Vision API 2.5
+   - `geminiService`: Three-step pipeline (concepts → script → image) using Gemini 3 Pro (text) and Gemini 3 Pro Image preview ("Nano Banana Pro")
    - `locationService`: Dual detection (GPS → OpenStreetMap, IP fallback via ipapi.co)
 
 2. **Stores** (`src/store/`): Zustand-based state management
@@ -51,6 +51,8 @@ npm run preview      # Preview production build locally
 **Optional:**
 - `VITE_API_BASE_URL`: Backend endpoint (defaults to localhost:3001 in dev)
 - `VITE_DEFAULT_NEWS_LIMIT`: Max articles to fetch (defaults to 10)
+- `VITE_GEMINI_TEXT_MODEL`: Override text model (defaults to `gemini-3-pro-preview`)
+- `VITE_GEMINI_IMAGE_MODEL`: Override image model (defaults to `gemini-3-pro-image-preview`)
 
 ⚠️ **Never commit `.env.development` or `.env.production`** — they're in .gitignore for security.
 

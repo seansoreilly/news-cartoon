@@ -128,7 +128,7 @@ export const handlers = [
 
   // Gemini: Unified concept and script generation
   http.post(
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent',
     async ({ request }) => {
       // Check for authentication
       if (!request.headers.get('x-goog-api-key')) {
@@ -167,7 +167,7 @@ export const handlers = [
 
   // Gemini: Image generation (vision API)
   http.post(
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent',
     async ({ request }) => {
       if (!request.headers.get('x-goog-api-key')) {
         return HttpResponse.json(
