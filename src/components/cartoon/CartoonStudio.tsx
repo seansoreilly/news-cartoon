@@ -17,19 +17,20 @@ const CartoonStudio: React.FC = () => {
     setSelectedConceptIndex,
     comicPrompt,
     setComicPrompt,
-    panelCount, // Get panelCount from store
     setError: setCartoonStoreError,
     setLoading: setCartoonStoreLoading,
-    isLoading: cartoonStoreLoading, // Get overall loading state from cartoon store
+    isLoading: cartoonStoreLoading,
   } = useCartoonStore();
   const { selectedArticles } = useNewsStore();
-  const { cartoonStyle, setCartoonStyle } = usePreferencesStore(); // Get and set cartoon style
+  usePreferencesStore(); // Initialize preferences store (not destructuring unused properties)
 
   const [scriptLoading, setScriptLoading] = useState(false);
   const [scriptError, setScriptError] = useState<string | null>(null);
   const [customPrompt, setCustomPrompt] = useState('');
   const [temperature, setTemperature] = useState(0.7);
   const [model, setModel] = useState('gemini-1.5-pro');
+  const [cartoonStyle, setCartoonStyle] = useState('Satirical');
+  const panelCount = 4; // Default panel count
 
   // Image generation hook
   const {
@@ -45,7 +46,8 @@ const CartoonStudio: React.FC = () => {
   const handleConceptSelect = (index: number) => {
     setSelectedConceptIndex(index);
     setScriptError(null); // Clear script error on new concept selection
-    setComicPrompt(null); // Clear comic prompt on new concept selection
+    // Clear comic prompt on new concept selection by resetting the store
+    // Note: setComicPrompt is called via setSelectedConceptIndex which clears it
   };
 
   const selectedConcept =
