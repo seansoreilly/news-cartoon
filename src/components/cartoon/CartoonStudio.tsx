@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { useCartoonStore } from '../../store/cartoonStore';
 import { useNewsStore } from '../../store/newsStore';
-import { usePreferencesStore } from '../../store/preferencesStore';
 import ConceptGenerator from './ConceptGenerator';
-import Collapsible from '../common/Collapsible';
 import { geminiService } from '../../services/geminiService';
 import { AppErrorHandler } from '../../utils/errorHandler';
-import { useImageGenerator } from '../../hooks/useImageGenerator'; // Import the image generator hook
+import { useImageGenerator } from '../../hooks/useImageGenerator';
 
 import type { CartoonConcept, ComicPanel, ComicScriptPanel } from '../../types/cartoon';
 
@@ -22,14 +20,9 @@ const CartoonStudio: React.FC = () => {
     isLoading: cartoonStoreLoading,
   } = useCartoonStore();
   const { selectedArticles } = useNewsStore();
-  usePreferencesStore(); // Initialize preferences store (not destructuring unused properties)
 
   const [scriptLoading, setScriptLoading] = useState(false);
   const [scriptError, setScriptError] = useState<string | null>(null);
-  const [customPrompt, setCustomPrompt] = useState('');
-  const [temperature, setTemperature] = useState(0.7);
-  const [model, setModel] = useState('gemini-1.5-pro');
-  const [cartoonStyle, setCartoonStyle] = useState('Satirical');
   const panelCount = 4; // Default panel count
 
   // Image generation hook
@@ -113,62 +106,6 @@ const CartoonStudio: React.FC = () => {
 
               {selectedConcept && (
                 <div className="mt-8">
-                  <div className="bg-white p-4 rounded-lg border-2 border-gray-200 mb-4">
-                    <h3 className="text-lg font-bold text-gray-800 mb-4">Cartoon Style</h3>
-                    <select
-                      value={cartoonStyle}
-                      onChange={(e) => setCartoonStyle(e.target.value)}
-                      className="block w-full p-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
-                    >
-                      <option value="Satirical">Satirical</option>
-                      <option value="Absurdist">Absurdist</option>
-                      <option value="Political">Political</option>
-                      <option value="Slice of Life">Slice of Life</option>
-                      <option value="Superhero">Superhero</option>
-                    </select>
-                  </div>
-
-                  <Collapsible title="Advanced Settings">
-                    <div className="space-y-4">
-                      <div>
-                        <label htmlFor="customPrompt" className="block text-sm font-medium text-gray-700">Custom Prompt</label>
-                        <textarea
-                          id="customPrompt"
-                          value={customPrompt}
-                          onChange={(e) => setCustomPrompt(e.target.value)}
-                          rows={3}
-                          className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
-                          placeholder="Add specific instructions for the AI..."
-                        ></textarea>
-                      </div>
-                      <div>
-                        <label htmlFor="temperature" className="block text-sm font-medium text-gray-700">Temperature ({temperature})</label>
-                        <input
-                          type="range"
-                          id="temperature"
-                          min="0"
-                          max="1"
-                          step="0.1"
-                          value={temperature}
-                          onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                          className="mt-1 block w-full"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="model" className="block text-sm font-medium text-gray-700">Model</label>
-                        <select
-                          id="model"
-                          value={model}
-                          onChange={(e) => setModel(e.target.value)}
-                          className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
-                        >
-                          <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                          <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                        </select>
-                      </div>
-                    </div>
-                  </Collapsible>
-
                   {!comicPrompt && (
                                       <button
                                         onClick={() => handleGenerateScript(selectedConcept)}
