@@ -15,22 +15,27 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header Banner */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-white/70 border-b border-white/40 shadow-sm">
-        <div className="container mx-auto max-w-[1000px] px-4 py-4 relative">
-          <div className="flex items-center justify-between">
+      <header className="sticky top-0 z-0 backdrop-blur-md bg-white/70 border-b border-white/40 shadow-sm">
+        <div className="container mx-auto max-w-[1000px] px-4 py-4 relative z-0">
+          <img 
+            src="/header.jpg" 
+            alt="NewsCartoon.lol" 
+            className="w-full h-auto object-cover rounded-xl shadow-sm relative -z-10"
+            style={{
+              maskImage: 'linear-gradient(to bottom, black 27%, rgba(0,0,0,0.3) 27%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 27%, rgba(0,0,0,0.3) 27%)'
+            }}
+          />
+          <div className="absolute inset-0 z-10 flex items-center justify-between w-full px-4">
             <div className="flex items-center justify-center w-full">
-              <img 
-                src="/header.jpg" 
-                alt="NewsCartoon.lol" 
-                className="w-full h-auto object-cover rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
-              />
+              {/* Content placeholder */}
             </div>
             {/* Optional: Add a small decorative element or status indicator here */}
           </div>
         </div>
       </header>
 
-      <div className="flex-1 container mx-auto max-w-[1000px] px-4 py-8">
+      <div className="flex-1 container mx-auto max-w-[1000px] px-4 py-8 relative z-10">
         <main className="glass-panel rounded-2xl p-4 sm:p-6 md:p-8 min-h-[600px]">
           {children}
         </main>
