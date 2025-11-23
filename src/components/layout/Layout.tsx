@@ -13,29 +13,31 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const buildTime = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-500 to-pink-500">
+    <div className="min-h-screen flex flex-col">
       {/* Header Banner */}
-      <header className="bg-gradient-to-r from-purple-600 to-purple-500 relative overflow-hidden">
-        <div className="container mx-auto max-w-[900px] px-3 py-4 sm:px-4 sm:py-6 relative">
-          <div className="text-center">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white drop-shadow-lg">
-              NewsCartoon.lol
-            </h1>
-            <p className="text-white text-opacity-90 mt-1 text-xs sm:text-sm">
-              Generate editorial cartoons from news articles
-            </p>
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-white/70 border-b border-white/40 shadow-sm">
+        <div className="container mx-auto max-w-[1000px] px-4 py-4 relative">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center justify-center w-full">
+              <img 
+                src="/header.jpg" 
+                alt="NewsCartoon.lol" 
+                className="w-full h-auto object-cover rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
+              />
+            </div>
+            {/* Optional: Add a small decorative element or status indicator here */}
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto max-w-[900px] px-2 sm:px-3 md:px-4 py-4 sm:py-6 md:py-8">
-        <main className="bg-white rounded-lg shadow-2xl p-3 sm:p-4 md:p-6 lg:p-8">
+      <div className="flex-1 container mx-auto max-w-[1000px] px-4 py-8">
+        <main className="glass-panel rounded-2xl p-4 sm:p-6 md:p-8 min-h-[600px]">
           {children}
         </main>
 
-        <footer className="mt-8 text-center text-white text-sm opacity-80">
+        <footer className="mt-12 text-center text-slate-500 text-sm font-medium">
           <p>&copy; {currentYear} News Cartoon. All rights reserved.</p>
-          <p className="text-xs mt-2 opacity-70">
+          <p className="text-xs mt-2 text-slate-400">
             {gitBranch}/{gitHash}
             {buildTime && (
               <span className="ml-2">
