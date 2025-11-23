@@ -36,11 +36,11 @@ const GalleryPage: React.FC = () => {
 
       if (data) {
         // Transform data to include public URL
-        const itemsWithUrls = data.map((item) => {
+        const itemsWithUrls = data.map((item: GalleryItem) => {
           const { data: publicUrlData } = client.storage
             .from(STORAGE_BUCKET)
             .getPublicUrl(item.image_path);
-            
+
           return {
             ...item,
             public_url: publicUrlData.publicUrl
