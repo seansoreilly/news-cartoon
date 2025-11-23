@@ -44,23 +44,45 @@
 }
 
 @layer components {
-  .gradient-primary {
-    background: linear-gradient(to right, #8b5cf6, #ec4899);
+  .glass-panel {
+    @apply bg-white/60 backdrop-blur-xl border border-white/40 shadow-xl;
+  }
+
+  .glass-card {
+    @apply bg-white/40 backdrop-blur-lg border border-white/40 transition-all duration-300;
+  }
+
+  .glass-card:hover {
+    @apply bg-white/60 border-white/60 shadow-lg;
+    box-shadow: 0 10px 15px -3px rgba(139, 92, 246, 0.1);
+  }
+
+  .text-glow {
+    text-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  }
+
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500;
   }
 
   .container-app {
-    @apply max-w-[900px] mx-auto px-4;
+    @apply max-w-[1000px] mx-auto px-4;
   }
 
   .btn-primary {
-    @apply px-6 py-2 rounded-lg font-medium transition-all duration-200;
+    @apply px-6 py-2.5 rounded-xl font-medium transition-all duration-300 relative overflow-hidden;
     background: linear-gradient(to right, #8b5cf6, #ec4899);
-    @apply text-white hover:opacity-90 hover:shadow-lg active:scale-95;
+    @apply text-white shadow-lg hover:scale-[1.02] active:scale-95;
+    box-shadow: 0 10px 15px -3px rgba(139, 92, 246, 0.2);
+  }
+
+  .btn-primary:hover {
+    box-shadow: 0 20px 25px -5px rgba(139, 92, 246, 0.4);
   }
 
   .btn-secondary {
-    @apply px-6 py-2 rounded-lg font-medium transition-all duration-200;
-    @apply bg-gray-200 text-gray-900 hover:bg-gray-300 active:scale-95;
+    @apply px-6 py-2.5 rounded-xl font-medium transition-all duration-300;
+    @apply bg-white/50 text-slate-800 border border-white/40 hover:bg-white/70 hover:border-white/60 active:scale-95 backdrop-blur-sm;
   }
 }
 
@@ -75,5 +97,15 @@ body,
 }
 
 body {
-  @apply m-0 p-0;
+  @apply m-0 p-0 text-slate-800 font-sans antialiased;
+  background-color: #fffcf2;
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(224, 195, 252, 0.4), transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(195, 228, 252, 0.4), transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(251, 195, 188, 0.3), transparent 50%);
+  background-attachment: fixed;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', sans-serif;
 }

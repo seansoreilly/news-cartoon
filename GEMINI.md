@@ -1,70 +1,73 @@
-# Project Overview
+# Gemini Context: News Cartoon Generator
 
-This is a web application that generates cartoons based on local news. It determines the user's location, fetches relevant news articles from a Google News RSS feed, and then uses AI to generate cartoon concepts, scripts, and images.
+## Project Overview
 
-**Main Technologies:**
+**News Cartoon** is a React + TypeScript web application that fetches news based on location or keywords and generates editorial cartoon concepts, scripts, and images using the Google Gemini API.
 
-*   **Frontend:** React, TypeScript, Vite, Tailwind CSS
-*   **Backend:** Node.js, Express (for local development), Vercel Serverless Functions (for production)
-*   **State Management:** Zustand
-*   **Routing:** React Router
-*   **Testing:** Vitest (unit/integration), Playwright (end-to-end)
+### Core Technology Stack
+-   **Frontend:** React, TypeScript, Vite
+-   **Styling:** Tailwind CSS
+-   **State Management:** Zustand
+-   **Backend:** Express (Proxy server for Google News RSS)
+-   **AI Integration:** Google Gemini API (Text & Image)
+-   **Database/Auth:** Supabase (client configured, usage to be verified)
+-   **Testing:** Vitest (Unit), Playwright (E2E), MSW (Mocking)
 
-**Architecture:**
+### Architecture Highlights
+-   **Services (`src/services/`)**: Handle API integrations (News, Gemini, Location). Implement caching and retry logic.
+-   **Stores (`src/store/`)**: Manage application state. Separated by domain (`newsStore`, `cartoonStore`, etc.).
+-   **Components (`src/components/`)**: Feature-based organization.
+-   **Proxy Server**: An Express server runs on port 3001 to proxy Google News RSS requests, avoiding CORS issues.
 
-The application is a single-page application (SPA) with a separate backend for fetching news. The frontend is built with React and Vite, and the backend is a simple Node.js server that can be run locally or as a Vercel serverless function.
+## Key Commands
 
-The frontend code is organized into components, pages, services, and stores.
-- `components` contains reusable UI elements.
-- `pages` contains the main pages of the application.
-- `services` contains logic for interacting with the backend and other external services.
-- `store` contains the Zustand stores for managing application state.
+| Command | Description |
+| :--- | :--- |
+| `npm run dev` | Starts both the Vite dev server (port 5173) and the Express proxy (port 3001). |
+| `npm run build` | Compiles TypeScript and bundles the application with Vite. |
+| `npm test` | Runs unit tests using Vitest in watch mode. |
+| `npm run test:ui` | Opens the Vitest UI dashboard. |
+| `npm run test:coverage` | Generates a test coverage report. |
+| `npm run lint` | Runs ESLint. |
+| `npx playwright test` | Runs E2E tests (check `package.json` for specific scripts if added). |
 
-The backend consists of a single API endpoint that fetches news from a Google News RSS feed.
+## Development Conventions
 
-# Building and Running
+-   **Three-Layer Architecture**: Keep strict separation between Components (UI), Stores (State), and Services (Logic/API).
+-   **Error Handling**: Use the established `create[Type]Error` factories in `src/types/error.ts`.
+-   **Styling**: Use Tailwind CSS utility classes.
+-   **Testing**:
+    -   Unit tests for logic/components using Vitest + Testing Library.
+    -   E2E tests for critical user flows using Playwright.
+    -   Mock external APIs using MSW.
 
-**Development:**
+## Task Management (Task Master)
 
-To run the application in development mode, you need to run both the frontend and backend servers.
+This project uses **Task Master** for task tracking.
 
-1.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
+-   **Task Files**: Located in `.taskmaster/tasks/`.
+-   **MCP Integration**: Use the available MCP tools to manage tasks.
+    -   `get_tasks`: List tasks.
+    -   `next_task`: Find the next task.
+    -   `get_task`: Get details for a specific task.
+    -   `set_task_status`: Update task status.
+    -   `add_task` / `update_task`: Manage task definitions.
+-   **Workflow**:
+    1.  Check for pending tasks using `next_task` or `get_tasks`.
+    2.  Read task details with `get_task`.
+    3.  Implement changes.
+    4.  Update status to `done` using `set_task_status`.
 
-2.  **Run the development servers:**
-    ```bash
-    npm run dev
-    ```
-    This will start the Vite development server for the frontend and the Express server for the backend.
+## Directory Structure
 
-**Production Build:**
-
-To build the application for production, run the following command:
-
-```bash
-npm run build
-```
-
-This will create a `dist` directory with the optimized production build.
-
-**Testing:**
-
-*   **Unit & Integration Tests:**
-    ```bash
-    npm test
-    ```
-
-*   **End-to-End Tests (Playwright):**
-    ```bash
-    npx playwright test
-    ```
-
-# Development Conventions
-
-*   **Coding Style:** The project uses ESLint to enforce a consistent coding style. You can run the linter with `npm run lint`.
-*   **State Management:** Application state is managed with Zustand. Stores are located in the `src/store` directory.
-*   **Styling:** The project uses Tailwind CSS for styling.
-*   **Commits:** The project uses `husky` and `lint-staged` to run ESLint on staged files before committing.
-*   **API:** The backend API is defined in `dev-server.js` for local development and `api/news/search.js` for Vercel deployment. The API endpoint is `/api/news/search`.
+-   `src/`: Source code.
+    -   `components/`: React components.
+    -   `hooks/`: Custom React hooks.
+    -   `pages/`: Route components.
+    -   `services/`: Business logic and API services.
+    -   `store/`: Zustand stores.
+    -   `types/`: TypeScript type definitions.
+    -   `utils/`: Helper functions.
+-   `e2e/`: Playwright end-to-end tests.
+-   `api/`: Backend logic (Express server files).
+-   `.taskmaster/`: Project management data.
