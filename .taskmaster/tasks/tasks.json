@@ -132,7 +132,7 @@
   },
   "metadata": {
     "createdAt": "2025-11-09T00:00:00.000Z",
-    "updatedAt": "2025-11-09T00:00:00.000Z",
+    "updatedAt": "2025-11-25T06:28:49.467Z",
     "currentTag": "regression-tests"
   },
   "master": {
@@ -1214,6 +1214,442 @@
       "created": "2025-11-15T23:39:56.102Z",
       "updated": "2025-11-15T23:57:03.884Z",
       "description": "Implement mainstream news source prioritization and filtering for better content quality"
+    }
+  },
+  "watermark": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Integrate Watermark into Image Generation Pipeline",
+        "description": "Apply the existing addWatermark() function to generated cartoon images automatically",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "details": "Integrate src/utils/imageUtils.ts addWatermark() into ImageGenerator.tsx. Apply watermark after Gemini returns base64 image, before storing in state. Ensure watermark persists through download and gallery upload.",
+        "testStrategy": "Generate a cartoon and verify watermark appears in bottom-right corner. Download image and confirm watermark is present. Upload to gallery and verify watermark is visible.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Import addWatermark in ImageGenerator.tsx",
+            "description": "Add import statement for the watermark utility",
+            "status": "pending",
+            "dependencies": []
+          },
+          {
+            "id": 2,
+            "title": "Apply watermark after image generation",
+            "description": "Call addWatermark() on base64 image returned from Gemini before setImagePath()",
+            "status": "pending",
+            "dependencies": [
+              "1.1"
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Test watermark on download",
+            "description": "Verify downloaded images include watermark",
+            "status": "pending",
+            "dependencies": [
+              "1.2"
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Test watermark on gallery upload",
+            "description": "Verify gallery uploads preserve watermark",
+            "status": "pending",
+            "dependencies": [
+              "1.2"
+            ]
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-11-25T06:28:49.467Z",
+      "updated": "2025-11-25T06:28:49.467Z",
+      "description": "Add newscartoon.lol watermark to all generated images"
+    }
+  },
+  "gallery": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Add Publish to Gallery Button on ImageGenerator",
+        "description": "Add a button that allows users to publish their generated cartoon to the public gallery",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "details": "Add 'Publish to Gallery' button next to Download button in ImageGenerator.tsx. Wire up to galleryService.uploadToGallery(). Show confirmation dialog before publishing. Display success/error toast after attempt.",
+        "testStrategy": "Generate a cartoon, click Publish to Gallery, confirm in dialog, verify image appears in gallery with correct metadata.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Add Publish to Gallery button UI",
+            "description": "Add styled button next to Download in ImageGenerator.tsx",
+            "status": "pending",
+            "dependencies": []
+          },
+          {
+            "id": 2,
+            "title": "Create confirmation dialog component",
+            "description": "Modal asking user to confirm gallery publication",
+            "status": "pending",
+            "dependencies": []
+          },
+          {
+            "id": 3,
+            "title": "Wire up galleryService.uploadToGallery",
+            "description": "Connect button to service with correct parameters",
+            "status": "pending",
+            "dependencies": [
+              "1.1"
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Add success/error feedback",
+            "description": "Show toast or inline message after publish attempt",
+            "status": "pending",
+            "dependencies": [
+              "1.3"
+            ]
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Add Gallery Item Detail View",
+        "description": "Create expandable detail view for gallery items with full-size image and metadata",
+        "status": "pending",
+        "dependencies": [
+          "1"
+        ],
+        "priority": "medium",
+        "details": "Add click handler on gallery cards to open detail modal/page. Show full-size image, title, date, news source link, and share buttons.",
+        "testStrategy": "Click gallery item, verify detail view opens with all expected information.",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Add view_count and share_count to Gallery Schema",
+        "description": "Update Supabase schema to track gallery item analytics",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "low",
+        "details": "Add view_count (integer, default 0) and share_count (integer, default 0) columns to news_cartoon_gallery table. Update GalleryItem type. Increment view_count on detail view open.",
+        "testStrategy": "Check Supabase schema after migration. Verify counters increment on view/share actions.",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-11-25T06:28:49.467Z",
+      "updated": "2025-11-25T06:28:49.467Z",
+      "description": "Public gallery enhancements for publishing and viewing cartoons"
+    }
+  },
+  "social-sharing": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Create ShareButtons Component",
+        "description": "Build reusable component with Twitter, Facebook, LinkedIn, and Copy Link buttons",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "details": "Create src/components/share/ShareButtons.tsx. Accept props: title, url, newsUrl (original article). Generate platform-specific share URLs. Include original news article link in share text.",
+        "testStrategy": "Render component, click each button, verify correct URL opens or clipboard is populated.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create ShareButtons.tsx component file",
+            "description": "Set up component structure with TypeScript props interface",
+            "status": "pending",
+            "dependencies": []
+          },
+          {
+            "id": 2,
+            "title": "Implement Twitter/X share",
+            "description": "Generate Twitter intent URL with text and links",
+            "status": "pending",
+            "dependencies": [
+              "1.1"
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Implement Facebook share",
+            "description": "Generate Facebook sharer URL",
+            "status": "pending",
+            "dependencies": [
+              "1.1"
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Implement LinkedIn share",
+            "description": "Generate LinkedIn share-offsite URL",
+            "status": "pending",
+            "dependencies": [
+              "1.1"
+            ]
+          },
+          {
+            "id": 5,
+            "title": "Implement Copy Link functionality",
+            "description": "Copy gallery URL to clipboard with feedback",
+            "status": "pending",
+            "dependencies": [
+              "1.1"
+            ]
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Add ShareButtons to ImageGenerator",
+        "description": "Display share options after cartoon is generated",
+        "status": "pending",
+        "dependencies": [
+          "1"
+        ],
+        "priority": "high",
+        "details": "Add ShareButtons component below generated image in ImageGenerator.tsx. Pass cartoon title and first selected article URL as newsUrl.",
+        "testStrategy": "Generate cartoon, verify share buttons appear, test each share option.",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Add ShareButtons to Gallery Detail View",
+        "description": "Enable sharing from gallery item detail page",
+        "status": "pending",
+        "dependencies": [
+          "1"
+        ],
+        "priority": "medium",
+        "details": "Add ShareButtons to gallery item detail view. Use gallery item's news_url field for original article attribution.",
+        "testStrategy": "Open gallery item detail, verify share buttons present, test sharing functionality.",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Configure Open Graph Meta Tags for Gallery Items",
+        "description": "Add proper OG tags for social media previews",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "details": "Implement dynamic OG tags (og:title, og:image, og:description, og:url) for gallery item pages. May require server-side rendering or prerendering strategy.",
+        "testStrategy": "Share gallery URL on social platform, verify preview shows correct title, image, and description.",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-11-25T06:28:49.467Z",
+      "updated": "2025-11-25T06:28:49.467Z",
+      "description": "Social media sharing with original news article attribution"
+    }
+  },
+  "weather-filter": {
+    "tasks": [
+      {
+        "id": "1",
+        "title": "Implement Weather Source Blocklist in Backend",
+        "description": "Filter out weather-related news sources from Google News RSS results",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "details": "Add WEATHER_SOURCES blocklist array in dev-server.js. Include: Weather.com, The Weather Channel, AccuWeather, Weather Underground, National Weather Service, WeatherBug, Weather Network. Filter articles before returning response.",
+        "testStrategy": "Search for a location that typically returns weather results. Verify no weather sources appear in results.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define WEATHER_SOURCES blocklist constant",
+            "description": "Array of weather-related source names to filter",
+            "status": "pending",
+            "dependencies": [],
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Create filterWeatherSources function",
+            "description": "Filter function checking source name against blocklist",
+            "status": "pending",
+            "dependencies": [
+              "1.1"
+            ],
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Apply filter in parseGoogleNewsRss",
+            "description": "Call filter before returning articles",
+            "status": "pending",
+            "dependencies": [
+              "1.2"
+            ],
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Add debug logging for filtered articles",
+            "description": "Log when articles are filtered (debug mode only)",
+            "status": "pending",
+            "dependencies": [
+              "1.3"
+            ],
+            "parentId": "undefined"
+          }
+        ],
+        "updatedAt": "2025-11-25T06:34:34.308Z"
+      },
+      {
+        "id": "2",
+        "title": "Add Weather Keyword Filtering",
+        "description": "Filter articles with weather-centric titles",
+        "status": "done",
+        "dependencies": [
+          "1"
+        ],
+        "priority": "medium",
+        "details": "Extend filtering to check article titles for weather keywords: 'weather forecast', 'temperature alert'. Case-insensitive matching.",
+        "testStrategy": "Verify articles with weather keywords in title are filtered out.",
+        "subtasks": [],
+        "updatedAt": "2025-11-25T06:34:57.776Z"
+      },
+      {
+        "id": "3",
+        "title": "Make Weather Filter Configurable",
+        "description": "Allow blocklist configuration via environment variable",
+        "status": "done",
+        "dependencies": [
+          "1"
+        ],
+        "priority": "low",
+        "details": "Add WEATHER_BLOCKLIST_EXTRA env var to extend default blocklist. Parse comma-separated values.",
+        "testStrategy": "Set env var with custom source, verify it gets filtered.",
+        "subtasks": [],
+        "updatedAt": "2025-11-25T06:35:45.289Z"
+      }
+    ],
+    "metadata": {
+      "version": "1.0.0",
+      "lastModified": "2025-11-25T06:35:45.290Z",
+      "taskCount": 3,
+      "completedCount": 3,
+      "tags": [
+        "weather-filter"
+      ]
+    }
+  },
+  "payment": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Set Up External Donation Page",
+        "description": "Create Ko-fi or Buy Me a Coffee account for newscartoon.lol",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "details": "Create account on Ko-fi (recommended) or Buy Me a Coffee. Configure donation tiers: $3 Coffee, $5 Lunch, $10 Dinner. Add project description explaining API costs, hosting, and development.",
+        "testStrategy": "Verify donation page is accessible and payment works.",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Add Support Button to Header",
+        "description": "Add 'Support Us' button/link in main navigation",
+        "status": "pending",
+        "dependencies": [
+          "1"
+        ],
+        "priority": "high",
+        "details": "Add styled button to Layout.tsx header linking to VITE_DONATION_URL. Use heart or coffee icon. Non-intrusive styling.",
+        "testStrategy": "Verify button appears in header and links to correct donation page.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Add VITE_DONATION_URL environment variable",
+            "description": "Configure donation URL in env files",
+            "status": "pending",
+            "dependencies": []
+          },
+          {
+            "id": 2,
+            "title": "Create SupportButton component",
+            "description": "Styled button/link component for donation",
+            "status": "pending",
+            "dependencies": [
+              "2.1"
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Add SupportButton to Layout header",
+            "description": "Integrate into main navigation",
+            "status": "pending",
+            "dependencies": [
+              "2.2"
+            ]
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Create Donation Prompt After Image Generation",
+        "description": "Show non-intrusive donation prompt after successful cartoon generation",
+        "status": "pending",
+        "dependencies": [
+          "2"
+        ],
+        "priority": "medium",
+        "details": "Create DonationPrompt component shown below generated image. Message: 'Enjoying News Cartoon? Support the project!' with Ko-fi button. Show max once per session using sessionStorage.",
+        "testStrategy": "Generate cartoon, verify prompt appears. Refresh and generate again, verify prompt doesn't reappear in same session.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create DonationPrompt component",
+            "description": "Non-intrusive prompt with friendly message and button",
+            "status": "pending",
+            "dependencies": []
+          },
+          {
+            "id": 2,
+            "title": "Add session tracking to show once",
+            "description": "Use sessionStorage to track if prompt was shown",
+            "status": "pending",
+            "dependencies": [
+              "3.1"
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Integrate prompt into ImageGenerator",
+            "description": "Show prompt after successful image generation",
+            "status": "pending",
+            "dependencies": [
+              "3.2"
+            ]
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Create Support/About Page",
+        "description": "Dedicated page explaining what donations support",
+        "status": "pending",
+        "dependencies": [
+          "1"
+        ],
+        "priority": "low",
+        "details": "Create src/pages/SupportPage.tsx. Content: explain Gemini API costs, hosting infrastructure, future development plans. Multiple donation options/tiers. Link from footer.",
+        "testStrategy": "Navigate to support page, verify all content displays correctly, donation links work.",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-11-25T06:28:49.467Z",
+      "updated": "2025-11-25T06:28:49.467Z",
+      "description": "Payment/donation integration for project sustainability"
     }
   }
 }

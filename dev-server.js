@@ -13,6 +13,69 @@ dotenv.config({ path: path.join(__dirname, '.env.development') });
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Weather-related sources to filter out (Subtask 1.1)
+const DEFAULT_WEATHER_SOURCES = [
+  'weather.com',
+  'the weather channel',
+  'accuweather',
+  'weather underground',
+  'wunderground',
+  'national weather service',
+  'weatherbug',
+  'weather network',
+  'weather.gov',
+  'weathernation',
+  'weather central'
+];
+
+// Task 3: Allow extending blocklist via environment variable
+const extraSources = process.env.WEATHER_BLOCKLIST_EXTRA
+  ? process.env.WEATHER_BLOCKLIST_EXTRA.split(',').map(s => s.trim().toLowerCase())
+  : [];
+const WEATHER_SOURCES = [...DEFAULT_WEATHER_SOURCES, ...extraSources];
+
+// Weather keywords to filter from titles (Task 2 prep)
+const WEATHER_KEYWORDS = [
+  'weather forecast',
+  'temperature alert',
+  'weather warning',
+  'weather advisory',
+  'weather update'
+];
+
+/**
+ * Filter out weather-related sources from articles (Subtask 1.2)
+ * @param {Array} articles - Array of news articles
+ * @returns {Array} - Filtered articles without weather sources
+ */
+const filterWeatherSources = (articles) => {
+  const debugMode = process.env.DEBUG === 'true';
+
+  return articles.filter((article) => {
+    const sourceName = (article.source?.name || '').toLowerCase();
+    const titleLower = (article.title || '').toLowerCase();
+
+    // Check if source is in blocklist
+    const isBlockedSource = WEATHER_SOURCES.some(blocked =>
+      sourceName.includes(blocked.toLowerCase())
+    );
+
+    // Check if title contains weather keywords
+    const hasWeatherKeywords = WEATHER_KEYWORDS.some(keyword =>
+      titleLower.includes(keyword.toLowerCase())
+    );
+
+    const shouldFilter = isBlockedSource || hasWeatherKeywords;
+
+    // Debug logging (Subtask 1.4)
+    if (debugMode && shouldFilter) {
+      console.log(`[WeatherFilter] Filtered: "${article.title}" (source: ${sourceName})`);
+    }
+
+    return !shouldFilter;
+  });
+};
+
 // Enable CORS for requests from the frontend
 app.use(cors());
 app.use(express.json());
@@ -110,7 +173,10 @@ app.get('/api/news/search', async (req, res) => {
 
     // Parse RSS XML
     const rssData = await parseStringPromise(xmlText);
-    const articles = parseGoogleNewsRss(rssData, parseInt(max, 10));
+    const parsedArticles = parseGoogleNewsRss(rssData, parseInt(max, 10) * 2); // Fetch extra to account for filtering
+
+    // Apply weather source filter (Subtask 1.3)
+    const articles = filterWeatherSources(parsedArticles).slice(0, parseInt(max, 10));
 
     return res.json({
       articles,
