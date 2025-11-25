@@ -190,6 +190,76 @@ app.get('/api/news/search', async (req, res) => {
   }
 });
 
+// Fetch article content endpoint
+app.get('/api/article/content', async (req, res) => {
+  const { url } = req.query;
+
+  if (!url) {
+    return res.status(400).json({ error: 'URL parameter is required' });
+  }
+
+  try {
+    console.log(`[article/content] Fetching: ${url}`);
+
+    // Fetch the article page
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
+      redirect: 'follow',
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const html = await response.text();
+
+    // Simple content extraction - remove scripts, styles, and extract text from article/main/body
+    let content = html
+      // Remove script tags and their contents
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      // Remove style tags and their contents
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+      // Remove HTML comments
+      .replace(/<!--[\s\S]*?-->/g, '')
+      // Remove all HTML tags
+      .replace(/<[^>]+>/g, ' ')
+      // Decode HTML entities
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      // Collapse whitespace
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // Limit content length
+    const maxLength = 5000;
+    if (content.length > maxLength) {
+      content = content.substring(0, maxLength) + '...';
+    }
+
+    console.log(`[article/content] ✅ Extracted ${content.length} chars`);
+
+    res.json({
+      content,
+      length: content.length,
+      url,
+    });
+  } catch (error) {
+    console.error(`[article/content] Error:`, error.message);
+    res.status(500).json({
+      error: 'Failed to fetch article content',
+      details: error.message,
+    });
+  }
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
