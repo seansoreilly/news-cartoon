@@ -87,8 +87,9 @@ describe('NewsService', () => {
 
       await newsService.fetchNewsByLocation('Brisbane', 5);
 
+      // Service fetches more (Math.max(limit * 2, 20)) to allow for filtering
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('max=5'),
+        expect.stringContaining('max=20'),
         expect.any(Object)
       );
     });

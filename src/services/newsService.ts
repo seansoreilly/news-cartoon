@@ -276,10 +276,10 @@ class NewsService {
     }));
 
     if (onlyAuthoritative) {
-      // Return only the top authoritative sources
+      // Return only the top authoritative sources, respecting user's limit
       return rankedArticles
-        .filter(article => article.isAuthoritative)
-        .slice(0, Math.min(limit, AUTHORITATIVE_RESULTS_LIMIT));
+        .filter(article => article.isAuthoritative || rankedArticles.indexOf(article) < limit)
+        .slice(0, limit);
     }
 
     // Return all articles up to limit, but with authority indicators
