@@ -1219,10 +1219,10 @@
   "watermark": {
     "tasks": [
       {
-        "id": 1,
+        "id": "1",
         "title": "Integrate Watermark into Image Generation Pipeline",
         "description": "Apply the existing addWatermark() function to generated cartoon images automatically",
-        "status": "pending",
+        "status": "done",
         "dependencies": [],
         "priority": "high",
         "details": "Integrate src/utils/imageUtils.ts addWatermark() into ImageGenerator.tsx. Apply watermark after Gemini returns base64 image, before storing in state. Ensure watermark persists through download and gallery upload.",
@@ -1233,7 +1233,8 @@
             "title": "Import addWatermark in ImageGenerator.tsx",
             "description": "Add import statement for the watermark utility",
             "status": "pending",
-            "dependencies": []
+            "dependencies": [],
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -1242,7 +1243,8 @@
             "status": "pending",
             "dependencies": [
               "1.1"
-            ]
+            ],
+            "parentId": "undefined"
           },
           {
             "id": 3,
@@ -1251,7 +1253,8 @@
             "status": "pending",
             "dependencies": [
               "1.2"
-            ]
+            ],
+            "parentId": "undefined"
           },
           {
             "id": 4,
@@ -1260,15 +1263,21 @@
             "status": "pending",
             "dependencies": [
               "1.2"
-            ]
+            ],
+            "parentId": "undefined"
           }
-        ]
+        ],
+        "updatedAt": "2025-11-25T07:24:51.948Z"
       }
     ],
     "metadata": {
-      "created": "2025-11-25T06:28:49.467Z",
-      "updated": "2025-11-25T06:28:49.467Z",
-      "description": "Add newscartoon.lol watermark to all generated images"
+      "version": "1.0.0",
+      "lastModified": "2025-11-25T07:24:51.949Z",
+      "taskCount": 1,
+      "completedCount": 1,
+      "tags": [
+        "watermark"
+      ]
     }
   },
   "gallery": {
@@ -1452,7 +1461,7 @@
   "weather-filter": {
     "tasks": [
       {
-        "id": "1",
+        "id": 1,
         "title": "Implement Weather Source Blocklist in Backend",
         "description": "Filter out weather-related news sources from Google News RSS results",
         "status": "done",
@@ -1503,7 +1512,7 @@
         "updatedAt": "2025-11-25T06:34:34.308Z"
       },
       {
-        "id": "2",
+        "id": 2,
         "title": "Add Weather Keyword Filtering",
         "description": "Filter articles with weather-centric titles",
         "status": "done",
@@ -1517,7 +1526,7 @@
         "updatedAt": "2025-11-25T06:34:57.776Z"
       },
       {
-        "id": "3",
+        "id": 3,
         "title": "Make Weather Filter Configurable",
         "description": "Allow blocklist configuration via environment variable",
         "status": "done",
@@ -1538,7 +1547,10 @@
       "completedCount": 3,
       "tags": [
         "weather-filter"
-      ]
+      ],
+      "created": "2025-11-25T07:21:09.359Z",
+      "description": "Tasks for weather-filter context",
+      "updated": "2025-11-25T07:21:09.359Z"
     }
   },
   "payment": {

@@ -4,6 +4,7 @@ import { useNewsStore } from '../../store/newsStore';
 import { geminiService } from '../../services/geminiService';
 import { ImageGenerationRateLimiter } from '../../utils/rateLimiter';
 import { AppErrorHandler } from '../../utils/errorHandler';
+import { addWatermark } from '../../utils/imageUtils';
 
 const ImageGenerator: React.FC = React.memo(() => {
   const { cartoon, comicPrompt, imagePath, setImagePath, setLoading, setError, selectedConceptIndex } = useCartoonStore();
@@ -96,7 +97,8 @@ const ImageGenerator: React.FC = React.memo(() => {
       const panelCount = comicPrompt.panels ? comicPrompt.panels.length : 4;
       const cartoonImage = await geminiService.generateCartoonImage(selectedConcept, selectedArticles, panelCount);
       const imageUrl = `data:${cartoonImage.mimeType};base64,${cartoonImage.base64Data}`;
-      setImagePath(imageUrl);
+      const watermarkedUrl = await addWatermark(imageUrl);
+      setImagePath(watermarkedUrl);
       setLocalError(null);
     } catch (err) {
       const appError = AppErrorHandler.handleError(err);

@@ -21,12 +21,12 @@ export const addWatermark = (base64Image: string, text: string = 'newscartoon.lo
       // Draw original image
       ctx.drawImage(img, 0, 0);
 
-      // Configure watermark text style
-      const fontSize = Math.max(16, Math.floor(img.width / 30));
+      // Configure watermark text style (1/4 size, 80% opacity)
+      const fontSize = Math.max(12, Math.floor(img.width / 120));
       ctx.font = `bold ${fontSize}px sans-serif`;
       ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx.lineWidth = 1;
       ctx.textAlign = 'right';
       ctx.textBaseline = 'bottom';
 
