@@ -198,7 +198,7 @@ class GeminiService {
     console.log(`[batchAnalyzeArticles] Analyzing ${articles.length} articles...`);
 
     // Process in smaller batches to avoid API limits and improve reliability
-    const BATCH_SIZE = 3;
+    const BATCH_SIZE = parseInt(import.meta.env.VITE_BATCH_SIZE || '3', 10);
     const results: Array<{ summary: string; humorScore: number }> = [];
 
     for (let i = 0; i < articles.length; i += BATCH_SIZE) {
