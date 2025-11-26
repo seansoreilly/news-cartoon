@@ -58,7 +58,7 @@ const ConceptGenerator: React.FC = () => {
           <button
             onClick={handleGenerateConcepts}
             disabled={localLoading || selectedArticles.length === 0}
-            className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all min-h-[44px] min-w-[44px]"
           >
             Regenerate Concepts
           </button>

@@ -75,7 +75,7 @@ const LocationDetector: React.FC = () => {
             </div>
             <button
               onClick={handleChangeLocation}
-              className="text-xs sm:text-sm bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 whitespace-nowrap"
+              className="text-xs sm:text-sm bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 whitespace-nowrap min-h-[44px] min-w-[44px]"
               aria-label="Change search keywords"
             >
               Change
@@ -111,14 +111,14 @@ const LocationDetector: React.FC = () => {
                 value={manualLocation}
                 onChange={(e) => setManualLocation(e.target.value)}
                 placeholder="Enter search keywords (e.g., technology, sports)"
-                className="flex-1 border-2 border-gray-300 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-20 transition-all"
+                className="flex-1 border-2 border-gray-300 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-20 transition-all min-h-[44px]"
                 disabled={isLoading}
                 aria-label="Enter search keywords"
               />
               <button
                 type="submit"
                 disabled={isLoading || !manualLocation.trim()}
-                className="bg-green-600 text-white px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md whitespace-nowrap"
+                className="bg-green-600 text-white px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md whitespace-nowrap min-h-[44px]"
                 aria-label="Set search keywords"
               >
                 Search

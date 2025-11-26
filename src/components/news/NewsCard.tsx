@@ -35,7 +35,7 @@ export const NewsCard: React.FC<NewsCardProps> = ({ article, selected, onSelect 
       )}
 
       <div className="flex items-start gap-3 sm:gap-4 relative z-10">
-        <div className={`mt-1 flex-shrink-0 transition-all duration-300 ${selected ? 'scale-110' : 'group-hover:scale-110'}`}>
+        <div className={`mt-1 flex-shrink-0 transition-all duration-300 ${selected ? 'scale-110' : 'group-hover:scale-110'} p-3`}>
           <input
             type="checkbox"
             checked={selected}
@@ -91,7 +91,7 @@ export const NewsCard: React.FC<NewsCardProps> = ({ article, selected, onSelect 
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="text-sm font-medium text-primary hover:text-primary-dark hover:underline decoration-primary decoration-2 underline-offset-4 transition-all flex items-center gap-1"
+              className="text-sm font-medium text-primary hover:text-primary-dark hover:underline decoration-primary decoration-2 underline-offset-4 transition-all flex items-center gap-1 min-w-[44px] min-h-[44px]"
             >
               Read Article 
               <span className="text-xs transition-transform group-hover:translate-x-1">→</span>
