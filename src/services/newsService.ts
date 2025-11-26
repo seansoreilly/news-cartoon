@@ -1,5 +1,10 @@
 import type { NewsArticle, NewsResponse } from '../types/news';
 import { createNewsError } from '../types/error';
+import { parse as parseDomain } from 'tldts';
+import {
+  isMainstreamSource,
+  getAuthorityRank,
+} from '../data/mainstreamSources';
 
 interface CacheEntry<T> {
   data: T;
@@ -16,12 +21,90 @@ const RETRY_DELAY_MS = 1000;
 // Google News ranks by authority/relevance, so first results are most trustworthy
 const AUTHORITATIVE_RESULTS_LIMIT = 5;
 
+// Filtering mode configuration from environment (reserved for future use)
+// const FILTERING_MODE = import.meta.env.VITE_NEWS_FILTERING_MODE || 'soft'; // 'strict' or 'soft'
+
 class NewsService {
   private cache: CacheStore = {};
   private baseUrl = import.meta.env.PROD ? '/api/news' : 'http://localhost:3001/api/news';
 
   constructor() {
     // API key is now handled server-side via backend proxy
+  }
+
+  /**
+   * Extract canonical domain from article URL using tldts library.
+   * Handles edge cases: subdomains, www prefix, tracking parameters.
+   *
+   * @param url - Article URL to extract domain from
+   * @returns Canonical domain (e.g., "nytimes.com") or null if invalid
+   *
+   * @example
+   * extractCanonicalDomain("https://www.nytimes.com/article?track=123") // "nytimes.com"
+   * extractCanonicalDomain("https://news.bbc.co.uk/article") // "bbc.co.uk"
+   */
+  private extractCanonicalDomain(url: string): string | null {
+    if (!url || typeof url !== 'string') {
+      return null;
+    }
+
+    try {
+      const parsed = parseDomain(url);
+
+      // tldts returns domain (SLD + TLD) which is what we need
+      // e.g., "nytimes.com" from "www.nytimes.com" or "news.nytimes.com"
+      if (parsed.domain) {
+        return parsed.domain.toLowerCase();
+      }
+
+      return null;
+    } catch (error) {
+      console.warn(`[NewsService.extractCanonicalDomain] Failed to parse URL: ${url}`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Check if an article's domain matches a whitelisted mainstream source for the given city.
+   * Uses case-insensitive and normalized matching via the mainstream sources data structure.
+   *
+   * @param articleUrl - Article URL to check
+   * @param cityName - City name to check mainstream sources against
+   * @returns True if the article is from a mainstream source for that city
+   *
+   * @example
+   * isArticleFromMainstreamSource("https://www.nytimes.com/article", "New York") // true
+   * isArticleFromMainstreamSource("https://random-blog.com/article", "New York") // false
+   */
+  private isArticleFromMainstreamSource(articleUrl: string, cityName: string): boolean {
+    const domain = this.extractCanonicalDomain(articleUrl);
+
+    if (!domain) {
+      return false;
+    }
+
+    return isMainstreamSource(domain, cityName);
+  }
+
+  /**
+   * Get the mainstream authority rank for an article based on the city's whitelist.
+   *
+   * @param articleUrl - Article URL to check
+   * @param cityName - City name to check mainstream sources against
+   * @returns Authority rank (1 = highest) or null if not a mainstream source
+   *
+   * @example
+   * getMainstreamAuthorityRank("https://www.nytimes.com/article", "New York") // 1
+   * getMainstreamAuthorityRank("https://random-blog.com/article", "New York") // null
+   */
+  private getMainstreamAuthorityRank(articleUrl: string, cityName: string): number | null {
+    const domain = this.extractCanonicalDomain(articleUrl);
+
+    if (!domain) {
+      return null;
+    }
+
+    return getAuthorityRank(domain, cityName);
   }
 
   async fetchNewsByLocation(

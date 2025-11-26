@@ -13,6 +13,41 @@ dotenv.config({ path: path.join(__dirname, '.env.development') });
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Location-to-country/language mapping for Google News (Task 3)
+const LOCATION_CONFIG = {
+  // Australia
+  Melbourne: { countryCode: 'AU', languageCode: 'en-AU' },
+  Sydney: { countryCode: 'AU', languageCode: 'en-AU' },
+  Brisbane: { countryCode: 'AU', languageCode: 'en-AU' },
+  Perth: { countryCode: 'AU', languageCode: 'en-AU' },
+  Adelaide: { countryCode: 'AU', languageCode: 'en-AU' },
+  Canberra: { countryCode: 'AU', languageCode: 'en-AU' },
+
+  // United States
+  'New York': { countryCode: 'US', languageCode: 'en-US' },
+  'Los Angeles': { countryCode: 'US', languageCode: 'en-US' },
+  Chicago: { countryCode: 'US', languageCode: 'en-US' },
+  'San Francisco': { countryCode: 'US', languageCode: 'en-US' },
+
+  // United Kingdom
+  London: { countryCode: 'GB', languageCode: 'en-GB' },
+  Manchester: { countryCode: 'GB', languageCode: 'en-GB' },
+
+  // Canada
+  Toronto: { countryCode: 'CA', languageCode: 'en-CA' },
+  Vancouver: { countryCode: 'CA', languageCode: 'en-CA' },
+
+  // New Zealand
+  Auckland: { countryCode: 'NZ', languageCode: 'en-NZ' },
+  Wellington: { countryCode: 'NZ', languageCode: 'en-NZ' },
+};
+
+// Default location config for unknown cities
+const DEFAULT_LOCATION_CONFIG = {
+  countryCode: 'US',
+  languageCode: 'en-US',
+};
+
 // Weather-related sources to filter out (Subtask 1.1)
 const DEFAULT_WEATHER_SOURCES = [
   'weather.com',
@@ -42,6 +77,46 @@ const WEATHER_KEYWORDS = [
   'weather advisory',
   'weather update'
 ];
+
+/**
+ * Normalize city name for lookup (title case).
+ * @param {string} cityName - Raw city name input
+ * @returns {string} - Normalized city name
+ */
+const normalizeCity = (cityName) => {
+  if (!cityName || typeof cityName !== 'string') {
+    return '';
+  }
+
+  return cityName
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+/**
+ * Resolve location to country and language codes for Google News.
+ * @param {string} location - City name or location string
+ * @returns {object} - Object with countryCode and languageCode
+ */
+const resolveLocationConfig = (location) => {
+  if (!location || typeof location !== 'string') {
+    console.log('[LocationResolver] No location provided, using default (US/en-US)');
+    return DEFAULT_LOCATION_CONFIG;
+  }
+
+  const normalizedLocation = normalizeCity(location);
+  const config = LOCATION_CONFIG[normalizedLocation];
+
+  if (config) {
+    console.log(`[LocationResolver] Resolved "${location}" → ${config.countryCode}/${config.languageCode}`);
+    return config;
+  }
+
+  console.log(`[LocationResolver] Unknown location "${location}", using default (US/en-US)`);
+  return DEFAULT_LOCATION_CONFIG;
+};
 
 /**
  * Filter out weather-related sources from articles (Subtask 1.2)
@@ -145,10 +220,23 @@ const parseGoogleNewsRss = (rssData, limit) => {
   }
 };
 
-// News search endpoint (location or keyword)
+/**
+ * News search endpoint (location or keyword)
+ *
+ * Query parameters:
+ * - q: Search query (required)
+ * - location: City name for location-aware results (optional, e.g., "Melbourne", "New York")
+ * - gl: Country code override (optional, e.g., "AU", "US", "GB")
+ * - hl: Language code override (optional, e.g., "en-AU", "en-US", "en-GB")
+ * - max: Maximum number of articles to return (default: 10)
+ * - scoring: Ranking algorithm - 'r' for relevance (default), 'd' for date
+ */
 app.get('/api/news/search', async (req, res) => {
   const {
     q,
+    location,
+    gl: glOverride,
+    hl: hlOverride,
     max = process.env.VITE_DEFAULT_NEWS_LIMIT || '10',
     scoring = 'r' // default to relevance/authority ranking
   } = req.query;
@@ -158,11 +246,32 @@ app.get('/api/news/search', async (req, res) => {
   }
 
   try {
-    // Encode query for Google News RSS
+    // Resolve location to country/language codes
+    let countryCode, languageCode;
+
+    if (glOverride || hlOverride) {
+      // Use explicit overrides if provided
+      countryCode = glOverride || 'US';
+      languageCode = hlOverride || 'en-US';
+      console.log(`[NewsSearch] Using explicit overrides: gl=${countryCode}, hl=${languageCode}`);
+    } else if (location) {
+      // Resolve location to config
+      const locationConfig = resolveLocationConfig(location);
+      countryCode = locationConfig.countryCode;
+      languageCode = locationConfig.languageCode;
+    } else {
+      // Use defaults
+      countryCode = 'US';
+      languageCode = 'en-US';
+      console.log('[NewsSearch] No location specified, using default (US/en-US)');
+    }
+
+    // Construct Google News RSS URL with location parameters
     const encodedQuery = encodeURIComponent(q);
-    // Use scoring=r for relevance/authority ranking (Google's default)
-    // This ensures the most authoritative sources appear first
-    const rssUrl = `https://news.google.com/rss/search?q=${encodedQuery}&hl=en-US&gl=US&ceid=US:en&scoring=${scoring}`;
+    const ceid = `${countryCode}:${languageCode.split('-')[0]}`;
+    const rssUrl = `https://news.google.com/rss/search?q=${encodedQuery}&hl=${languageCode}&gl=${countryCode}&ceid=${ceid}&scoring=${scoring}`;
+
+    console.log(`[NewsSearch] Fetching: ${rssUrl}`);
 
     const response = await fetch(rssUrl);
     if (!response.ok) {
@@ -178,11 +287,17 @@ app.get('/api/news/search', async (req, res) => {
     // Apply weather source filter (Subtask 1.3)
     const articles = filterWeatherSources(parsedArticles).slice(0, parseInt(max, 10));
 
+    console.log(`[NewsSearch] Returning ${articles.length} articles for query="${q}", location="${location || 'default'}"`);
+
     return res.json({
       articles,
       totalArticles: articles.length,
+      location: location || null,
+      countryCode,
+      languageCode,
     });
   } catch (error) {
+    console.error(`[NewsSearch] Error:`, error.message);
     return res.status(500).json({
       error: 'Failed to fetch news',
       details: error.message,
