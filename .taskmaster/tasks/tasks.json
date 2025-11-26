@@ -1219,7 +1219,7 @@
   "watermark": {
     "tasks": [
       {
-        "id": "1",
+        "id": 1,
         "title": "Integrate Watermark into Image Generation Pipeline",
         "description": "Apply the existing addWatermark() function to generated cartoon images automatically",
         "status": "done",
@@ -1227,46 +1227,7 @@
         "priority": "high",
         "details": "Integrate src/utils/imageUtils.ts addWatermark() into ImageGenerator.tsx. Apply watermark after Gemini returns base64 image, before storing in state. Ensure watermark persists through download and gallery upload.",
         "testStrategy": "Generate a cartoon and verify watermark appears in bottom-right corner. Download image and confirm watermark is present. Upload to gallery and verify watermark is visible.",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Import addWatermark in ImageGenerator.tsx",
-            "description": "Add import statement for the watermark utility",
-            "status": "pending",
-            "dependencies": [],
-            "parentId": "undefined"
-          },
-          {
-            "id": 2,
-            "title": "Apply watermark after image generation",
-            "description": "Call addWatermark() on base64 image returned from Gemini before setImagePath()",
-            "status": "pending",
-            "dependencies": [
-              "1.1"
-            ],
-            "parentId": "undefined"
-          },
-          {
-            "id": 3,
-            "title": "Test watermark on download",
-            "description": "Verify downloaded images include watermark",
-            "status": "pending",
-            "dependencies": [
-              "1.2"
-            ],
-            "parentId": "undefined"
-          },
-          {
-            "id": 4,
-            "title": "Test watermark on gallery upload",
-            "description": "Verify gallery uploads preserve watermark",
-            "status": "pending",
-            "dependencies": [
-              "1.2"
-            ],
-            "parentId": "undefined"
-          }
-        ],
+        "subtasks": [],
         "updatedAt": "2025-11-25T07:24:51.948Z"
       }
     ],
@@ -1277,7 +1238,9 @@
       "completedCount": 1,
       "tags": [
         "watermark"
-      ]
+      ],
+      "created": "2025-11-26T12:04:06.015Z",
+      "description": "Tasks for watermark context"
     }
   },
   "gallery": {
