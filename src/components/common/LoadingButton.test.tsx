@@ -42,7 +42,7 @@ describe('LoadingButton', () => {
     // The progress bar is a div with animate-progress-slide class
     const progressBar = screen.getByRole('button').querySelector('.animate-progress-slide');
     expect(progressBar).toBeInTheDocument();
-    expect(progressBar).toHaveClass('bg-white');
+    expect(progressBar).toHaveClass('bg-white/80');
     expect(progressBar?.parentElement).toHaveClass('bg-black/20');
   });
 

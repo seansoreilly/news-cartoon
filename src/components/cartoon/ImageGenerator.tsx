@@ -5,6 +5,8 @@ import { geminiService } from '../../services/geminiService';
 import { ImageGenerationRateLimiter } from '../../utils/rateLimiter';
 import { AppErrorHandler } from '../../utils/errorHandler';
 import { addWatermark } from '../../utils/imageUtils';
+import { uploadToGallery } from '../../services/galleryService';
+import ShareButtons from '../common/ShareButtons';
 
 const ImageGenerator: React.FC = React.memo(() => {
   const { cartoon, comicPrompt, imagePath, setImagePath, setLoading, setError, selectedConceptIndex } = useCartoonStore();
@@ -13,6 +15,9 @@ const ImageGenerator: React.FC = React.memo(() => {
   const [localError, setLocalError] = useState<string | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishStatus, setPublishStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [publishError, setPublishError] = useState<string | null>(null);
 
   const selectedConcept = cartoon && selectedConceptIndex !== null && cartoon.ideas[selectedConceptIndex] ? {
     ...cartoon.ideas[selectedConceptIndex],
@@ -128,6 +133,41 @@ const ImageGenerator: React.FC = React.memo(() => {
     geminiService.clearImageCache();
     setImagePath('');
     setLocalError(null);
+    setPublishStatus('idle');
+    setPublishError(null);
+  };
+
+  const handlePublishToGallery = async () => {
+    if (!imagePath || !selectedConcept || !selectedArticles.length) {
+      setPublishError('Missing required data for publishing');
+      return;
+    }
+
+    setIsPublishing(true);
+    setPublishError(null);
+    setPublishStatus('idle');
+
+    try {
+      const firstArticle = selectedArticles[0];
+      const result = await uploadToGallery(
+        imagePath,
+        selectedConcept.title,
+        firstArticle.link || '',
+        firstArticle.source || 'Unknown'
+      );
+
+      if (result.success) {
+        setPublishStatus('success');
+      } else {
+        setPublishStatus('error');
+        setPublishError(result.error || 'Failed to publish to gallery');
+      }
+    } catch (err) {
+      setPublishStatus('error');
+      setPublishError(err instanceof Error ? err.message : 'Unknown error occurred');
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   // Don't show this section until a prompt has been generated
@@ -196,21 +236,56 @@ const ImageGenerator: React.FC = React.memo(() => {
               </a>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
               <button
                 onClick={handleDownload}
                 className="w-full bg-blue-600 text-white px-3 sm:px-6 py-2 text-sm sm:text-base rounded-lg font-medium hover:bg-blue-700 transition-colors min-h-[44px] min-w-[44px]"
               >
-                Download Cartoon
+                Download
+              </button>
+
+              <button
+                onClick={handlePublishToGallery}
+                disabled={isPublishing || publishStatus === 'success'}
+                className={`w-full px-3 sm:px-6 py-2 text-sm sm:text-base rounded-lg font-medium transition-colors min-h-[44px] min-w-[44px] ${
+                  publishStatus === 'success'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed'
+                }`}
+              >
+                {isPublishing ? 'Publishing...' : publishStatus === 'success' ? 'Published!' : 'Publish to Gallery'}
               </button>
 
               <button
                 onClick={handleRegenerateImage}
-                disabled={localLoading}
+                disabled={localLoading || isPublishing}
                 className="w-full bg-gray-200 text-gray-800 px-3 sm:px-6 py-2 text-sm sm:text-base rounded-lg font-medium hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px] min-w-[44px]"
               >
-                Generate New Cartoon
+                Regenerate
               </button>
+            </div>
+
+            {publishError && (
+              <div className="mt-3 bg-red-50 border-l-4 border-red-500 p-3 rounded">
+                <p className="text-red-800 text-sm">{publishError}</p>
+              </div>
+            )}
+
+            {publishStatus === 'success' && (
+              <div className="mt-3 bg-green-50 border-l-4 border-green-500 p-3 rounded">
+                <p className="text-green-800 text-sm">
+                  Cartoon published to gallery! <a href="/gallery" className="underline font-medium">View Gallery</a>
+                </p>
+              </div>
+            )}
+
+            <div className="mt-4 flex flex-col items-center justify-center space-y-2">
+              <p className="text-sm text-gray-500 font-medium">Share your cartoon</p>
+              <ShareButtons 
+                url={window.location.origin} 
+                title={`Check out this AI cartoon: ${selectedConcept.title}`} 
+                description={selectedConcept.premise}
+              />
             </div>
 
             <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">

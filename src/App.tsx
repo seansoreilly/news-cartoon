@@ -9,6 +9,7 @@ import './App.css';
 // Lazy load page components for code splitting
 const HomePage = lazy(() => import('./pages/HomePage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const GalleryPage = lazy(() => import('./pages/GalleryPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/gallery" element={<GalleryPage />} />
               <Route path="/404" element={<NotFoundPage />} />
               <Route path="*" element={<Navigate to="/404" replace />} />
             </Routes>
