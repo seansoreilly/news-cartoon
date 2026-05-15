@@ -33,6 +33,17 @@
   }
 }
 
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 .animate-flash-green {
   animation: flash-green 1.5s ease-in-out infinite;
   border: 3px solid transparent;

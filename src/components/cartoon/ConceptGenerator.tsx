@@ -4,6 +4,7 @@ import { useLocationStore } from '../../store/locationStore';
 import { useCartoonStore } from '../../store/cartoonStore';
 import { geminiService } from '../../services/geminiService';
 import { AppErrorHandler } from '../../utils/errorHandler';
+import RecoverableError from '../common/RecoverableError';
 
 const ConceptGenerator: React.FC = () => {
   const { selectedArticles } = useNewsStore();
@@ -117,9 +118,14 @@ const ConceptGenerator: React.FC = () => {
         </button>
 
         {localError && (
-          <div className="mt-4 bg-red-50 border-l-4 border-red-500 p-4 rounded">
-            <p className="text-red-800 font-medium">{localError}</p>
-          </div>
+          <RecoverableError
+            error={localError}
+            onRetry={() => {
+              setLocalError(null);
+              handleGenerateConcepts();
+            }}
+            className="mt-4"
+          />
         )}
       </div>
     </div>

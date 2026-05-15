@@ -7,9 +7,21 @@ import { AppErrorHandler } from '../../utils/errorHandler';
 import { addWatermark } from '../../utils/imageUtils';
 import { uploadToGallery } from '../../services/galleryService';
 import ShareButtons from '../common/ShareButtons';
+import RecoverableError from '../common/RecoverableError';
+import GenerationProgress from './GenerationProgress';
 
 const ImageGenerator: React.FC = React.memo(() => {
-  const { cartoon, comicPrompt, imagePath, setImagePath, setLoading, setError, selectedConceptIndex } = useCartoonStore();
+  const {
+    cartoon,
+    comicPrompt,
+    imagePath,
+    setImagePath,
+    setLoading,
+    setError,
+    selectedConceptIndex,
+    generationPhase,
+    setGenerationPhase,
+  } = useCartoonStore();
   const { selectedArticles } = useNewsStore();
   const [localLoading, setLocalLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -100,7 +112,12 @@ const ImageGenerator: React.FC = React.memo(() => {
 
       // Extract panel count from the generated script
       const panelCount = comicPrompt.panels ? comicPrompt.panels.length : 4;
-      const cartoonImage = await geminiService.generateCartoonImage(selectedConcept, selectedArticles, panelCount);
+      const cartoonImage = await geminiService.generateCartoonImage(
+        selectedConcept,
+        selectedArticles,
+        panelCount,
+        setGenerationPhase
+      );
       const imageUrl = `data:${cartoonImage.mimeType};base64,${cartoonImage.base64Data}`;
       const watermarkedUrl = await addWatermark(imageUrl);
       setImagePath(watermarkedUrl);
@@ -113,6 +130,7 @@ const ImageGenerator: React.FC = React.memo(() => {
     } finally {
       setLocalLoading(false);
       setLoading(false);
+      setGenerationPhase(null);
     }
   };
 
@@ -152,8 +170,8 @@ const ImageGenerator: React.FC = React.memo(() => {
       const result = await uploadToGallery(
         imagePath,
         selectedConcept.title,
-        firstArticle.link || '',
-        firstArticle.source || 'Unknown'
+        firstArticle.url || '',
+        firstArticle.source?.name || 'Unknown'
       );
 
       if (result.success) {
@@ -212,10 +230,17 @@ const ImageGenerator: React.FC = React.memo(() => {
                   : 'Generate Cartoon'}
             </button>
 
+            <GenerationProgress phase={generationPhase} active={localLoading} />
+
             {localError && (
-              <div className="mt-4 bg-red-50 border-l-4 border-red-500 p-4 rounded">
-                <p className="text-red-800 font-medium">{localError}</p>
-              </div>
+              <RecoverableError
+                error={localError}
+                onRetry={() => {
+                  setLocalError(null);
+                  handleGenerateImage();
+                }}
+                className="mt-4"
+              />
             )}
           </div>
         </div>
@@ -266,9 +291,11 @@ const ImageGenerator: React.FC = React.memo(() => {
             </div>
 
             {publishError && (
-              <div className="mt-3 bg-red-50 border-l-4 border-red-500 p-3 rounded">
-                <p className="text-red-800 text-sm">{publishError}</p>
-              </div>
+              <RecoverableError
+                error={publishError}
+                onRetry={handlePublishToGallery}
+                className="mt-3"
+              />
             )}
 
             {publishStatus === 'success' && (

@@ -3,6 +3,7 @@ import { useCartoonStore } from '../../store/cartoonStore';
 import { useNewsStore } from '../../store/newsStore';
 import { geminiService } from '../../services/geminiService';
 import { AppErrorHandler } from '../../utils/errorHandler';
+import RecoverableError from '../common/RecoverableError';
 import type { CartoonConcept } from '../../types/cartoon';
 
 const ConceptDisplay: React.FC = () => {
@@ -53,6 +54,18 @@ const ConceptDisplay: React.FC = () => {
     }
   };
 
+  const accentPalette = [
+    { border: 'border-l-purple-400', badge: 'bg-purple-100 text-purple-700' },
+    { border: 'border-l-pink-400', badge: 'bg-pink-100 text-pink-700' },
+    { border: 'border-l-amber-400', badge: 'bg-amber-100 text-amber-700' },
+    { border: 'border-l-blue-400', badge: 'bg-blue-100 text-blue-700' },
+    { border: 'border-l-emerald-400', badge: 'bg-emerald-100 text-emerald-700' },
+  ];
+
+  const selectedConcept =
+    selectedConceptIndex !== null ? cartoon.ideas[selectedConceptIndex] : null;
+  const showStickyBar = selectedConcept !== null && !comicPrompt;
+
   return (
     <div className="mt-8">
       <p className="mb-4 text-gray-600">Select a concept to generate the cartoon:</p>
@@ -60,12 +73,22 @@ const ConceptDisplay: React.FC = () => {
       <div className="grid grid-cols-1 gap-3">
         {cartoon.ideas.map((concept: CartoonConcept, index: number) => {
           const isSelected = selectedConceptIndex === index;
+          const accent = accentPalette[index % accentPalette.length];
 
           return (
             <div
               key={index}
               onClick={() => handleConceptClick(index)}
-              className={`p-2 sm:p-3 md:p-4 rounded-lg border-2 cursor-pointer transition-all duration-300 ${
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleConceptClick(index);
+                }
+              }}
+              aria-pressed={isSelected}
+              className={`p-2 sm:p-3 md:p-4 rounded-lg border-2 border-l-4 ${accent.border} cursor-pointer transition-all duration-300 ${
                 isSelected
                   ? 'bg-gradient-to-br from-purple-100 via-pink-50 to-amber-50 border-purple-500 shadow-lg transform scale-[1.02]'
                   : 'bg-white border-gray-200 hover:border-purple-400 hover:shadow-md hover:bg-gradient-to-br hover:from-purple-50/30 hover:via-pink-50/30 hover:to-amber-50/30'
@@ -73,9 +96,17 @@ const ConceptDisplay: React.FC = () => {
             >
               <div className="flex-1">
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-semibold text-gray-800 line-clamp-2 text-sm sm:text-base flex-1">
-                    {concept.title}
-                  </h3>
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <span
+                      className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold flex-shrink-0 ${accent.badge}`}
+                      aria-hidden="true"
+                    >
+                      {index + 1}
+                    </span>
+                    <h3 className="font-semibold text-gray-800 line-clamp-2 text-sm sm:text-base flex-1">
+                      {concept.title}
+                    </h3>
+                  </div>
                   {isSelected && (
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-600 text-white flex-shrink-0">
                       Selected
@@ -99,9 +130,14 @@ const ConceptDisplay: React.FC = () => {
       {selectedConceptIndex !== null && (
         <div className="mt-6">
           {localError && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded">
-              <p className="text-red-800 text-sm">{localError}</p>
-            </div>
+            <RecoverableError
+              error={localError}
+              onRetry={() => {
+                setLocalError(null);
+                handleGeneratePrompt();
+              }}
+              className="mb-4"
+            />
           )}
 
           <div className="mb-4 bg-white p-3 sm:p-4 rounded-lg border-2 border-purple-200">
@@ -135,6 +171,36 @@ const ConceptDisplay: React.FC = () => {
           >
             {localLoading ? '✨ Generating Prompt...' : '✨ Generate Prompt'}
           </button>
+        </div>
+      )}
+
+      {showStickyBar && selectedConcept && (
+        <div
+          role="region"
+          aria-label="Selected concept summary"
+          className="fixed bottom-0 left-0 right-0 z-40 px-4 pb-4 pointer-events-none"
+        >
+          <div className="container mx-auto max-w-[1000px] pointer-events-auto">
+            <div className="bg-white/90 backdrop-blur-lg border border-purple-200 rounded-xl shadow-xl px-4 py-3 flex items-center gap-3 animate-[slideUp_300ms_ease-out]">
+              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white text-sm font-bold flex-shrink-0">
+                ✓
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Selected</p>
+                <p className="text-sm sm:text-base font-semibold text-gray-800 truncate">
+                  {selectedConcept.title}
+                </p>
+              </div>
+              <button
+                onClick={handleGeneratePrompt}
+                disabled={localLoading}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md min-h-[44px] whitespace-nowrap text-sm sm:text-base"
+                aria-busy={localLoading}
+              >
+                {localLoading ? 'Working…' : 'Continue ▸'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

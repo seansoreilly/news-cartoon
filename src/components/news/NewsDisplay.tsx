@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNewsStore } from '../../store/newsStore';
 import { useLocationStore } from '../../store/locationStore';
 import { usePreferencesStore } from '../../store/preferencesStore';
@@ -7,6 +7,7 @@ import { geminiService } from '../../services/geminiService';
 import { AppErrorHandler } from '../../utils/errorHandler';
 import { calculateHumorScore } from '../../utils/textUtils';
 import { NewsCard } from './NewsCard';
+import RecoverableError from '../common/RecoverableError';
 import type { NewsArticle, NewsData } from '../../types';
 
 const NewsDisplay: React.FC = () => {
@@ -23,6 +24,7 @@ const NewsDisplay: React.FC = () => {
     setLoading,
     setError,
   } = useNewsStore();
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -106,7 +108,7 @@ const NewsDisplay: React.FC = () => {
     };
 
     fetchNews();
-  }, [location?.name, newsCount, setLoading, setError, setNews]);
+  }, [location?.name, newsCount, refreshKey, setLoading, setError, setNews]);
 
   const handleSelectArticle = async (article: NewsArticle) => {
     const isSelected = selectedArticles.some(
@@ -191,9 +193,13 @@ const NewsDisplay: React.FC = () => {
           <span className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white font-bold text-sm">2</span>
           <h2 className="text-lg sm:text-2xl font-bold text-gray-800">News Articles</h2>
         </div>
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-          <p className="text-red-800 font-medium">{error}</p>
-        </div>
+        <RecoverableError
+          error={error}
+          onRetry={() => {
+            setError(null);
+            setRefreshKey((k) => k + 1);
+          }}
+        />
       </div>
     );
   }

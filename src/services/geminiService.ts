@@ -105,7 +105,12 @@ class GeminiService {
     }
   }
 
-  async generateCartoonImage(concept: CartoonConcept, articles: NewsArticle[], panelCount: number = 4): Promise<CartoonImage> {
+  async generateCartoonImage(
+    concept: CartoonConcept,
+    articles: NewsArticle[],
+    panelCount: number = 4,
+    onPhase?: (phase: 'script' | 'image' | null) => void
+  ): Promise<CartoonImage> {
     console.log('=== Starting image generation ===');
     console.log('Concept:', JSON.stringify(concept, null, 2));
     console.log('Articles count:', articles.length);
@@ -132,6 +137,7 @@ class GeminiService {
     console.log('No cached image found, generating new one...');
 
     console.log('Generating comic prompt...');
+    onPhase?.('script');
     const prompt = await this.generateComicPrompt(concept, articles, panelCount);
     console.log('Comic prompt generated:', prompt);
     console.log('Panel count being used for image generation:', panelCount);
@@ -145,6 +151,7 @@ class GeminiService {
 
     try {
       console.log('Calling Vision API...');
+      onPhase?.('image');
       const response = await this.apiClient.callVisionApi(imagePrompt);
       console.log('Vision API response received');
 
