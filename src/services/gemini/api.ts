@@ -1,4 +1,5 @@
 import { createCartoonError } from '../../types/error';
+import { logger } from '../../utils/logger';
 import type { GeminiRequest, GeminiResponse } from './types';
 
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || '';
@@ -84,7 +85,7 @@ export class GeminiApiClient {
     }
 
     async callVisionApi(prompt: string, retryCount = 0): Promise<GeminiResponse> {
-        console.log(`[callVisionApi] Starting API call (retry ${retryCount}/${MAX_RETRIES})`);
+        logger.debug(`[callVisionApi] Starting API call (retry ${retryCount}/${MAX_RETRIES})`);
 
         if (!this.apiKey) {
             console.error('[callVisionApi] No API key configured');
@@ -93,8 +94,8 @@ export class GeminiApiClient {
             );
         }
 
-        console.log('[callVisionApi] API key present, length:', this.apiKey.length);
-        console.log('[callVisionApi] Using Vision URL:', this.visionBaseUrl);
+        logger.debug('[callVisionApi] API key present, length:', this.apiKey.length);
+        logger.debug('[callVisionApi] Using Vision URL:', this.visionBaseUrl);
 
         const request: GeminiRequest = {
             contents: [
@@ -111,7 +112,7 @@ export class GeminiApiClient {
             },
         };
 
-        console.log('[callVisionApi] Request config:', {
+        logger.debug('[callVisionApi] Request config:', {
             url: this.visionBaseUrl,
             hasApiKey: !!this.apiKey,
             promptLength: prompt.length,
@@ -119,7 +120,7 @@ export class GeminiApiClient {
         });
 
         try {
-            console.log('[callVisionApi] Sending POST request to Gemini API...');
+            logger.debug('[callVisionApi] Sending POST request to Gemini API...');
             const response = await fetch(this.visionBaseUrl, {
                 method: 'POST',
                 headers: {
@@ -129,7 +130,7 @@ export class GeminiApiClient {
                 body: JSON.stringify(request),
             });
 
-            console.log('[callVisionApi] Response received:', {
+            logger.debug('[callVisionApi] Response received:', {
                 status: response.status,
                 statusText: response.statusText,
                 ok: response.ok,
@@ -138,7 +139,7 @@ export class GeminiApiClient {
             if (!response.ok) {
                 if (response.status === 429 && retryCount < MAX_RETRIES) {
                     const delay = RETRY_DELAY_MS * Math.pow(2, retryCount);
-                    console.log(`[callVisionApi] Rate limited, retrying in ${delay}ms...`);
+                    logger.debug(`[callVisionApi] Rate limited, retrying in ${delay}ms...`);
                     await sleep(delay);
                     return this.callVisionApi(prompt, retryCount + 1);
                 }
@@ -148,10 +149,10 @@ export class GeminiApiClient {
                 throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
             }
 
-            console.log('[callVisionApi] Parsing JSON response...');
+            logger.debug('[callVisionApi] Parsing JSON response...');
             const data = (await response.json()) as GeminiResponse;
 
-            console.log('[callVisionApi] Response structure:', {
+            logger.debug('[callVisionApi] Response structure:', {
                 hasCandidates: !!data.candidates,
                 candidatesCount: data.candidates?.length || 0,
                 hasError: !!data.error,
@@ -162,14 +163,14 @@ export class GeminiApiClient {
                 throw new Error(`API Error: ${data.error.message}`);
             }
 
-            console.log('[callVisionApi] API call successful');
+            logger.debug('[callVisionApi] API call successful');
             return data;
         } catch (error) {
             console.error(`[callVisionApi] Error during API call:`, error);
 
             if (retryCount < MAX_RETRIES) {
                 const delay = RETRY_DELAY_MS * Math.pow(2, retryCount);
-                console.log(`[callVisionApi] Retrying after error, delay: ${delay}ms`);
+                logger.debug(`[callVisionApi] Retrying after error, delay: ${delay}ms`);
                 await sleep(delay);
                 return this.callVisionApi(prompt, retryCount + 1);
             }

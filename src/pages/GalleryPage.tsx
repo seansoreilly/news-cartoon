@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { supabase, TABLE_NAME, STORAGE_BUCKET, isSupabaseConfigured } from '../services/supabaseClient';
+import { fetchGalleryItems } from '../services/galleryService';
 import type { GalleryItem } from '../types/gallery';
 import { Link } from 'react-router-dom';
 import ShareButtons from '../components/common/ShareButtons';
@@ -11,51 +11,15 @@ const GalleryPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isSupabaseConfigured()) {
-      setError('Supabase is not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
-      setLoading(false);
-      return;
-    }
-
-    fetchGalleryItems();
+    void loadGallery();
   }, []);
 
-  const fetchGalleryItems = async () => {
-    try {
-      setLoading(true);
-      const client = supabase;
-      if (!client) return;
-
-      const { data, error } = await client
-        .from(TABLE_NAME)
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (error) {
-        throw error;
-      }
-
-      if (data) {
-        // Transform data to include public URL
-        const itemsWithUrls = data.map((item: GalleryItem) => {
-          const { data: publicUrlData } = client.storage
-            .from(STORAGE_BUCKET)
-            .getPublicUrl(item.image_path);
-
-          return {
-            ...item,
-            public_url: publicUrlData.publicUrl
-          };
-        });
-        setItems(itemsWithUrls);
-      }
-    } catch (err) {
-      console.error('Error fetching gallery:', err);
-      setError('Failed to load gallery items.');
-    } finally {
-      setLoading(false);
-    }
+  const loadGallery = async (): Promise<void> => {
+    setLoading(true);
+    const { items: fetchedItems, error: fetchError } = await fetchGalleryItems();
+    setItems(fetchedItems);
+    setError(fetchError ?? null);
+    setLoading(false);
   };
 
   return (

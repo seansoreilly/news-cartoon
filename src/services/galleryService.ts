@@ -1,4 +1,37 @@
 import { supabase, STORAGE_BUCKET, TABLE_NAME, isSupabaseConfigured } from './supabaseClient';
+import type { GalleryItem } from '../types/gallery';
+
+export const fetchGalleryItems = async (): Promise<{ items: GalleryItem[]; error?: string }> => {
+  if (!isSupabaseConfigured() || !supabase) {
+    return { items: [], error: 'Gallery service not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.' };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) throw error;
+
+    const items: GalleryItem[] = (data ?? []).map((item: GalleryItem) => {
+      const { data: publicUrlData } = supabase!.storage
+        .from(STORAGE_BUCKET)
+        .getPublicUrl(item.image_path);
+
+      return { ...item, public_url: publicUrlData.publicUrl };
+    });
+
+    return { items };
+  } catch (err) {
+    console.error('Error fetching gallery:', err);
+    return {
+      items: [],
+      error: err instanceof Error ? err.message : 'Failed to load gallery items.'
+    };
+  }
+};
 
 export const uploadToGallery = async (
   base64Image: string,
