@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNewsStore } from '../store/newsStore';
 import { useLocationStore } from '../store/locationStore';
 import { usePreferencesStore } from '../store/preferencesStore';
@@ -22,6 +22,12 @@ export const useNews = () => {
     setLoading,
     setError,
   } = useNewsStore();
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const refresh = useCallback((): void => {
+    setError(null);
+    setRefreshKey((k) => k + 1);
+  }, [setError]);
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -93,7 +99,7 @@ export const useNews = () => {
     };
 
     fetchNews();
-  }, [location?.name, newsCount, setLoading, setError, setNews]);
+  }, [location?.name, newsCount, refreshKey, setLoading, setError, setNews]);
 
   const handleSelectArticle = async (article: NewsArticle) => {
     const isSelected = selectedArticles.some(
@@ -153,5 +159,6 @@ export const useNews = () => {
     error,
     handleSelectArticle,
     location,
+    refresh,
   };
 };

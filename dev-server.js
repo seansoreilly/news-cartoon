@@ -3,7 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { parseStringPromise } from 'xml2js';
+import { parseGoogleNewsRSS } from './api/_shared/rssParser.js';
 
 // Load environment variables
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -155,70 +155,6 @@ const filterWeatherSources = (articles) => {
 app.use(cors());
 app.use(express.json());
 
-/**
- * Parse Google News RSS feed and filter articles from the last 3 days
- */
-const parseGoogleNewsRss = (rssData, limit) => {
-  try {
-    const rssRoot = rssData.RSS || rssData.rss;
-    if (!rssRoot) {
-      return [];
-    }
-
-    const channel = rssRoot.CHANNEL?.[0] || rssRoot.channel?.[0];
-    if (!channel) {
-      return [];
-    }
-
-    const items = channel.ITEM || channel.item || [];
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-
-    return items
-      .map((item) => {
-        const title = item.TITLE?.[0] || item.title?.[0] || '';
-        const description = item.DESCRIPTION?.[0] || item.description?.[0] || '';
-        const link = item.LINK?.[0] || item.link?.[0] || '';
-        const pubDate = item.PUBDATE?.[0] || item.pubDate?.[0] || new Date().toISOString();
-
-        // Extract source from title (Google News format: "Title - Source")
-        const titleParts = title.split(' - ');
-        const cleanTitle = titleParts.slice(0, -1).join(' - ') || title;
-        const source = titleParts[titleParts.length - 1] || 'Unknown';
-
-        // Clean HTML from description
-        const cleanDescription = description
-          .replace(/<[^>]*>/g, '')
-          .replace(/&quot;/g, '"')
-          .replace(/&apos;/g, "'")
-          .replace(/&amp;/g, '&')
-          .replace(/&lt;/g, '<')
-          .replace(/&gt;/g, '>')
-          .trim();
-
-        const publishedAtISO = new Date(pubDate).toISOString();
-
-        return {
-          title: cleanTitle,
-          description: cleanDescription,
-          content: cleanDescription,
-          url: link,
-          image: null,
-          publishedAt: publishedAtISO,
-          source: {
-            name: source,
-            url: null,
-          },
-          publishedDate: new Date(pubDate),
-        };
-      })
-      .filter((article) => article.publishedDate >= threeDaysAgo)
-      .slice(0, limit)
-      .map(({ publishedDate, ...article }) => article);
-  } catch (error) {
-    return [];
-  }
-};
 
 /**
  * News search endpoint (location or keyword)
@@ -280,9 +216,13 @@ app.get('/api/news/search', async (req, res) => {
 
     const xmlText = await response.text();
 
-    // Parse RSS XML
-    const rssData = await parseStringPromise(xmlText);
-    const parsedArticles = parseGoogleNewsRss(rssData, parseInt(max, 10) * 2); // Fetch extra to account for filtering
+    // Parse RSS XML — fetch extra to account for weather filtering, apply 3-day recency filter
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    const parsedArticles = await parseGoogleNewsRSS(xmlText, {
+      limit: parseInt(max, 10) * 2,
+      since: threeDaysAgo,
+    });
 
     // Apply weather source filter (Subtask 1.3)
     const articles = filterWeatherSources(parsedArticles).slice(0, parseInt(max, 10));

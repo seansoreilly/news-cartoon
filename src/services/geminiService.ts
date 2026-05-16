@@ -2,6 +2,7 @@ import type { NewsArticle } from '../types/news';
 import type { CartoonConcept, CartoonData, ComicScript, CartoonImage } from '../types/cartoon';
 import { createCartoonError } from '../types/error';
 import { ImageGenerationRateLimiter } from '../utils/rateLimiter';
+import { logger } from '../utils/logger';
 import { GeminiApiClient } from './gemini/api';
 import { ImageCacheService } from './gemini/cache';
 import {
@@ -64,22 +65,22 @@ class GeminiService {
     articles: NewsArticle[],
     panelCount: number = 4
   ): Promise<ComicScript> {
-    console.log('[generateComicPrompt] Starting comic prompt generation...');
-    console.log('[generateComicPrompt] Concept title:', concept.title);
-    console.log('[generateComicPrompt] Articles count:', articles.length);
-    console.log('[generateComicPrompt] Panel count requested:', panelCount);
+    logger.debug('[generateComicPrompt] Starting comic prompt generation...');
+    logger.debug('[generateComicPrompt] Concept title:', concept.title);
+    logger.debug('[generateComicPrompt] Articles count:', articles.length);
+    logger.debug('[generateComicPrompt] Panel count requested:', panelCount);
 
     const prompt = buildComicPrompt(concept, articles, panelCount);
-    console.log('[generateComicPrompt] Prompt text length:', prompt.length);
+    logger.debug('[generateComicPrompt] Prompt text length:', prompt.length);
 
     try {
-      console.log('[generateComicPrompt] Calling Gemini API for prompt...');
+      logger.debug('[generateComicPrompt] Calling Gemini API for prompt...');
       const response = await this.apiClient.callApi(prompt);
-      console.log('[generateComicPrompt] Received response from Gemini');
+      logger.debug('[generateComicPrompt] Received response from Gemini');
 
-      console.log('[generateComicPrompt] Parsing prompt response...');
+      logger.debug('[generateComicPrompt] Parsing prompt response...');
       const panels = parseComicScript(response, panelCount);
-      console.log('[generateComicPrompt] Parsed panels count:', panels.length);
+      logger.debug('[generateComicPrompt] Parsed panels count:', panels.length);
 
       const comicPrompt = {
         panels,
@@ -88,7 +89,7 @@ class GeminiService {
         newsContext: articles.map((a) => a.title).join('; '),
       };
 
-      console.log('[generateComicPrompt] ✅ Comic prompt generated successfully');
+      logger.debug('[generateComicPrompt] ✅ Comic prompt generated successfully');
       return comicPrompt;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -111,15 +112,15 @@ class GeminiService {
     panelCount: number = 4,
     onPhase?: (phase: 'script' | 'image' | null) => void
   ): Promise<CartoonImage> {
-    console.log('=== Starting image generation ===');
-    console.log('Concept:', JSON.stringify(concept, null, 2));
-    console.log('Articles count:', articles.length);
-    console.log('Panel count requested:', panelCount);
+    logger.debug('=== Starting image generation ===');
+    logger.debug('Concept:', JSON.stringify(concept, null, 2));
+    logger.debug('Articles count:', articles.length);
+    logger.debug('Panel count requested:', panelCount);
 
     // Check rate limiting
     if (!ImageGenerationRateLimiter.canGenerateImage()) {
       const timeUntilNext = ImageGenerationRateLimiter.getTimeUntilNextGeneration();
-      console.log('Rate limit hit. Time until next:', timeUntilNext);
+      logger.debug('Rate limit hit. Time until next:', timeUntilNext);
       throw createCartoonError(
         `Rate limit exceeded. Try again in ${Math.ceil(timeUntilNext / 1000)} seconds.`,
         { statusCode: 429, code: 'RATE_LIMIT_ERROR' }
@@ -128,40 +129,40 @@ class GeminiService {
 
     // Check cache
     const cacheKey = this.imageCache.buildCacheKey(concept);
-    console.log('Cache key:', cacheKey);
+    logger.debug('Cache key:', cacheKey);
     const cached = this.imageCache.get(cacheKey);
     if (cached) {
-      console.log('✅ Found cached image, returning from cache');
+      logger.debug('✅ Found cached image, returning from cache');
       return cached;
     }
-    console.log('No cached image found, generating new one...');
+    logger.debug('No cached image found, generating new one...');
 
-    console.log('Generating comic prompt...');
+    logger.debug('Generating comic prompt...');
     onPhase?.('script');
     const prompt = await this.generateComicPrompt(concept, articles, panelCount);
-    console.log('Comic prompt generated:', prompt);
-    console.log('Panel count being used for image generation:', panelCount);
+    logger.debug('Comic prompt generated:', prompt);
+    logger.debug('Panel count being used for image generation:', panelCount);
 
     // Extract and validate text elements before building prompt
     const textElements = extractTextElements(prompt);
     validateTextElements(textElements);
 
     const imagePrompt = buildImagePrompt(concept, prompt, panelCount);
-    console.log('Image prompt length:', imagePrompt.length, 'characters');
+    logger.debug('Image prompt length:', imagePrompt.length, 'characters');
 
     try {
-      console.log('Calling Vision API...');
+      logger.debug('Calling Vision API...');
       onPhase?.('image');
       const response = await this.apiClient.callVisionApi(imagePrompt);
-      console.log('Vision API response received');
+      logger.debug('Vision API response received');
 
-      console.log('Parsing image response...');
+      logger.debug('Parsing image response...');
       const imageData = parseImageResponse(response);
-      console.log('Image data parsed successfully, base64 length:', imageData.length);
+      logger.debug('Image data parsed successfully, base64 length:', imageData.length);
 
       // Record rate limit
       ImageGenerationRateLimiter.recordImageGeneration();
-      console.log('Rate limit recorded');
+      logger.debug('Rate limit recorded');
 
       // Cache the result
       const cartoonImage: CartoonImage = {
@@ -170,9 +171,9 @@ class GeminiService {
         generatedAt: Date.now(),
       };
       this.imageCache.set(cacheKey, cartoonImage);
-      console.log('Image cached successfully');
+      logger.debug('Image cached successfully');
 
-      console.log('=== Image generation complete ===');
+      logger.debug('=== Image generation complete ===');
       return cartoonImage;
     } catch (error) {
       console.error('Image generation failed:', error);
@@ -202,7 +203,7 @@ class GeminiService {
   }
 
   async batchAnalyzeArticles(articles: Array<{ title: string; description?: string; content?: string }>): Promise<Array<{ summary: string; humorScore: number }>> {
-    console.log(`[batchAnalyzeArticles] Analyzing ${articles.length} articles...`);
+    logger.debug(`[batchAnalyzeArticles] Analyzing ${articles.length} articles...`);
 
     // Process in smaller batches to avoid API limits and improve reliability
     const BATCH_SIZE = parseInt(import.meta.env.VITE_BATCH_SIZE || '3', 10);
@@ -213,7 +214,7 @@ class GeminiService {
       const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
       const totalBatches = Math.ceil(articles.length / BATCH_SIZE);
 
-      console.log(`[batchAnalyzeArticles] Processing batch ${batchNumber}/${totalBatches} (articles ${i + 1}-${Math.min(i + BATCH_SIZE, articles.length)})`);
+      logger.debug(`[batchAnalyzeArticles] Processing batch ${batchNumber}/${totalBatches} (articles ${i + 1}-${Math.min(i + BATCH_SIZE, articles.length)})`);
 
       const prompt = buildBatchAnalysisPrompt(batch);
 
@@ -223,7 +224,7 @@ class GeminiService {
 
         // Ensure we have the right number of results
         if (batchResults.length < batch.length) {
-          console.warn(`[batchAnalyzeArticles] Batch ${batchNumber}: Expected ${batch.length} results, got ${batchResults.length}. Padding with defaults.`);
+          logger.warn(`[batchAnalyzeArticles] Batch ${batchNumber}: Expected ${batch.length} results, got ${batchResults.length}. Padding with defaults.`);
           while (batchResults.length < batch.length) {
             batchResults.push({ summary: '', humorScore: 50 });
           }
@@ -231,7 +232,7 @@ class GeminiService {
 
         // Take only the needed number of results
         results.push(...batchResults.slice(0, batch.length));
-        console.log(`[batchAnalyzeArticles] ✅ Batch ${batchNumber} successful (${batchResults.length} articles)`);
+        logger.debug(`[batchAnalyzeArticles] ✅ Batch ${batchNumber} successful (${batchResults.length} articles)`);
 
         // Small delay between batches to avoid rate limiting
         if (i + BATCH_SIZE < articles.length) {
@@ -245,7 +246,7 @@ class GeminiService {
     }
 
     const successCount = results.filter(r => r.summary && r.summary.length > 0).length;
-    console.log(`[batchAnalyzeArticles] ✅ Completed: ${successCount}/${articles.length} articles with AI summaries`);
+    logger.debug(`[batchAnalyzeArticles] ✅ Completed: ${successCount}/${articles.length} articles with AI summaries`);
 
     return results;
   }

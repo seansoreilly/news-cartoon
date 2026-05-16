@@ -1,142 +1,27 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useCartoonStore } from '../../store/cartoonStore';
-import { useNewsStore } from '../../store/newsStore';
 import { geminiService } from '../../services/geminiService';
-import { ImageGenerationRateLimiter } from '../../utils/rateLimiter';
-import { AppErrorHandler } from '../../utils/errorHandler';
-import { addWatermark } from '../../utils/imageUtils';
-import { uploadToGallery } from '../../services/galleryService';
+import { useGeneratedImageUrl } from '../../hooks/useGeneratedImageUrl';
+import { useImageGeneration } from '../../hooks/useImageGeneration';
+import { useGalleryPublish } from '../../hooks/useGalleryPublish';
 import ShareButtons from '../common/ShareButtons';
 import RecoverableError from '../common/RecoverableError';
 import GenerationProgress from './GenerationProgress';
 
 const ImageGenerator: React.FC = React.memo(() => {
-  const {
-    cartoon,
-    comicPrompt,
-    imagePath,
-    setImagePath,
-    setLoading,
-    setError,
-    selectedConceptIndex,
-    generationPhase,
-    setGenerationPhase,
-  } = useCartoonStore();
-  const { selectedArticles } = useNewsStore();
-  const [localLoading, setLocalLoading] = useState(false);
-  const [localError, setLocalError] = useState<string | null>(null);
-  const [timeRemaining, setTimeRemaining] = useState(0);
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
-  const [isPublishing, setIsPublishing] = useState(false);
-  const [publishStatus, setPublishStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const [publishError, setPublishError] = useState<string | null>(null);
+  const { cartoon, comicPrompt, imagePath, setImagePath, selectedConceptIndex } = useCartoonStore();
 
   const selectedConcept = cartoon && selectedConceptIndex !== null && cartoon.ideas[selectedConceptIndex] ? {
     ...cartoon.ideas[selectedConceptIndex],
     location: cartoon.location,
   } : undefined;
 
-  // Convert base64 data URL to Blob URL when image changes
-  React.useEffect(() => {
-    if (!imagePath) {
-      if (blobUrl) {
-        URL.revokeObjectURL(blobUrl);
-        setBlobUrl(null);
-      }
-      return;
-    }
+  const { blobUrl } = useGeneratedImageUrl(imagePath ?? null);
+  const { generate, isGenerating, secondsUntilNext, error: generationError, generationPhase } = useImageGeneration();
+  const { publish, isPublishing, publishStatus, publishError, resetPublish } = useGalleryPublish();
 
-    try {
-      // Convert base64 to Blob
-      const byteString = atob(imagePath.split(',')[1]);
-      const mimeString = imagePath.split(',')[0].split(':')[1].split(';')[0];
-      const ab = new ArrayBuffer(byteString.length);
-      const ia = new Uint8Array(ab);
-      for (let i = 0; i < byteString.length; i++) {
-        ia[i] = byteString.charCodeAt(i);
-      }
-      const blob = new Blob([ab], { type: mimeString });
-      const url = URL.createObjectURL(blob);
-
-      // Clean up previous blob URL
-      if (blobUrl) {
-        URL.revokeObjectURL(blobUrl);
-      }
-
-      setBlobUrl(url);
-    } catch (error) {
-      console.error('[ImageGenerator] Failed to create blob URL:', error);
-    }
-
-    // Cleanup on unmount
-    return () => {
-      if (blobUrl) {
-        URL.revokeObjectURL(blobUrl);
-      }
-    };
-  }, [imagePath]);
-
-  const handleGenerateImage = async () => {
-    if (!selectedConcept) {
-      setLocalError('No cartoon concept selected');
-      return;
-    }
-
-    if (!comicPrompt) {
-      setLocalError('No cartoon script generated');
-      return;
-    }
-
-    setLocalLoading(true);
-    setLocalError(null);
-    setLoading(true);
-
-    try {
-      const timeUntilNext = ImageGenerationRateLimiter.getTimeUntilNextGeneration();
-      if (timeUntilNext > 0) {
-        const secondsRemaining = Math.ceil(timeUntilNext / 1000);
-        setTimeRemaining(secondsRemaining);
-        const timer = setInterval(() => {
-          setTimeRemaining((prev) => {
-            if (prev <= 1) {
-              clearInterval(timer);
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
-        throw new Error(
-          `Rate limit exceeded. Please wait ${secondsRemaining} second${secondsRemaining !== 1 ? 's' : ''}.`
-        );
-      }
-
-      // Extract panel count from the generated script
-      const panelCount = comicPrompt.panels ? comicPrompt.panels.length : 4;
-      const cartoonImage = await geminiService.generateCartoonImage(
-        selectedConcept,
-        selectedArticles,
-        panelCount,
-        setGenerationPhase
-      );
-      const imageUrl = `data:${cartoonImage.mimeType};base64,${cartoonImage.base64Data}`;
-      const watermarkedUrl = await addWatermark(imageUrl);
-      setImagePath(watermarkedUrl);
-      setLocalError(null);
-    } catch (err) {
-      const appError = AppErrorHandler.handleError(err);
-      const userMessage = AppErrorHandler.getUserMessage(appError);
-      setLocalError(userMessage);
-      setError(userMessage);
-    } finally {
-      setLocalLoading(false);
-      setLoading(false);
-      setGenerationPhase(null);
-    }
-  };
-
-  const handleDownload = () => {
+  const handleDownload = (): void => {
     if (!imagePath || !selectedConcept) return;
-
     const link = document.createElement('a');
     link.href = imagePath;
     link.download = `cartoon-${selectedConcept.title.replace(/\s+/g, '-').toLowerCase()}.png`;
@@ -145,47 +30,10 @@ const ImageGenerator: React.FC = React.memo(() => {
     document.body.removeChild(link);
   };
 
-
-  const handleRegenerateImage = () => {
-    // Clear the image cache so a new image will be generated
+  const handleRegenerateImage = (): void => {
     geminiService.clearImageCache();
     setImagePath('');
-    setLocalError(null);
-    setPublishStatus('idle');
-    setPublishError(null);
-  };
-
-  const handlePublishToGallery = async () => {
-    if (!imagePath || !selectedConcept || !selectedArticles.length) {
-      setPublishError('Missing required data for publishing');
-      return;
-    }
-
-    setIsPublishing(true);
-    setPublishError(null);
-    setPublishStatus('idle');
-
-    try {
-      const firstArticle = selectedArticles[0];
-      const result = await uploadToGallery(
-        imagePath,
-        selectedConcept.title,
-        firstArticle.url || '',
-        firstArticle.source?.name || 'Unknown'
-      );
-
-      if (result.success) {
-        setPublishStatus('success');
-      } else {
-        setPublishStatus('error');
-        setPublishError(result.error || 'Failed to publish to gallery');
-      }
-    } catch (err) {
-      setPublishStatus('error');
-      setPublishError(err instanceof Error ? err.message : 'Unknown error occurred');
-    } finally {
-      setIsPublishing(false);
-    }
+    resetPublish();
   };
 
   // Don't show this section until a prompt has been generated
@@ -214,31 +62,28 @@ const ImageGenerator: React.FC = React.memo(() => {
             <p className="text-sm text-gray-500 mb-4">Why it's funny: {selectedConcept.why_funny}</p>
 
             <button
-              onClick={handleGenerateImage}
-              disabled={localLoading || timeRemaining > 0 || !comicPrompt}
+              onClick={generate}
+              disabled={isGenerating || secondsUntilNext > 0 || !comicPrompt}
               className={`w-full px-6 py-3 rounded-lg font-medium transition-all ${
                 !comicPrompt
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : `bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-700 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed ${localLoading ? 'animate-flash-amber' : 'animate-flash-green'}`
+                  : `bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-700 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed ${isGenerating ? 'animate-flash-amber' : 'animate-flash-green'}`
               }`}
-              aria-busy={localLoading}
+              aria-busy={isGenerating}
             >
-              {localLoading
+              {isGenerating
                 ? 'Generating Cartoon...'
-                : timeRemaining > 0
-                  ? `Wait ${timeRemaining}s`
+                : secondsUntilNext > 0
+                  ? `Wait ${secondsUntilNext}s`
                   : 'Generate Cartoon'}
             </button>
 
-            <GenerationProgress phase={generationPhase} active={localLoading} />
+            <GenerationProgress phase={generationPhase} active={isGenerating} />
 
-            {localError && (
+            {generationError && (
               <RecoverableError
-                error={localError}
-                onRetry={() => {
-                  setLocalError(null);
-                  handleGenerateImage();
-                }}
+                error={generationError}
+                onRetry={generate}
                 className="mt-4"
               />
             )}
@@ -270,7 +115,7 @@ const ImageGenerator: React.FC = React.memo(() => {
               </button>
 
               <button
-                onClick={handlePublishToGallery}
+                onClick={publish}
                 disabled={isPublishing || publishStatus === 'success'}
                 className={`w-full px-3 sm:px-6 py-2 text-sm sm:text-base rounded-lg font-medium transition-colors min-h-[44px] min-w-[44px] ${
                   publishStatus === 'success'
@@ -283,7 +128,7 @@ const ImageGenerator: React.FC = React.memo(() => {
 
               <button
                 onClick={handleRegenerateImage}
-                disabled={localLoading || isPublishing}
+                disabled={isGenerating || isPublishing}
                 className="w-full bg-gray-200 text-gray-800 px-3 sm:px-6 py-2 text-sm sm:text-base rounded-lg font-medium hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px] min-w-[44px]"
               >
                 Regenerate
@@ -293,7 +138,7 @@ const ImageGenerator: React.FC = React.memo(() => {
             {publishError && (
               <RecoverableError
                 error={publishError}
-                onRetry={handlePublishToGallery}
+                onRetry={publish}
                 className="mt-3"
               />
             )}
@@ -308,9 +153,9 @@ const ImageGenerator: React.FC = React.memo(() => {
 
             <div className="mt-4 flex flex-col items-center justify-center space-y-2">
               <p className="text-sm text-gray-500 font-medium">Share your cartoon</p>
-              <ShareButtons 
-                url={window.location.origin} 
-                title={`Check out this AI cartoon: ${selectedConcept.title}`} 
+              <ShareButtons
+                url={window.location.origin}
+                title={`Check out this AI cartoon: ${selectedConcept.title}`}
                 description={selectedConcept.premise}
               />
             </div>

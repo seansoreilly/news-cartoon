@@ -1,6 +1,7 @@
 import type { GeminiResponse } from './types';
 import type { CartoonConcept, ComicScriptPanel, ComicPanel, ComicScript } from '../../types/cartoon';
 import { createCartoonError } from '../../types/error';
+import { logger } from '../../utils/logger';
 
 export const parseConceptResponse = (response: GeminiResponse, location: string): CartoonConcept[] => {
     const text = response.candidates?.[0]?.content?.parts?.[0]?.text || '';
@@ -32,17 +33,17 @@ export const parseConceptResponse = (response: GeminiResponse, location: string)
 };
 
 export const parseComicScript = (response: GeminiResponse, expectedPanelCount: number = 4): ComicScriptPanel[] => {
-    console.log('[parseComicScript] Starting to parse new JSON prompt format...');
-    console.log('[parseComicScript] Expected panel count:', expectedPanelCount);
+    logger.debug('[parseComicScript] Starting to parse new JSON prompt format...');
+    logger.debug('[parseComicScript] Expected panel count:', expectedPanelCount);
 
     const text = response.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    console.log('[parseComicScript] Response text length:', text.length);
-    console.log('[parseComicScript] Response text preview:', text.substring(0, 500));
+    logger.debug('[parseComicScript] Response text length:', text.length);
+    logger.debug('[parseComicScript] Response text preview:', text.substring(0, 500));
 
     // Try to parse as JSON array (new format)
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (jsonMatch) {
-        console.log('[parseComicScript] Found JSON array, parsing new format...');
+        logger.debug('[parseComicScript] Found JSON array, parsing new format...');
         try {
             const parsed = JSON.parse(jsonMatch[0]) as Array<{
                 panelNumber?: number;
@@ -53,10 +54,10 @@ export const parseComicScript = (response: GeminiResponse, expectedPanelCount: n
             }>;
 
             if (Array.isArray(parsed) && parsed.length > 0) {
-                console.log('[parseComicScript] Successfully parsed JSON array with', parsed.length, 'panels');
+                logger.debug('[parseComicScript] Successfully parsed JSON array with', parsed.length, 'panels');
 
                 const panels: ComicScriptPanel[] = parsed.slice(0, expectedPanelCount).map((panel, index) => {
-                    console.log(`[parseComicScript] Panel ${index + 1}:`, {
+                    logger.debug(`[parseComicScript] Panel ${index + 1}:`, {
                         hasVisualDescription: !!panel.visualDescription,
                         textElementCount: panel.visibleText?.length || 0,
                     });
@@ -77,16 +78,16 @@ export const parseComicScript = (response: GeminiResponse, expectedPanelCount: n
                     };
                 });
 
-                console.log('[parseComicScript] Successfully extracted', panels.length, 'panels with structured data');
+                logger.debug('[parseComicScript] Successfully extracted', panels.length, 'panels with structured data');
                 return panels;
             }
         } catch (error) {
-            console.warn('[parseComicScript] JSON parsing failed:', error);
+            logger.warn('[parseComicScript] JSON parsing failed:', error);
         }
     }
 
     // Fallback: Create default panels if parsing completely fails
-    console.warn('[parseComicScript] Could not parse JSON, using default panels');
+    logger.warn('[parseComicScript] Could not parse JSON, using default panels');
     const defaultPanels: ComicScriptPanel[] = [];
     for (let i = 1; i <= expectedPanelCount; i++) {
         defaultPanels.push({
@@ -101,15 +102,15 @@ export const parseComicScript = (response: GeminiResponse, expectedPanelCount: n
 };
 
 export const parseImageResponse = (response: GeminiResponse): string => {
-    console.log('[parseImageResponse] Starting response parsing...');
+    logger.debug('[parseImageResponse] Starting response parsing...');
 
     // Log full response structure for debugging
-    console.log('[parseImageResponse] Full response structure:', JSON.stringify(response, null, 2));
+    logger.debug('[parseImageResponse] Full response structure:', JSON.stringify(response, null, 2));
 
     // Extract image data from Gemini Image Generation API response
     // The response structure varies based on the model and generation config
 
-    console.log('[parseImageResponse] Response structure check:', {
+    logger.debug('[parseImageResponse] Response structure check:', {
         hasCandidates: !!response.candidates,
         candidatesLength: response.candidates?.length || 0,
     });
@@ -129,16 +130,16 @@ export const parseImageResponse = (response: GeminiResponse): string => {
     };
 
     if ('inlineData' in candidateExtended && candidateExtended.inlineData) {
-        console.log('[parseImageResponse] Found inlineData directly in candidate');
+        logger.debug('[parseImageResponse] Found inlineData directly in candidate');
         const data = candidateExtended.inlineData.data;
         if (data) {
-            console.log('[parseImageResponse] ✅ Successfully extracted image data from candidate');
+            logger.debug('[parseImageResponse] ✅ Successfully extracted image data from candidate');
             return data;
         }
     }
 
     // Check standard structure: candidate.content.parts[0]
-    console.log('[parseImageResponse] Candidate structure:', {
+    logger.debug('[parseImageResponse] Candidate structure:', {
         hasContent: !!candidate.content,
         hasParts: !!candidate.content?.parts,
         partsLength: candidate.content?.parts?.length || 0,
@@ -156,7 +157,7 @@ export const parseImageResponse = (response: GeminiResponse): string => {
     }
 
     const part = parts[0];
-    console.log('[parseImageResponse] Part type check:', {
+    logger.debug('[parseImageResponse] Part type check:', {
         hasInlineData: 'inlineData' in part,
         hasText: 'text' in part,
         partKeys: Object.keys(part),
@@ -164,7 +165,7 @@ export const parseImageResponse = (response: GeminiResponse): string => {
 
     // Check for inlineData (image generation response)
     if (part && 'inlineData' in part && part.inlineData) {
-        console.log('[parseImageResponse] Found inlineData:', {
+        logger.debug('[parseImageResponse] Found inlineData:', {
             hasMimeType: !!part.inlineData.mimeType,
             mimeType: part.inlineData.mimeType,
             hasData: !!part.inlineData.data,
@@ -173,7 +174,7 @@ export const parseImageResponse = (response: GeminiResponse): string => {
         });
 
         if (part.inlineData.data) {
-            console.log('[parseImageResponse] ✅ Successfully extracted image data');
+            logger.debug('[parseImageResponse] ✅ Successfully extracted image data');
             return part.inlineData.data;
         } else {
             console.error('[parseImageResponse] inlineData exists but data field is empty');
@@ -183,7 +184,7 @@ export const parseImageResponse = (response: GeminiResponse): string => {
 
     // Fallback to text field for debugging
     if (part && 'text' in part && part.text) {
-        console.warn('[parseImageResponse] ⚠️ Received text instead of image data:', {
+        logger.warn('[parseImageResponse] ⚠️ Received text instead of image data:', {
             textLength: part.text.length,
             textPreview: part.text.substring(0, 200),
         });
@@ -232,7 +233,7 @@ export const parseBatchAnalysisResponse = (response: GeminiResponse): Array<{ su
         return batchResults;
     } catch (parseError) {
         console.error('[parseBatchAnalysisResponse] Failed to parse JSON', parseError);
-        console.log('[parseBatchAnalysisResponse] Attempted to parse:', jsonMatch[0].substring(0, 200));
+        logger.debug('[parseBatchAnalysisResponse] Attempted to parse:', jsonMatch[0].substring(0, 200));
         return [];
     }
 };
@@ -260,7 +261,7 @@ export const extractTextElements = (script: ComicScript): Array<{ panel: number;
                                 text: cleaned,
                                 type: textElem.type || 'sign',
                             });
-                            console.log(`[extractTextElements] Panel ${panelNum}: Found text from ${textElem.type}: "${cleaned}"`);
+                            logger.debug(`[extractTextElements] Panel ${panelNum}: Found text from ${textElem.type}: "${cleaned}"`);
                         }
                     }
                 });
@@ -297,7 +298,7 @@ export const extractTextElements = (script: ComicScript): Array<{ panel: number;
         }
     });
 
-    console.log('[extractTextElements] Extracted', textElements.length, 'text elements total');
+    logger.debug('[extractTextElements] Extracted', textElements.length, 'text elements total');
     return textElements;
 };
 
@@ -306,7 +307,7 @@ export const extractTextElements = (script: ComicScript): Array<{ panel: number;
  * Ensures all text is properly formatted and within limits
  */
 export const validateTextElements = (textElements: Array<{ panel: number; text: string; type: string }>): void => {
-    console.log('[validateTextElements] Validating', textElements.length, 'text elements');
+    logger.debug('[validateTextElements] Validating', textElements.length, 'text elements');
 
     const issues: string[] = [];
 
@@ -325,20 +326,20 @@ export const validateTextElements = (textElements: Array<{ panel: number; text: 
 
         // Check if text is all caps
         if (elem.text !== elem.text.toUpperCase()) {
-            console.warn(`[validateTextElements] Panel ${elem.panel}: Text not in ALL CAPS: "${elem.text}"`);
+            logger.warn(`[validateTextElements] Panel ${elem.panel}: Text not in ALL CAPS: "${elem.text}"`);
         }
 
         // Warn about special characters that might render poorly
         if (/[^\w\s\-'!?.]/.test(elem.text)) {
-            console.warn(`[validateTextElements] Panel ${elem.panel}: Contains special characters: "${elem.text}"`);
+            logger.warn(`[validateTextElements] Panel ${elem.panel}: Contains special characters: "${elem.text}"`);
         }
     });
 
     // Log validation results
     if (issues.length === 0) {
-        console.log('[validateTextElements] ✅ All text elements valid');
+        logger.debug('[validateTextElements] ✅ All text elements valid');
     } else {
-        console.warn('[validateTextElements] ⚠️ Issues found:');
-        issues.forEach(issue => console.warn(`  - ${issue}`));
+        logger.warn('[validateTextElements] ⚠️ Issues found:');
+        issues.forEach(issue => logger.warn(`  - ${issue}`));
     }
 };
