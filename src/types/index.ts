@@ -58,6 +58,7 @@ export interface UserPreferences {
   autoGenerate: boolean;
   autoRefresh: boolean;
   newsCount: number;
+  simpleMode: boolean;
 }
 
 // Rate limiting type
