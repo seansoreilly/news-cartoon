@@ -18,7 +18,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   autoGenerate: false,
   autoRefresh: false,
   newsCount: 5,
-  simpleMode: false,
+  simpleMode: true,
 };
 
 export const usePreferencesStore = create<

@@ -3,7 +3,9 @@ import LocationDetector from '../location/LocationDetector';
 import ExpressProgress from './ExpressProgress';
 import ShareButtons from '../common/ShareButtons';
 import RecoverableError from '../common/RecoverableError';
+import HalftoneSpinner from '../common/HalftoneSpinner';
 import { useLocationStore } from '../../store/locationStore';
+import { useNewsStore } from '../../store/newsStore';
 import { useCartoonStore } from '../../store/cartoonStore';
 import { useExpressGenerate } from '../../hooks/useExpressGenerate';
 import { useGeneratedImageUrl } from '../../hooks/useGeneratedImageUrl';
@@ -12,6 +14,7 @@ import { geminiService } from '../../services/geminiService';
 
 const ExpressWorkflow: React.FC = () => {
   const location = useLocationStore((s) => s.location);
+  const selectedArticles = useNewsStore((s) => s.selectedArticles);
   const { cartoon, imagePath, selectedConceptIndex, setImagePath } = useCartoonStore();
   const { run, retry, phase, error, isRunning, secondsUntilNext } = useExpressGenerate();
   const { blobUrl } = useGeneratedImageUrl(imagePath ?? null);
@@ -61,7 +64,7 @@ const ExpressWorkflow: React.FC = () => {
           <span aria-hidden="true" className="text-xl sm:text-2xl">
             ⚡
           </span>
-          <h2 className="text-lg sm:text-2xl font-bold text-gray-800">Express Mode</h2>
+          <h2 className="text-lg sm:text-2xl font-bold text-gray-800">Fast Mode</h2>
         </div>
 
         <p className="text-sm text-gray-600 mb-4">
@@ -77,7 +80,10 @@ const ExpressWorkflow: React.FC = () => {
           }`}
           aria-busy={isRunning}
         >
-          {buttonLabel}
+          <span className="inline-flex items-center justify-center gap-2">
+            {isRunning && <HalftoneSpinner size="sm" />}
+            {buttonLabel}
+          </span>
         </button>
 
         {!hasLocation && !isRunning && (
@@ -124,6 +130,57 @@ const ExpressWorkflow: React.FC = () => {
               </a>
             </div>
 
+            <div className="mb-4 p-4 bg-gradient-to-br from-amber-50/80 to-orange-50/60 border border-amber-200 rounded-lg space-y-4">
+              <div>
+                <p className="text-[0.65rem] sm:text-xs font-bold uppercase tracking-[0.18em] text-amber-700 mb-1.5">
+                  The concept
+                </p>
+                <p className="text-sm sm:text-base text-gray-800 leading-relaxed">
+                  {selectedConcept.premise}
+                </p>
+              </div>
+
+              {selectedConcept.why_funny && (
+                <div>
+                  <p className="text-[0.65rem] sm:text-xs font-bold uppercase tracking-[0.18em] text-amber-700 mb-1.5">
+                    Why it's funny
+                  </p>
+                  <p className="text-sm text-gray-700 italic leading-relaxed">
+                    {selectedConcept.why_funny}
+                  </p>
+                </div>
+              )}
+
+              {selectedArticles.length > 0 && (
+                <div>
+                  <p className="text-[0.65rem] sm:text-xs font-bold uppercase tracking-[0.18em] text-amber-700 mb-1.5">
+                    Based on
+                  </p>
+                  <ul className="text-sm text-gray-700 space-y-1.5">
+                    {selectedArticles.map((article, i) => (
+                      <li key={`${article.url}-${i}`} className="flex gap-2 items-start">
+                        <span className="text-amber-600 font-bold flex-shrink-0 mt-0.5" aria-hidden="true">
+                          ◦
+                        </span>
+                        {article.url ? (
+                          <a
+                            href={article.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-amber-700 hover:underline line-clamp-2"
+                          >
+                            {article.title}
+                          </a>
+                        ) : (
+                          <span className="line-clamp-2">{article.title}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
               <button
                 type="button"
@@ -143,11 +200,14 @@ const ExpressWorkflow: React.FC = () => {
                     : 'bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed'
                 }`}
               >
-                {isPublishing
-                  ? 'Publishing...'
-                  : publishStatus === 'success'
-                    ? 'Published!'
-                    : 'Publish to Gallery'}
+                <span className="inline-flex items-center justify-center gap-2">
+                  {isPublishing && <HalftoneSpinner size="sm" />}
+                  {isPublishing
+                    ? 'Publishing…'
+                    : publishStatus === 'success'
+                      ? 'Published!'
+                      : 'Publish to Gallery'}
+                </span>
               </button>
 
               <button

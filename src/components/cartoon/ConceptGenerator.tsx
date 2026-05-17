@@ -5,6 +5,7 @@ import { useCartoonStore } from '../../store/cartoonStore';
 import { geminiService } from '../../services/geminiService';
 import { AppErrorHandler } from '../../utils/errorHandler';
 import RecoverableError from '../common/RecoverableError';
+import HalftoneSpinner from '../common/HalftoneSpinner';
 
 const ConceptGenerator: React.FC = () => {
   const { selectedArticles } = useNewsStore();
@@ -60,8 +61,12 @@ const ConceptGenerator: React.FC = () => {
             onClick={handleGenerateConcepts}
             disabled={localLoading || selectedArticles.length === 0}
             className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all min-h-[44px] min-w-[44px]"
+            aria-busy={localLoading}
           >
-            Regenerate Concepts
+            <span className="inline-flex items-center justify-center gap-2">
+              {localLoading && <HalftoneSpinner size="sm" />}
+              {localLoading ? 'Regenerating…' : 'Regenerate Concepts'}
+            </span>
           </button>
         </div>
       </div>
@@ -114,7 +119,10 @@ const ConceptGenerator: React.FC = () => {
           className={`w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 shadow-lg ${localLoading ? 'animate-flash-amber' : 'animate-flash-green'}`}
           aria-busy={localLoading}
         >
-          {localLoading ? 'Generating Concepts...' : 'Generate Concepts'}
+          <span className="inline-flex items-center justify-center gap-2">
+            {localLoading && <HalftoneSpinner size="sm" />}
+            {localLoading ? 'Generating Concepts…' : 'Generate Concepts'}
+          </span>
         </button>
 
         {localError && (

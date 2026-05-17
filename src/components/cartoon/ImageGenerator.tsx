@@ -6,6 +6,7 @@ import { useImageGeneration } from '../../hooks/useImageGeneration';
 import { useGalleryPublish } from '../../hooks/useGalleryPublish';
 import ShareButtons from '../common/ShareButtons';
 import RecoverableError from '../common/RecoverableError';
+import HalftoneSpinner from '../common/HalftoneSpinner';
 import GenerationProgress from './GenerationProgress';
 
 const ImageGenerator: React.FC = React.memo(() => {
@@ -71,11 +72,14 @@ const ImageGenerator: React.FC = React.memo(() => {
               }`}
               aria-busy={isGenerating}
             >
-              {isGenerating
-                ? 'Generating Cartoon...'
-                : secondsUntilNext > 0
-                  ? `Wait ${secondsUntilNext}s`
-                  : 'Generate Cartoon'}
+              <span className="inline-flex items-center justify-center gap-2">
+                {isGenerating && <HalftoneSpinner size="sm" />}
+                {isGenerating
+                  ? 'Generating Cartoon…'
+                  : secondsUntilNext > 0
+                    ? `Wait ${secondsUntilNext}s`
+                    : 'Generate Cartoon'}
+              </span>
             </button>
 
             <GenerationProgress phase={generationPhase} active={isGenerating} />
@@ -123,7 +127,10 @@ const ImageGenerator: React.FC = React.memo(() => {
                     : 'bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed'
                 }`}
               >
-                {isPublishing ? 'Publishing...' : publishStatus === 'success' ? 'Published!' : 'Publish to Gallery'}
+                <span className="inline-flex items-center justify-center gap-2">
+                  {isPublishing && <HalftoneSpinner size="sm" />}
+                  {isPublishing ? 'Publishing…' : publishStatus === 'success' ? 'Published!' : 'Publish to Gallery'}
+                </span>
               </button>
 
               <button

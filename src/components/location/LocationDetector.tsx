@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLocationStore } from '../../store/locationStore';
 import { locationService } from '../../services/locationService';
 import { AppErrorHandler } from '../../utils/errorHandler';
+import HalftoneSpinner from '../common/HalftoneSpinner';
 import type { LocationData } from '../../types/location';
 
 const LocationDetector: React.FC = () => {
@@ -91,7 +92,16 @@ const LocationDetector: React.FC = () => {
             aria-label="Detect my location automatically"
             aria-busy={isLoading}
           >
-            {isLoading ? '🔍 Detecting your location...' : '📍 Detect My Location'}
+            <span className="inline-flex items-center justify-center gap-2">
+              {isLoading ? (
+                <>
+                  <HalftoneSpinner size="sm" />
+                  Detecting your location…
+                </>
+              ) : (
+                <>📍 Detect My Location</>
+              )}
+            </span>
           </button>
 
           <div className="relative">

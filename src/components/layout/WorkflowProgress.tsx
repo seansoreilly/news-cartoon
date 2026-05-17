@@ -48,19 +48,35 @@ const WorkflowProgress: React.FC<WorkflowProgressProps> = ({ onReset }) => {
       role="switch"
       aria-checked={simpleMode}
       onClick={() => setSimpleMode(!simpleMode)}
-      className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-gray-600 hover:text-amber-700 transition-colors min-h-[44px] px-2"
-      aria-label={simpleMode ? 'Switch to step-by-step mode' : 'Switch to express mode'}
+      className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium min-h-[44px] px-1.5 group"
+      aria-label={simpleMode ? 'Switch to Custom mode' : 'Switch to Fast mode'}
     >
-      <span aria-hidden="true">⚡</span>
-      <span className="hidden sm:inline">Express</span>
+      <span
+        className={`hidden sm:inline transition-colors ${
+          !simpleMode ? 'text-gray-900 font-semibold' : 'text-gray-400 group-hover:text-gray-600'
+        }`}
+      >
+        Custom
+      </span>
       <span
         className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors"
-        style={{ backgroundColor: simpleMode ? 'rgb(217, 119, 6)' : 'rgb(209, 213, 219)' }}
+        style={{ backgroundColor: simpleMode ? 'rgb(217, 119, 6)' : 'rgb(156, 163, 175)' }}
       >
         <span
-          className="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform"
+          className="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform"
           style={{ transform: simpleMode ? 'translateX(1.25rem)' : 'translateX(0.25rem)' }}
         />
+      </span>
+      <span
+        className={`hidden sm:inline-flex items-center gap-1 transition-colors ${
+          simpleMode ? 'text-amber-800 font-semibold' : 'text-gray-400 group-hover:text-gray-600'
+        }`}
+      >
+        <span aria-hidden="true">⚡</span>
+        Fast
+      </span>
+      <span className="sm:hidden text-base" aria-hidden="true">
+        {simpleMode ? '⚡' : '✏️'}
       </span>
     </button>
   );
@@ -76,7 +92,7 @@ const WorkflowProgress: React.FC<WorkflowProgressProps> = ({ onReset }) => {
             <span aria-hidden="true" className="text-base">
               ⚡
             </span>
-            <span>Express mode</span>
+            <span>Fast mode</span>
           </div>
         ) : (
           <>

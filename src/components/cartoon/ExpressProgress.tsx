@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { ExpressPhase } from '../../hooks/useExpressGenerate';
+import HalftoneSpinner from '../common/HalftoneSpinner';
 
 interface ExpressProgressProps {
   phase: ExpressPhase;
@@ -70,10 +71,9 @@ const ExpressProgress: React.FC<ExpressProgressProps> = ({ phase, active }) => {
       className="mt-4 bg-white/70 backdrop-blur-sm border border-amber-200 rounded-lg p-4 shadow-sm"
     >
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+        <div className="flex items-center gap-2.5">
+          <span className="text-amber-600">
+            <HalftoneSpinner size="md" label={currentHint} />
           </span>
           <p className="text-sm font-semibold text-amber-900">{currentHint}</p>
         </div>

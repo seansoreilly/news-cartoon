@@ -4,6 +4,7 @@ import { useNewsStore } from '../../store/newsStore';
 import { geminiService } from '../../services/geminiService';
 import { AppErrorHandler } from '../../utils/errorHandler';
 import RecoverableError from '../common/RecoverableError';
+import HalftoneSpinner from '../common/HalftoneSpinner';
 import type { CartoonConcept } from '../../types/cartoon';
 
 const ConceptDisplay: React.FC = () => {
@@ -169,7 +170,16 @@ const ConceptDisplay: React.FC = () => {
             aria-label="Generate prompt"
             aria-busy={localLoading}
           >
-            {localLoading ? '✨ Generating Prompt...' : '✨ Generate Prompt'}
+            <span className="inline-flex items-center justify-center gap-2">
+              {localLoading ? (
+                <>
+                  <HalftoneSpinner size="sm" />
+                  Generating Prompt…
+                </>
+              ) : (
+                <>✨ Generate Prompt</>
+              )}
+            </span>
           </button>
         </div>
       )}
@@ -197,7 +207,10 @@ const ConceptDisplay: React.FC = () => {
                 className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md min-h-[44px] whitespace-nowrap text-sm sm:text-base"
                 aria-busy={localLoading}
               >
-                {localLoading ? 'Working…' : 'Continue ▸'}
+                <span className="inline-flex items-center justify-center gap-2">
+                  {localLoading && <HalftoneSpinner size="sm" />}
+                  {localLoading ? 'Working…' : 'Continue ▸'}
+                </span>
               </button>
             </div>
           </div>
