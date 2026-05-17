@@ -9,162 +9,106 @@ describe('LoadingSpinner', () => {
       expect(container).toBeInTheDocument();
     });
 
-    it('should display "Loading..." text', () => {
+    it('should display "Loading" label', () => {
       render(<LoadingSpinner />);
-      expect(screen.getByText('Loading...')).toBeInTheDocument();
+      // Two occurrences: sr-only label inside the HalftoneSpinner and the visible caption
+      const matches = screen.getAllByText('Loading');
+      expect(matches.length).toBeGreaterThanOrEqual(1);
     });
 
-    it('should render spinning animation container', () => {
+    it('should render the halftone spinner svg', () => {
       const { container } = render(<LoadingSpinner />);
-      const spinningDiv = container.querySelector('.animate-spin');
-      expect(spinningDiv).toBeInTheDocument();
+      const svg = container.querySelector('svg');
+      expect(svg).toBeInTheDocument();
+      expect(svg).toHaveClass('animate-spin');
+    });
+
+    it('should render 8 halftone dots', () => {
+      const { container } = render(<LoadingSpinner />);
+      const dots = container.querySelectorAll('svg circle');
+      expect(dots.length).toBe(8);
     });
   });
 
   describe('Structure', () => {
-    it('should have flex container with center alignment', () => {
+    it('should be a flex column container with center alignment', () => {
       const { container } = render(<LoadingSpinner />);
       const flexContainer = container.firstChild;
-      expect(flexContainer).toHaveClass('flex', 'items-center', 'justify-center');
+      expect(flexContainer).toHaveClass('flex', 'flex-col', 'items-center', 'justify-center');
     });
 
-    it('should have relative positioned spinner wrapper', () => {
+    it('should render a status role for screen readers', () => {
+      render(<LoadingSpinner />);
+      expect(screen.getByRole('status')).toBeInTheDocument();
+    });
+
+    it('should size the spinner at w-16 h-16', () => {
       const { container } = render(<LoadingSpinner />);
-      const spinner = container.querySelector('.relative');
-      expect(spinner).toBeInTheDocument();
+      const spinner = container.querySelector('[role="status"]');
       expect(spinner).toHaveClass('w-16', 'h-16');
-    });
-
-    it('should have static background border', () => {
-      const { container } = render(<LoadingSpinner />);
-      const borders = container.querySelectorAll('.rounded-full');
-      expect(borders.length).toBeGreaterThanOrEqual(2);
-
-      // First border is static gray background
-      const staticBorder = borders[0];
-      expect(staticBorder).toHaveClass('border-4', 'border-gray-200');
-    });
-
-    it('should have animated colored border', () => {
-      const { container } = render(<LoadingSpinner />);
-      const animatedBorder = container.querySelector('.animate-spin');
-      expect(animatedBorder).toHaveClass(
-        'rounded-full',
-        'border-4',
-        'border-transparent',
-        'border-t-purple-600',
-        'border-r-purple-600'
-      );
     });
   });
 
   describe('Styling', () => {
-    it('should apply correct padding', () => {
+    it('should apply vertical padding', () => {
       const { container } = render(<LoadingSpinner />);
       const outerDiv = container.firstChild;
       expect(outerDiv).toHaveClass('py-12');
     });
 
-    it('should apply correct spinner dimensions', () => {
+    it('should tint the spinner in purple via currentColor', () => {
       const { container } = render(<LoadingSpinner />);
-      const spinner = container.querySelector('.relative');
-      expect(spinner).toHaveClass('w-16', 'h-16');
+      const tinted = container.querySelector('.text-purple-600');
+      expect(tinted).toBeInTheDocument();
     });
 
-    it('should apply correct text styling', () => {
-      render(<LoadingSpinner />);
-      const text = screen.getByText('Loading...');
-      expect(text).toHaveClass('ml-4', 'text-gray-600');
-    });
-
-    it('should apply purple color to spinner', () => {
+    it('should fill all dots with currentColor', () => {
       const { container } = render(<LoadingSpinner />);
-      const animatedBorder = container.querySelector('.animate-spin');
-      expect(animatedBorder).toHaveClass('border-t-purple-600', 'border-r-purple-600');
-    });
-
-    it('should have absolute positioning for borders', () => {
-      const { container } = render(<LoadingSpinner />);
-      const borders = container.querySelectorAll('.absolute');
-      expect(borders.length).toBeGreaterThanOrEqual(2);
-      borders.forEach((border) => {
-        expect(border).toHaveClass('inset-0');
+      const dots = container.querySelectorAll('svg circle');
+      dots.forEach((dot) => {
+        expect(dot.getAttribute('fill')).toBe('currentColor');
       });
+    });
+
+    it('should give dots varying opacity to create a trail', () => {
+      const { container } = render(<LoadingSpinner />);
+      const dots = Array.from(container.querySelectorAll('svg circle'));
+      const opacities = dots.map((d) => Number(d.getAttribute('opacity')));
+      // Brightest dot first, faintest last
+      expect(opacities[0]).toBeGreaterThan(opacities[opacities.length - 1]);
+      // Unique opacities, not all identical
+      const unique = new Set(opacities);
+      expect(unique.size).toBeGreaterThan(1);
     });
   });
 
   describe('Animation', () => {
-    it('should have spin animation class', () => {
-      const { container: animContainer } = render(<LoadingSpinner />);
-      const animatedBorder = animContainer.querySelector('.animate-spin');
-      expect(animatedBorder).toHaveClass('animate-spin');
-    });
-
-    it('should only apply animation to colored border, not static border', () => {
+    it('should have spin animation class on the svg', () => {
       const { container } = render(<LoadingSpinner />);
-      const spinner = container.querySelector('.relative');
-      const children = spinner?.querySelectorAll(':scope > div');
-
-      expect(children?.length).toBe(2);
-
-      // First child (static) should not have animation
-      expect(children?.[0]).not.toHaveClass('animate-spin');
-
-      // Second child (animated) should have animation
-      expect(children?.[1]).toHaveClass('animate-spin');
+      const svg = container.querySelector('svg');
+      expect(svg).toHaveClass('animate-spin');
     });
   });
 
   describe('Accessibility', () => {
-    it('should be accessible to screen readers', () => {
+    it('should expose a status role for screen readers', () => {
       render(<LoadingSpinner />);
-      // Screen readers can access the "Loading..." text
-      expect(screen.getByText('Loading...')).toBeInTheDocument();
+      expect(screen.getByRole('status')).toBeInTheDocument();
     });
 
-    it('should have semantic text content', () => {
+    it('should have an aria-label of "Loading"', () => {
       render(<LoadingSpinner />);
-      const loadingText = screen.getByText('Loading...');
-      expect(loadingText.textContent).toBe('Loading...');
-    });
-  });
-
-  describe('Props', () => {
-    it('should not accept any props', () => {
-      // LoadingSpinner is a functional component with no props
-      // This is more of a documentation test
-      const { container } = render(<LoadingSpinner />);
-      expect(container.firstChild).toBeInTheDocument();
-    });
-  });
-
-  describe('Visual Hierarchy', () => {
-    it('should place spinner before text', () => {
-      const { container } = render(<LoadingSpinner />);
-      const flexContainer = container.querySelector('.flex');
-      const children = flexContainer?.childNodes;
-
-      expect(children?.length).toBe(2);
-
-      // First child is the spinner (relative positioned container)
-      const spinner = (children?.[0] as Element)?.classList.contains('relative');
-      expect(spinner).toBe(true);
-
-      // Second child is the text span
-      const textSpan = children?.[1] as Element;
-      expect(textSpan.tagName).toBe('SPAN');
+      expect(screen.getByLabelText('Loading')).toBeInTheDocument();
     });
   });
 
   describe('Consistency', () => {
     it('should render consistently across multiple mounts', () => {
-      const { container: container1 } = render(<LoadingSpinner />);
-      const spinner1 = container1.querySelector('.animate-spin');
-
-      const { container: container2 } = render(<LoadingSpinner />);
-      const spinner2 = container2.querySelector('.animate-spin');
-
-      expect(spinner1?.className).toBe(spinner2?.className);
+      const { container: c1 } = render(<LoadingSpinner />);
+      const { container: c2 } = render(<LoadingSpinner />);
+      const svg1 = c1.querySelector('svg');
+      const svg2 = c2.querySelector('svg');
+      expect(svg1?.outerHTML).toBe(svg2?.outerHTML);
     });
   });
 });

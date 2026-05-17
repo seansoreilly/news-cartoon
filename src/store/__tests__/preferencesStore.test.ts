@@ -173,6 +173,62 @@ describe('preferencesStore', () => {
     });
   });
 
+  describe('setSimpleMode', () => {
+    it('should enable simple mode', () => {
+      const { result } = renderHook(() => usePreferencesStore());
+
+      act(() => {
+        result.current.setSimpleMode(true);
+      });
+
+      expect(result.current.simpleMode).toBe(true);
+    });
+
+    it('should disable simple mode', () => {
+      const { result } = renderHook(() => usePreferencesStore());
+
+      act(() => {
+        result.current.setSimpleMode(true);
+      });
+
+      expect(result.current.simpleMode).toBe(true);
+
+      act(() => {
+        result.current.setSimpleMode(false);
+      });
+
+      expect(result.current.simpleMode).toBe(false);
+    });
+
+    it('should start with simple mode enabled by default', () => {
+      const { result } = renderHook(() => usePreferencesStore());
+
+      expect(result.current.simpleMode).toBe(true);
+    });
+
+    it('should toggle simple mode multiple times', () => {
+      const { result } = renderHook(() => usePreferencesStore());
+
+      act(() => {
+        result.current.setSimpleMode(true);
+      });
+
+      expect(result.current.simpleMode).toBe(true);
+
+      act(() => {
+        result.current.setSimpleMode(false);
+      });
+
+      expect(result.current.simpleMode).toBe(false);
+
+      act(() => {
+        result.current.setSimpleMode(true);
+      });
+
+      expect(result.current.simpleMode).toBe(true);
+    });
+  });
+
   describe('Independent Preference Changes', () => {
     it('should change theme without affecting other preferences', () => {
       const { result } = renderHook(() => usePreferencesStore());
@@ -260,11 +316,13 @@ describe('preferencesStore', () => {
         result.current.setTheme('dark');
         result.current.setSortBy('recency');
         result.current.setAutoGenerate(true);
+        result.current.setSimpleMode(false);
       });
 
       expect(result.current.theme).toBe('dark');
       expect(result.current.sortBy).toBe('recency');
       expect(result.current.autoGenerate).toBe(true);
+      expect(result.current.simpleMode).toBe(false);
 
       act(() => {
         result.current.reset();
@@ -273,6 +331,7 @@ describe('preferencesStore', () => {
       expect(result.current.theme).toBe('auto');
       expect(result.current.sortBy).toBe('popularity');
       expect(result.current.autoGenerate).toBe(false);
+      expect(result.current.simpleMode).toBe(true);
     });
 
     it('should be idempotent', () => {

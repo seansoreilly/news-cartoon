@@ -69,7 +69,8 @@ describe('Accessibility Tests', () => {
   describe('Loading Spinner Accessibility', () => {
     it('should have text alternative for visual indicator', () => {
       render(<LoadingSpinner />);
-      expect(screen.getByText('Loading...')).toBeInTheDocument();
+      // HalftoneSpinner renders "Loading" (sr-only label + visible caption)
+      expect(screen.getAllByText('Loading').length).toBeGreaterThan(0);
     });
 
     it('should have proper ARIA attributes', () => {
@@ -313,7 +314,8 @@ describe('Accessibility Tests', () => {
   describe('Text Alternatives', () => {
     it('should provide text for loading indicator', () => {
       render(<LoadingSpinner />);
-      expect(screen.getByText('Loading...')).toBeInTheDocument();
+      // HalftoneSpinner renders "Loading" (sr-only label + visible caption)
+      expect(screen.getAllByText('Loading').length).toBeGreaterThan(0);
     });
 
     it('should provide text for error messages', () => {

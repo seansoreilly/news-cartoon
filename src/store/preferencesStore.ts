@@ -8,6 +8,7 @@ interface PreferencesState extends UserPreferences {
   setAutoGenerate: (autoGenerate: boolean) => void;
   setAutoRefresh: (autoRefresh: boolean) => void;
   setNewsCount: (newsCount: number) => void;
+  setSimpleMode: (simpleMode: boolean) => void;
   reset: () => void;
 }
 
@@ -17,6 +18,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   autoGenerate: false,
   autoRefresh: false,
   newsCount: 5,
+  simpleMode: true,
 };
 
 export const usePreferencesStore = create<
@@ -45,6 +47,10 @@ export const usePreferencesStore = create<
 
       setNewsCount: (newsCount: number) => {
         set({ newsCount });
+      },
+
+      setSimpleMode: (simpleMode: boolean) => {
+        set({ simpleMode });
       },
 
       reset: () => {
