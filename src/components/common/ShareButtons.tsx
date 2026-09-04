@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { logger } from '../../utils/logger';
 
 interface ShareButtonsProps {
   url: string;
@@ -26,7 +27,7 @@ const ShareButtons: React.FC<ShareButtonsProps> = ({ url, title, description = '
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy link:', err);
+      logger.error('Failed to copy link:', err);
     }
   };
 

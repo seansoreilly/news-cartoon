@@ -94,7 +94,7 @@ class GeminiService {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       const errorStack = error instanceof Error ? error.stack : undefined;
-      console.error('[generateComicPrompt] ❌ Comic prompt generation failed:', {
+      logger.error('[generateComicPrompt] ❌ Comic prompt generation failed:', {
         message: errorMessage,
         stack: errorStack,
         error,
@@ -176,7 +176,7 @@ class GeminiService {
       logger.debug('=== Image generation complete ===');
       return cartoonImage;
     } catch (error) {
-      console.error('Image generation failed:', error);
+      logger.error('Image generation failed:', error);
       throw createCartoonError(
         'Failed to generate cartoon image',
         { originalError: String(error) }
@@ -197,7 +197,7 @@ class GeminiService {
       const score = parseInt(scoreText || '0', 10);
       return isNaN(score) ? 50 : Math.min(100, Math.max(1, score));
     } catch (error) {
-      console.error('[generateHumorScore] Error:', error);
+      logger.error('[generateHumorScore] Error:', error);
       return 50; // Default to middle score on error
     }
   }
@@ -239,7 +239,7 @@ class GeminiService {
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       } catch (error) {
-        console.error(`[batchAnalyzeArticles] Batch ${batchNumber} error:`, error);
+        logger.error(`[batchAnalyzeArticles] Batch ${batchNumber} error:`, error);
         // Add fallback for this batch
         batch.forEach(() => results.push({ summary: '', humorScore: 50 }));
       }

@@ -81,7 +81,7 @@ const SettingsPage: React.FC = () => {
           </div>
 
           {saveMessage && (
-            <div className="text-green-600 mt-2">{saveMessage}</div>
+            <div className="text-green-600 mt-2" role="status" aria-live="polite">{saveMessage}</div>
           )}
         </div>
 

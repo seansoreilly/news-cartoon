@@ -1,6 +1,7 @@
 import type { NewsArticle } from '../../types/news';
 import type { CartoonConcept, ComicScript, ComicScriptPanel, ComicPanel } from '../../types/cartoon';
 import { extractTextElements } from './parsers';
+import { logger } from '../../utils/logger';
 
 /**
  * Create bracket-formatted spelling: "HELLO" -> "[H] [E] [L] [L] [O]"
@@ -232,9 +233,9 @@ export const buildImagePrompt = (concept: CartoonConcept, script: ComicScript, p
     const textElements = extractTextElements(script);
 
     // Validate text before building prompt
-    console.log('[buildImagePrompt] Building image prompt with', textElements.length, 'text elements');
+    logger.debug('[buildImagePrompt] Building image prompt with', textElements.length, 'text elements');
     textElements.forEach(elem => {
-        console.log(`  - Panel ${elem.panel}: "${elem.text}" (${elem.type})`);
+        logger.debug(`  - Panel ${elem.panel}: "${elem.text}" (${elem.type})`);
     });
 
     // Build text manifest with letter-by-letter spelling format

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useCartoonStore } from '../../store/cartoonStore';
 import { geminiService } from '../../services/geminiService';
 import { useGeneratedImageUrl } from '../../hooks/useGeneratedImageUrl';
@@ -153,7 +154,7 @@ const ImageGenerator: React.FC = React.memo(() => {
             {publishStatus === 'success' && (
               <div className="mt-3 bg-green-50 border-l-4 border-green-500 p-3 rounded">
                 <p className="text-green-800 text-sm">
-                  Cartoon published to gallery! <a href="/gallery" className="underline font-medium">View Gallery</a>
+                  Cartoon published to gallery! <Link to="/gallery" className="underline font-medium">View Gallery</Link>
                 </p>
               </div>
             )}

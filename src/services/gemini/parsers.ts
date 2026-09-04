@@ -116,7 +116,7 @@ export const parseImageResponse = (response: GeminiResponse): string => {
     });
 
     if (!response.candidates || response.candidates.length === 0) {
-        console.error('[parseImageResponse] No candidates in response');
+        logger.error('[parseImageResponse] No candidates in response');
         throw createCartoonError('No candidates in API response');
     }
 
@@ -150,9 +150,9 @@ export const parseImageResponse = (response: GeminiResponse): string => {
     const parts = candidate.content?.parts || candidateExtended.parts || [];
 
     if (parts.length === 0) {
-        console.error('[parseImageResponse] No parts found in candidate');
-        console.error('[parseImageResponse] Candidate keys:', Object.keys(candidate));
-        console.error('[parseImageResponse] Full candidate:', JSON.stringify(candidate, null, 2));
+        logger.error('[parseImageResponse] No parts found in candidate');
+        logger.error('[parseImageResponse] Candidate keys:', Object.keys(candidate));
+        logger.error('[parseImageResponse] Full candidate:', JSON.stringify(candidate, null, 2));
         throw createCartoonError('No parts in API response candidate');
     }
 
@@ -177,7 +177,7 @@ export const parseImageResponse = (response: GeminiResponse): string => {
             logger.debug('[parseImageResponse] ✅ Successfully extracted image data');
             return part.inlineData.data;
         } else {
-            console.error('[parseImageResponse] inlineData exists but data field is empty');
+            logger.error('[parseImageResponse] inlineData exists but data field is empty');
             throw createCartoonError('Image data field is empty in API response');
         }
     }
@@ -192,8 +192,8 @@ export const parseImageResponse = (response: GeminiResponse): string => {
     }
 
     // Log the actual response structure for debugging
-    console.error('[parseImageResponse] ❌ Unexpected response structure');
-    console.error('[parseImageResponse] Full response:', JSON.stringify(response, null, 2));
+    logger.error('[parseImageResponse] ❌ Unexpected response structure');
+    logger.error('[parseImageResponse] Full response:', JSON.stringify(response, null, 2));
     throw createCartoonError('Could not extract image data from API response. Check console for full response structure.');
 };
 
@@ -211,7 +211,7 @@ export const parseBatchAnalysisResponse = (response: GeminiResponse): Array<{ su
     // Extract JSON from response - look for array pattern
     const jsonMatch = cleanedResponse.match(/\[[\s\S]*?\]/);
     if (!jsonMatch) {
-        console.error('[parseBatchAnalysisResponse] No JSON array found in response');
+        logger.error('[parseBatchAnalysisResponse] No JSON array found in response');
         // Return empty array to indicate failure for this batch
         return [];
     }
@@ -226,13 +226,13 @@ export const parseBatchAnalysisResponse = (response: GeminiResponse): Array<{ su
 
         // Validate results structure
         if (!Array.isArray(batchResults)) {
-            console.error('[parseBatchAnalysisResponse] Parsed JSON is not an array');
+            logger.error('[parseBatchAnalysisResponse] Parsed JSON is not an array');
             return [];
         }
 
         return batchResults;
     } catch (parseError) {
-        console.error('[parseBatchAnalysisResponse] Failed to parse JSON', parseError);
+        logger.error('[parseBatchAnalysisResponse] Failed to parse JSON', parseError);
         logger.debug('[parseBatchAnalysisResponse] Attempted to parse:', jsonMatch[0].substring(0, 200));
         return [];
     }

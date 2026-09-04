@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLocationStore } from '../../store/locationStore';
 import { locationService } from '../../services/locationService';
 import { AppErrorHandler } from '../../utils/errorHandler';
+import { logger } from '../../utils/logger';
 import HalftoneSpinner from '../common/HalftoneSpinner';
 import type { LocationData } from '../../types/location';
 
@@ -49,7 +50,7 @@ const LocationDetector: React.FC = () => {
       timestamp: Date.now(),
     };
 
-    console.log('[LocationDetector] Setting location:', locationData);
+    logger.debug('[LocationDetector] Setting location:', locationData);
     setLocation(locationData);
     setManualLocation('');
     setStoreError(null);

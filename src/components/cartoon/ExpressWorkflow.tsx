@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import LocationDetector from '../location/LocationDetector';
 import ExpressProgress from './ExpressProgress';
 import ShareButtons from '../common/ShareButtons';
@@ -228,9 +229,9 @@ const ExpressWorkflow: React.FC = () => {
               <div className="mt-3 bg-green-50 border-l-4 border-green-500 p-3 rounded">
                 <p className="text-green-800 text-sm">
                   Cartoon published to gallery!{' '}
-                  <a href="/gallery" className="underline font-medium">
+                  <Link to="/gallery" className="underline font-medium">
                     View Gallery
-                  </a>
+                  </Link>
                 </p>
               </div>
             )}

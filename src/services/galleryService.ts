@@ -1,5 +1,6 @@
 import { supabase, STORAGE_BUCKET, TABLE_NAME, isSupabaseConfigured } from './supabaseClient';
 import type { GalleryItem } from '../types/gallery';
+import { logger } from '../utils/logger';
 
 export const fetchGalleryItems = async (): Promise<{ items: GalleryItem[]; error?: string }> => {
   if (!isSupabaseConfigured() || !supabase) {
@@ -25,7 +26,7 @@ export const fetchGalleryItems = async (): Promise<{ items: GalleryItem[]; error
 
     return { items };
   } catch (err) {
-    console.error('Error fetching gallery:', err);
+    logger.error('Error fetching gallery:', err);
     return {
       items: [],
       error: err instanceof Error ? err.message : 'Failed to load gallery items.'
@@ -87,7 +88,7 @@ export const uploadToGallery = async (
     return { success: true };
 
   } catch (error) {
-    console.error('Gallery upload failed:', error);
+    logger.error('Gallery upload failed:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error occurred' 

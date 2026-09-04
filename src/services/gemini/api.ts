@@ -88,7 +88,7 @@ export class GeminiApiClient {
         logger.debug(`[callVisionApi] Starting API call (retry ${retryCount}/${MAX_RETRIES})`);
 
         if (!this.apiKey) {
-            console.error('[callVisionApi] No API key configured');
+            logger.error('[callVisionApi] No API key configured');
             throw createCartoonError(
                 'Gemini API key not configured. Set VITE_GOOGLE_API_KEY environment variable.'
             );
@@ -145,7 +145,7 @@ export class GeminiApiClient {
                 }
 
                 const errorText = await response.text();
-                console.error('[callVisionApi] API error response:', errorText);
+                logger.error('[callVisionApi] API error response:', errorText);
                 throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
             }
 
@@ -159,14 +159,14 @@ export class GeminiApiClient {
             });
 
             if (data.error) {
-                console.error('[callVisionApi] API returned error:', data.error);
+                logger.error('[callVisionApi] API returned error:', data.error);
                 throw new Error(`API Error: ${data.error.message}`);
             }
 
             logger.debug('[callVisionApi] API call successful');
             return data;
         } catch (error) {
-            console.error(`[callVisionApi] Error during API call:`, error);
+            logger.error(`[callVisionApi] Error during API call:`, error);
 
             if (retryCount < MAX_RETRIES) {
                 const delay = RETRY_DELAY_MS * Math.pow(2, retryCount);
@@ -175,7 +175,7 @@ export class GeminiApiClient {
                 return this.callVisionApi(prompt, retryCount + 1);
             }
 
-            console.error('[callVisionApi] Max retries exceeded, throwing error');
+            logger.error('[callVisionApi] Max retries exceeded, throwing error');
             throw error;
         }
     }

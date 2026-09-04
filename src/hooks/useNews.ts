@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNewsStore } from '../store/newsStore';
 import { useLocationStore } from '../store/locationStore';
+import { logger } from '../utils/logger';
 import { usePreferencesStore } from '../store/preferencesStore';
 import { newsService } from '../services/newsService';
 import { geminiService } from '../services/geminiService';
@@ -79,7 +80,7 @@ export const useNews = () => {
             return { ...prevNews, articles: updatedArticles };
           });
         } catch (aiError) {
-          console.warn('⚠️ AI analysis failed, using local scores:', aiError);
+          logger.warn('⚠️ AI analysis failed, using local scores:', aiError);
           setNews(prevNews => {
             if (!prevNews) return prevNews;
             const updatedArticles = prevNews.articles.map(article => ({
@@ -132,7 +133,7 @@ export const useNews = () => {
 
           selectArticle({ ...article, content: fullContent, contentFetched: true });
         } catch (error) {
-          console.error('Failed to fetch article content:', error);
+          logger.error('Failed to fetch article content:', error);
 
           setNews(prevNews => {
             if (!prevNews) return prevNews;

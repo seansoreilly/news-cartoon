@@ -3,6 +3,7 @@ import { useCartoonStore } from '../../store/cartoonStore';
 import { useNewsStore } from '../../store/newsStore';
 import { geminiService } from '../../services/geminiService';
 import { AppErrorHandler } from '../../utils/errorHandler';
+import { logger } from '../../utils/logger';
 import RecoverableError from '../common/RecoverableError';
 import HalftoneSpinner from '../common/HalftoneSpinner';
 import type { CartoonConcept } from '../../types/cartoon';
@@ -36,7 +37,7 @@ const ConceptDisplay: React.FC = () => {
     setLoading(true);
 
     try {
-      console.log('[ConceptDisplay] Generating cartoon prompt for concept:', selectedConcept.title);
+      logger.debug('[ConceptDisplay] Generating cartoon prompt for concept:', selectedConcept.title);
       const prompt = await geminiService.generateComicPrompt(
         selectedConcept,
         selectedArticles,

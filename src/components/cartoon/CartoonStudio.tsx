@@ -23,7 +23,7 @@ const CartoonStudio: React.FC = () => {
 
   const [scriptLoading, setScriptLoading] = useState(false);
   const [scriptError, setScriptError] = useState<string | null>(null);
-  const panelCount = 4; // Default panel count
+  const panelCount = 4; // Hardcoded default; not read from the store
 
   // Image generation hook
   const {
@@ -37,10 +37,8 @@ const CartoonStudio: React.FC = () => {
   } = useImageGenerator();
 
   const handleConceptSelect = (index: number) => {
-    setSelectedConceptIndex(index);
-    setScriptError(null); // Clear script error on new concept selection
-    // Clear comic prompt on new concept selection by resetting the store
-    // Note: setComicPrompt is called via setSelectedConceptIndex which clears it
+    setSelectedConceptIndex(index); // also clears comicPrompt in the store
+    setScriptError(null);
   };
 
   const selectedConcept =
@@ -107,13 +105,14 @@ const CartoonStudio: React.FC = () => {
               {selectedConcept && (
                 <div className="mt-8">
                   {!comicPrompt && (
-                                      <button
-                                        onClick={() => handleGenerateScript(selectedConcept)}
-                                        disabled={scriptLoading || selectedArticles.length === 0}
-                                        className={`w-full mt-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 shadow-lg min-h-[44px] min-w-[44px] touch-action-manipulation ${scriptLoading ? 'animate-flash-amber' : 'animate-flash-green'}`}
-                                      >
-                                        {scriptLoading ? 'Generating Script...' : 'Generate Script'}
-                                      </button>                  )}
+                    <button
+                      onClick={() => handleGenerateScript(selectedConcept)}
+                      disabled={scriptLoading || selectedArticles.length === 0}
+                      className={`w-full mt-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 shadow-lg min-h-[44px] min-w-[44px] touch-action-manipulation ${scriptLoading ? 'animate-flash-amber' : 'animate-flash-green'}`}
+                    >
+                      {scriptLoading ? 'Generating Script...' : 'Generate Script'}
+                    </button>
+                  )}
 
                   {scriptError && (
                     <div className="mt-4 bg-red-50 border-l-4 border-red-500 p-4 rounded">

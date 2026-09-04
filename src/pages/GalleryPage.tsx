@@ -4,6 +4,7 @@ import type { GalleryItem } from '../types/gallery';
 import { Link } from 'react-router-dom';
 import ShareButtons from '../components/common/ShareButtons';
 import MetaTags from '../components/common/MetaTags';
+import LoadingSpinner from '../components/common/LoadingSpinner';
 
 const GalleryPage: React.FC = () => {
   const [items, setItems] = useState<GalleryItem[]>([]);
@@ -41,13 +42,13 @@ const GalleryPage: React.FC = () => {
       </div>
 
       {loading && (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600"></div>
+        <div role="status" aria-live="polite">
+          <LoadingSpinner />
         </div>
       )}
 
       {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded" role="alert">
           <p className="text-red-800">{error}</p>
         </div>
       )}
@@ -88,9 +89,9 @@ const GalleryPage: React.FC = () => {
               <div className="text-xs text-gray-500 flex justify-between items-center">
                 <span>{new Date(item.created_at).toLocaleDateString()}</span>
                 {item.news_url && (
-                  <a 
-                    href={item.news_url} 
-                    target="_blank" 
+                  <a
+                    href={item.news_url}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:underline"
                   >
@@ -98,15 +99,15 @@ const GalleryPage: React.FC = () => {
                   </a>
                 )}
               </div>
-              </div>
               <div className="mt-3 pt-3 border-t border-gray-100">
-                <ShareButtons 
-                  url={item.public_url || window.location.href} 
-                  title={item.title} 
+                <ShareButtons
+                  url={item.public_url || window.location.href}
+                  title={item.title}
                   className="justify-end"
                 />
               </div>
             </div>
+          </div>
         ))}
       </div>
     </div>

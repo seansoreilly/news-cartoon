@@ -1,4 +1,5 @@
 import type { IAppError, ILocationError, INewsError, ICartoonError, IRateLimitError } from '../types/error';
+import { logger } from './logger';
 
 /**
  * Central error handler for the application
@@ -82,7 +83,7 @@ export class AppErrorHandler {
       details: error.details,
     };
 
-    console.error('[AppError]', logEntry);
+    logger.error('[AppError]', logEntry);
   }
 
   /**

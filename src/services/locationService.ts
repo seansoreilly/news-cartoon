@@ -1,5 +1,6 @@
 import type { LocationData, Coordinates } from '../types/location';
 import { createLocationError } from '../types/error';
+import { logger } from '../utils/logger';
 
 const GEOLOCATION_TIMEOUT = 10000;
 const MAX_RETRIES = 2;
@@ -22,7 +23,7 @@ class LocationService {
     try {
       return await this.getLocationFromGPS();
     } catch (gpsError) {
-      console.warn('GPS detection failed, trying IP fallback:', gpsError);
+      logger.warn('GPS detection failed, trying IP fallback:', gpsError);
       try {
         return await this.getLocationFromIP();
       } catch (ipError) {
@@ -195,7 +196,7 @@ class LocationService {
         });
       }
     } catch (error) {
-      console.warn('Failed to load location cache:', error);
+      logger.warn('Failed to load location cache:', error);
     }
   }
 
@@ -207,7 +208,7 @@ class LocationService {
       });
       localStorage.setItem(CACHE_KEY, JSON.stringify(cacheObj));
     } catch (error) {
-      console.warn('Failed to save location cache:', error);
+      logger.warn('Failed to save location cache:', error);
     }
   }
 
