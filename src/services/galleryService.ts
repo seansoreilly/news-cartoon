@@ -1,36 +1,91 @@
-import { supabase, STORAGE_BUCKET, TABLE_NAME, isSupabaseConfigured } from './supabaseClient';
 import type { GalleryItem } from '../types/gallery';
 import { logger } from '../utils/logger';
+import { resolveApiBaseUrl } from './gemini/api';
 
-export const fetchGalleryItems = async (): Promise<{ items: GalleryItem[]; error?: string }> => {
-  if (!isSupabaseConfigured() || !supabase) {
-    return { items: [], error: 'Gallery service not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.' };
+/**
+ * Thin client for our own gallery endpoint. The browser never talks to
+ * Supabase directly: api/_shared/gallery.js (Vercel function + dev-server.js)
+ * holds the Supabase URL and key and does the storage upload / DB insert.
+ */
+export const GALLERY_PATH = '/gallery';
+
+export const buildGalleryUrl = (baseUrl: string = resolveApiBaseUrl()): string =>
+  `${baseUrl.replace(/\/+$/, '')}${GALLERY_PATH}`;
+
+export interface GalleryFailure {
+  message: string;
+  code: string;
+  statusCode: number;
+}
+
+export interface GalleryListResult {
+  items: GalleryItem[];
+  error?: string;
+  code?: string;
+}
+
+export interface GalleryPublishResult {
+  success: boolean;
+  item?: GalleryItem;
+  error?: string;
+  code?: string;
+  statusCode?: number;
+}
+
+const fallbackMessage = (status: number): string => {
+  if (status === 502 || status === 503 || status === 504) {
+    return `The gallery server timed out or is unavailable (HTTP ${status})`;
+  }
+  return `The gallery request failed (HTTP ${status})`;
+};
+
+/** Turn a non-OK proxy response into a structured failure. */
+export const readGalleryFailure = async (response: Response): Promise<GalleryFailure> => {
+  const bodyText = await response.text().catch(() => '');
+  try {
+    const parsed = JSON.parse(bodyText) as { error?: { message?: string; code?: string; statusCode?: number } };
+    if (parsed?.error && typeof parsed.error.message === 'string') {
+      return {
+        message: parsed.error.message,
+        code: typeof parsed.error.code === 'string' ? parsed.error.code : 'GALLERY_ERROR',
+        statusCode: typeof parsed.error.statusCode === 'number' ? parsed.error.statusCode : response.status,
+      };
+    }
+  } catch {
+    // Not JSON (e.g. a gateway HTML page); fall through to the generic message.
+  }
+  return { message: fallbackMessage(response.status), code: 'GALLERY_ERROR', statusCode: response.status };
+};
+
+const networkFailure = (err: unknown, action: string): GalleryFailure => ({
+  message: err instanceof Error && err.message ? `Could not reach the server to ${action}: ${err.message}` : `Could not reach the server to ${action}`,
+  code: 'NETWORK_ERROR',
+  statusCode: 0,
+});
+
+export const fetchGalleryItems = async (): Promise<GalleryListResult> => {
+  const url = buildGalleryUrl();
+  let response: Response;
+  try {
+    response = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } });
+  } catch (err) {
+    logger.error('Error fetching gallery:', err);
+    const failure = networkFailure(err, 'load the gallery');
+    return { items: [], error: failure.message, code: failure.code };
+  }
+
+  if (!response.ok) {
+    const failure = await readGalleryFailure(response);
+    logger.error(`Gallery list failed: ${failure.code} (${failure.statusCode}) ${failure.message}`);
+    return { items: [], error: failure.message, code: failure.code };
   }
 
   try {
-    const { data, error } = await supabase
-      .from(TABLE_NAME)
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(50);
-
-    if (error) throw error;
-
-    const items: GalleryItem[] = (data ?? []).map((item: GalleryItem) => {
-      const { data: publicUrlData } = supabase!.storage
-        .from(STORAGE_BUCKET)
-        .getPublicUrl(item.image_path);
-
-      return { ...item, public_url: publicUrlData.publicUrl };
-    });
-
-    return { items };
+    const data = (await response.json()) as { items?: GalleryItem[] };
+    return { items: Array.isArray(data.items) ? data.items : [] };
   } catch (err) {
-    logger.error('Error fetching gallery:', err);
-    return {
-      items: [],
-      error: err instanceof Error ? err.message : 'Failed to load gallery items.'
-    };
+    logger.error('Error parsing gallery response:', err);
+    return { items: [], error: 'The gallery server returned an unreadable response.', code: 'GALLERY_ERROR' };
   }
 };
 
@@ -39,59 +94,32 @@ export const uploadToGallery = async (
   title: string,
   newsUrl: string,
   newsSource: string
-): Promise<{ success: boolean; error?: string }> => {
-  if (!isSupabaseConfigured() || !supabase) {
-    return { success: false, error: 'Gallery service not configured' };
+): Promise<GalleryPublishResult> => {
+  const url = buildGalleryUrl();
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ image: base64Image, title, newsUrl, newsSource }),
+    });
+  } catch (err) {
+    logger.error('Gallery upload failed:', err);
+    const failure = networkFailure(err, 'publish the cartoon');
+    return { success: false, error: failure.message, code: failure.code, statusCode: failure.statusCode };
+  }
+
+  if (!response.ok) {
+    const failure = await readGalleryFailure(response);
+    logger.error(`Gallery publish failed: ${failure.code} (${failure.statusCode}) ${failure.message}`);
+    return { success: false, error: failure.message, code: failure.code, statusCode: failure.statusCode };
   }
 
   try {
-    // 1. Convert base64 to Blob
-    const base64Data = base64Image.split(',')[1];
-    const byteCharacters = atob(base64Data);
-    const byteNumbers = new Array(byteCharacters.length);
-    
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: 'image/png' });
-
-    // 2. Generate unique filename
-    const filename = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.png`;
-    const filePath = `${filename}`;
-
-    // 3. Upload to Storage
-    const { error: uploadError } = await supabase.storage
-      .from(STORAGE_BUCKET)
-      .upload(filePath, blob, {
-        contentType: 'image/png',
-        upsert: false
-      });
-
-    if (uploadError) throw uploadError;
-
-    // 4. Insert record into DB
-    const { error: dbError } = await supabase
-      .from(TABLE_NAME)
-      .insert([
-        {
-          title: title,
-          image_path: filePath,
-          news_url: newsUrl,
-          news_source: newsSource
-        }
-      ]);
-
-    if (dbError) throw dbError;
-
+    const data = (await response.json()) as { success?: boolean; item?: GalleryItem };
+    return { success: data.success !== false, item: data.item };
+  } catch {
+    // A 2xx without a readable body still means the publish went through.
     return { success: true };
-
-  } catch (error) {
-    logger.error('Gallery upload failed:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error occurred' 
-    };
   }
 };

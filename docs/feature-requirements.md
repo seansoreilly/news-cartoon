@@ -48,10 +48,10 @@ Publicly accessible gallery showing all published cartoons with metadata.
 
 ### Current State
 - Basic gallery page exists at `src/pages/GalleryPage.tsx`
-- Supabase integration configured (`supabaseClient.ts`)
-- Gallery service exists at `src/services/galleryService.ts`
-- Storage bucket: `news-cartoon-images`
-- Database table: `news_cartoon_gallery`
+- Supabase is accessed server-side only via `api/_shared/gallery.js` (`GET`/`POST /api/gallery`)
+- Browser client exists at `src/services/galleryService.ts`
+- Storage bucket: `cartoons` (override with `SUPABASE_GALLERY_BUCKET`)
+- Database table: `cartoons` (override with `SUPABASE_GALLERY_TABLE`)
 
 ### Requirements
 

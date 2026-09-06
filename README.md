@@ -59,6 +59,13 @@ GOOGLE_API_KEY=your_google_api_key_here
 VITE_ENV=development
 ```
 
+3. (Optional) To enable the public gallery, add your Supabase project settings. These are also server-side only:
+```env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+```
+The gallery expects a public storage bucket and a table both named `cartoons` (override with `SUPABASE_GALLERY_BUCKET` / `SUPABASE_GALLERY_TABLE`). The table needs `id`, `created_at`, `title`, `image_path`, `news_url`, `news_source` columns.
+
 ### Development
 
 Start both the Vite dev server and Express backend:

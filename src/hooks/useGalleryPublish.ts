@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useCartoonStore } from '../store/cartoonStore';
 import { useNewsStore } from '../store/newsStore';
 import { uploadToGallery } from '../services/galleryService';
+import { createAppError, type IAppError } from '../types/error';
 
 export type PublishStatus = 'idle' | 'success' | 'error';
 
@@ -9,7 +10,7 @@ export interface UseGalleryPublishResult {
   publish: () => Promise<void>;
   isPublishing: boolean;
   publishStatus: PublishStatus;
-  publishError: string | null;
+  publishError: IAppError | null;
   resetPublish: () => void;
 }
 
@@ -18,7 +19,7 @@ export function useGalleryPublish(): UseGalleryPublishResult {
   const { selectedArticles } = useNewsStore();
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishStatus, setPublishStatus] = useState<PublishStatus>('idle');
-  const [publishError, setPublishError] = useState<string | null>(null);
+  const [publishError, setPublishError] = useState<IAppError | null>(null);
 
   const selectedConcept = cartoon && selectedConceptIndex !== null && cartoon.ideas[selectedConceptIndex]
     ? cartoon.ideas[selectedConceptIndex]
@@ -26,7 +27,8 @@ export function useGalleryPublish(): UseGalleryPublishResult {
 
   const publish = async (): Promise<void> => {
     if (!imagePath || !selectedConcept || !selectedArticles.length) {
-      setPublishError('Missing required data for publishing');
+      setPublishStatus('error');
+      setPublishError(createAppError('VALIDATION_ERROR', 'Missing required data for publishing', 400));
       return;
     }
 
@@ -47,11 +49,22 @@ export function useGalleryPublish(): UseGalleryPublishResult {
         setPublishStatus('success');
       } else {
         setPublishStatus('error');
-        setPublishError(result.error ?? 'Failed to publish to gallery');
+        setPublishError(
+          createAppError(
+            result.code ?? 'GALLERY_ERROR',
+            result.error ?? 'Failed to publish to gallery',
+            result.statusCode ?? 500,
+            { userFacing: true }
+          )
+        );
       }
     } catch (err) {
       setPublishStatus('error');
-      setPublishError(err instanceof Error ? err.message : 'Unknown error occurred');
+      setPublishError(
+        createAppError('GALLERY_ERROR', err instanceof Error ? err.message : 'Unknown error occurred', 500, {
+          userFacing: true,
+        })
+      );
     } finally {
       setIsPublishing(false);
     }

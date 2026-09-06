@@ -32,6 +32,13 @@ const getActionForCode = (code: string, details?: Record<string, unknown>): Acti
       return { label: 'Try again', hint: 'You can pick a different concept if it keeps failing' };
     case 'GEMINI_API_KEY_MISSING':
       return { label: 'Try again', hint: 'The server is missing its GOOGLE_API_KEY environment variable' };
+    case 'GALLERY_NOT_CONFIGURED':
+      return {
+        label: 'Try again',
+        hint: 'The server needs SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY set before cartoons can be published',
+      };
+    case 'GALLERY_IMAGE_TOO_LARGE':
+      return null;
     case 'VALIDATION_ERROR':
       return null;
     default:

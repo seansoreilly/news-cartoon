@@ -1,9 +1,33 @@
 import { http, HttpResponse } from 'msw';
 import { buildProxyUrl } from '../../services/gemini/api';
+import { buildGalleryUrl } from '../../services/galleryService';
 
 // The browser talks to our own proxy; text and image share one endpoint and
 // are distinguished by `kind` in the JSON body.
 export const GEMINI_PROXY_URL = buildProxyUrl();
+// Gallery list/publish also go through our own endpoint (Supabase stays server-side).
+export const GALLERY_URL = buildGalleryUrl();
+
+export const mockGalleryItems = [
+  {
+    id: 'gal-1',
+    created_at: '2025-01-02T10:00:00Z',
+    title: 'Political Theater',
+    image_path: '1735812000000-abc123.png',
+    news_url: 'https://example.com/news/1',
+    news_source: 'Test News Source',
+    public_url: 'https://stub.supabase.co/storage/v1/object/public/cartoons/1735812000000-abc123.png',
+  },
+  {
+    id: 'gal-2',
+    created_at: '2025-01-01T10:00:00Z',
+    title: 'Economic Rollercoaster',
+    image_path: '1735725600000-def456.png',
+    news_url: 'https://example.com/news/2',
+    news_source: 'Another News Source',
+    public_url: 'https://stub.supabase.co/storage/v1/object/public/cartoons/1735725600000-def456.png',
+  },
+];
 
 /**
  * Mock Data Fixtures
@@ -171,6 +195,63 @@ export const handlers = [
 
     // Default to concept response
     return HttpResponse.json(mockGeminiConceptResponse);
+  }),
+
+  // Gallery proxy: list
+  http.get(GALLERY_URL, () => HttpResponse.json({ items: mockGalleryItems })),
+
+  // Gallery proxy: publish. A title containing 'not-configured' simulates a
+  // server without Supabase settings; 'too-large' simulates the size guard.
+  http.post(GALLERY_URL, async ({ request }) => {
+    let body: Record<string, any> = {};
+    try {
+      body = (await request.json()) as Record<string, any>;
+    } catch {
+      return HttpResponse.json(
+        { error: { message: 'Request body must be a JSON object', statusCode: 400, code: 'BAD_REQUEST' } },
+        { status: 400 }
+      );
+    }
+    const title: string = typeof body.title === 'string' ? body.title : '';
+    if (title.trim() === '' || typeof body.image !== 'string' || body.image === '') {
+      return HttpResponse.json(
+        { error: { message: 'title must be a non-empty string', statusCode: 400, code: 'BAD_REQUEST' } },
+        { status: 400 }
+      );
+    }
+    if (title.includes('not-configured')) {
+      return HttpResponse.json(
+        {
+          error: {
+            message: 'The gallery is not set up on this server yet. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in the server environment.',
+            statusCode: 503,
+            code: 'GALLERY_NOT_CONFIGURED',
+          },
+        },
+        { status: 503 }
+      );
+    }
+    if (title.includes('too-large')) {
+      return HttpResponse.json(
+        { error: { message: 'Image is too large to publish (max 3 MB)', statusCode: 413, code: 'GALLERY_IMAGE_TOO_LARGE' } },
+        { status: 413 }
+      );
+    }
+    return HttpResponse.json(
+      {
+        success: true,
+        item: {
+          id: 'gal-new',
+          created_at: '2025-01-03T10:00:00Z',
+          title,
+          image_path: 'new.png',
+          news_url: body.newsUrl,
+          news_source: body.newsSource,
+          public_url: 'https://stub.supabase.co/storage/v1/object/public/cartoons/new.png',
+        },
+      },
+      { status: 201 }
+    );
   }),
 
   // IP Geolocation API (for location detection)

@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { parseGoogleNewsRSS } from './api/_shared/rssParser.js';
 import { handleGenerateRequest } from './api/_shared/gemini.js';
+import { handleGalleryRequest } from './api/_shared/gallery.js';
 
 // Load environment variables
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -155,13 +156,16 @@ const filterWeatherSources = (articles) => {
 
 // Enable CORS for requests from the frontend
 app.use(cors());
-app.use(express.json({ limit: '1mb' }));
+// 6mb so a base64 cartoon can be published to the gallery.
+app.use(express.json({ limit: '6mb' }));
 
 /**
  * Gemini proxy. Mirrors api/gemini/generate.js so the browser uses the same
  * endpoint in dev and prod and never holds the Gemini key.
  */
 app.post('/api/gemini/generate', (req, res) => handleGenerateRequest(req, res));
+app.get('/api/gallery', (req, res) => handleGalleryRequest(req, res));
+app.post('/api/gallery', (req, res) => handleGalleryRequest(req, res));
 
 
 /**

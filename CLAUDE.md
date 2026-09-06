@@ -13,6 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    - `newsService`: Fetches news via Express backend proxy (port 3001) to Google News RSS, with 5-min TTL caching and exponential backoff
    - `geminiService`: Three-step pipeline (concepts → script → image) using Gemini 3.1 Pro (text) and Gemini 3 Pro Image ("Nano Banana Pro"). The browser never calls Google directly: `src/services/gemini/api.ts` POSTs to our own `/api/gemini/generate` proxy (`api/gemini/generate.js` on Vercel, the same handler mounted in `dev-server.js` locally). The server module `api/_shared/gemini.js` holds the API key, walks an ordered model list (`DEFAULT_TEXT_MODELS` / `DEFAULT_IMAGE_MODELS`) and falls back to the next model when Google reports the current one as not found, because Google retires preview models on a schedule.
    - `locationService`: Dual detection (GPS → OpenStreetMap, IP fallback via ipapi.co)
+   - `galleryService`: Thin client for our own `/api/gallery` endpoint (`api/gallery/index.js` on Vercel, same handler in `dev-server.js`). The server module `api/_shared/gallery.js` holds the Supabase URL and key and talks to Supabase Storage / PostgREST over plain fetch, so nothing Supabase-related ships in the bundle.
 
 2. **Stores** (`src/store/`): Zustand-based state management
    - `locationStore` & `preferencesStore`: Persist to localStorage
@@ -54,6 +55,8 @@ npm run preview      # Preview production build locally
 - `GEMINI_TEXT_MODELS`: Server-side preferred text model, or a comma-separated priority list (defaults to `gemini-3.1-pro-preview`, then `gemini-3.8-flash`, `gemini-2.5-pro`, `gemini-2.5-flash`). Legacy `VITE_GEMINI_TEXT_MODEL` is honoured.
 - `GEMINI_IMAGE_MODELS`: Server-side preferred image model, or a comma-separated priority list (defaults to `gemini-3-pro-image`, then `gemini-3.1-flash-image`, `gemini-2.5-flash-image`). Legacy `VITE_GEMINI_IMAGE_MODEL` is honoured.
 - `GEMINI_API_ROOT`: Override the Gemini base URL (used to point the server at a stub in tests)
+- `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`: Server-side Supabase settings for the gallery (read by `api/_shared/gallery.js`). Without them the gallery endpoint answers `503 GALLERY_NOT_CONFIGURED` and the UI shows "The gallery is not set up on this server yet". `SUPABASE_SECRET_KEY`, `SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_*` and the legacy `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` are accepted as fallbacks.
+- `SUPABASE_GALLERY_BUCKET` / `SUPABASE_GALLERY_TABLE`: Override the storage bucket and table (both default to `cartoons`).
 
 Models set via env are tried first; the built-in defaults remain as fallbacks. Retired models return HTTP 404 and are skipped automatically for the life of the server process / warm function instance.
 
@@ -65,6 +68,7 @@ Models set via env are tried first; the built-in defaults remain as fallbacks. R
 - Express server on port 3001 proxies Google News RSS to avoid CORS and hide API patterns
 - Parses complex RSS/XML structures with fallbacks for different field formats
 - Returns normalized article structure regardless of RSS variations
+- `GET /api/gallery` lists the newest 50 cartoons as `{ items }` (each with a computed `public_url`); `POST /api/gallery` with `{ image, title, newsUrl?, newsSource? }` uploads the base64 image to Supabase Storage, inserts the row, and returns `201 { success: true, item }`. Images are sniffed (PNG/JPEG/WebP) and capped at 3 MB decoded because Vercel limits request bodies to 4.5 MB. Publishes are limited to 10/min per IP. Errors use the same `{ error: { message, statusCode, code } }` envelope; `GALLERY_NOT_CONFIGURED` (503) means the server has no Supabase settings.
 - `POST /api/gemini/generate` proxies Gemini. Body: `{ kind: 'text' | 'image', prompt, generationConfig? }`. Returns Google's response JSON unchanged on success, or `{ error: { message, statusCode, code, model, modelNotFound } }` with the matching HTTP status. Validates the body, allow-lists `generationConfig` keys, applies a best-effort 30 req/min per-IP limit, and has `maxDuration: 120` in `vercel.json` because image generation can take a minute.
 
 ### Caching Strategy
@@ -128,6 +132,7 @@ Components dispatch store actions and derive UI from store state—no prop drill
 - **API key**: Verify `GOOGLE_API_KEY` is set in the server environment (Vercel project env / `.env.local` for `dev-server.js`). A `GEMINI_API_KEY_MISSING` error from the proxy means it is not.
 - **Rate limiting**: Check `ImageGenerationRateLimiter` logs
 - **Response parsing**: Check `parseImageResponse()` and `parseScriptResponse()` methods
+- **Gallery**: `GALLERY_NOT_CONFIGURED` means `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` are missing from the server environment; `GALLERY_NOT_FOUND` means the `cartoons` bucket or table does not exist in that Supabase project; `GALLERY_ACCESS_DENIED` means the key was rejected (wrong project, or an anon key blocked by RLS/storage policies).
 - **Backend issues**: Check dev-server.js logs on port 3001
 
 ## Testing Setup
