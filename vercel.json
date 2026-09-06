@@ -2,6 +2,11 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "installCommand": "npm install",
+  "functions": {
+    "api/gemini/generate.js": {
+      "maxDuration": 120
+    }
+  },
   "headers": [
     {
       "source": "/graphic.png",

@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Three-layer architecture:**
 1. **Services** (`src/services/`): External API integration and business logic
    - `newsService`: Fetches news via Express backend proxy (port 3001) to Google News RSS, with 5-min TTL caching and exponential backoff
-   - `geminiService`: Three-step pipeline (concepts → script → image) using Gemini 3.1 Pro (text) and Gemini 3 Pro Image ("Nano Banana Pro"). Each call walks an ordered model list (`DEFAULT_TEXT_MODELS` / `DEFAULT_IMAGE_MODELS` in `src/services/gemini/api.ts`) and falls back to the next model when Google reports the current one as not found, because Google retires preview models on a schedule.
+   - `geminiService`: Three-step pipeline (concepts → script → image) using Gemini 3.1 Pro (text) and Gemini 3 Pro Image ("Nano Banana Pro"). The browser never calls Google directly: `src/services/gemini/api.ts` POSTs to our own `/api/gemini/generate` proxy (`api/gemini/generate.js` on Vercel, the same handler mounted in `dev-server.js` locally). The server module `api/_shared/gemini.js` holds the API key, walks an ordered model list (`DEFAULT_TEXT_MODELS` / `DEFAULT_IMAGE_MODELS`) and falls back to the next model when Google reports the current one as not found, because Google retires preview models on a schedule.
    - `locationService`: Dual detection (GPS → OpenStreetMap, IP fallback via ipapi.co)
 
 2. **Stores** (`src/store/`): Zustand-based state management
@@ -45,16 +45,17 @@ npm run preview      # Preview production build locally
 ## Environment Setup
 
 **Required variables** (add to `.env.local` or `.env.development`):
-- `VITE_GOOGLE_API_KEY`: Google Gemini API key (required for cartoon generation)
+- `GOOGLE_API_KEY`: Google Gemini API key, read **server-side only** by `api/_shared/gemini.js` (the Vercel function and `dev-server.js`). `GEMINI_API_KEY` and the legacy `VITE_GOOGLE_API_KEY` are accepted as fallbacks so existing deployments keep working, but the key is no longer bundled into the browser.
 - `VITE_ENV`: Set to `development` or `production`
 
 **Optional:**
-- `VITE_API_BASE_URL`: Backend endpoint (defaults to localhost:3001 in dev)
+- `VITE_API_BASE_URL`: Backend endpoint (defaults to `/api` in prod and `http://localhost:3001/api` in dev)
 - `VITE_DEFAULT_NEWS_LIMIT`: Max articles to fetch (defaults to 10)
-- `VITE_GEMINI_TEXT_MODEL`: Preferred text model, or a comma-separated priority list (defaults to `gemini-3.1-pro-preview`, then `gemini-3.8-flash`, `gemini-2.5-pro`, `gemini-2.5-flash`)
-- `VITE_GEMINI_IMAGE_MODEL`: Preferred image model, or a comma-separated priority list (defaults to `gemini-3-pro-image`, then `gemini-3.1-flash-image`, `gemini-2.5-flash-image`)
+- `GEMINI_TEXT_MODELS`: Server-side preferred text model, or a comma-separated priority list (defaults to `gemini-3.1-pro-preview`, then `gemini-3.8-flash`, `gemini-2.5-pro`, `gemini-2.5-flash`). Legacy `VITE_GEMINI_TEXT_MODEL` is honoured.
+- `GEMINI_IMAGE_MODELS`: Server-side preferred image model, or a comma-separated priority list (defaults to `gemini-3-pro-image`, then `gemini-3.1-flash-image`, `gemini-2.5-flash-image`). Legacy `VITE_GEMINI_IMAGE_MODEL` is honoured.
+- `GEMINI_API_ROOT`: Override the Gemini base URL (used to point the server at a stub in tests)
 
-Models set via env are tried first; the built-in defaults remain as fallbacks. Retired models return HTTP 404 and are skipped automatically for the rest of the session.
+Models set via env are tried first; the built-in defaults remain as fallbacks. Retired models return HTTP 404 and are skipped automatically for the life of the server process / warm function instance.
 
 ⚠️ **Never commit `.env.development` or `.env.production`** — they're in .gitignore for security.
 
@@ -64,6 +65,7 @@ Models set via env are tried first; the built-in defaults remain as fallbacks. R
 - Express server on port 3001 proxies Google News RSS to avoid CORS and hide API patterns
 - Parses complex RSS/XML structures with fallbacks for different field formats
 - Returns normalized article structure regardless of RSS variations
+- `POST /api/gemini/generate` proxies Gemini. Body: `{ kind: 'text' | 'image', prompt, generationConfig? }`. Returns Google's response JSON unchanged on success, or `{ error: { message, statusCode, code, model, modelNotFound } }` with the matching HTTP status. Validates the body, allow-lists `generationConfig` keys, applies a best-effort 30 req/min per-IP limit, and has `maxDuration: 120` in `vercel.json` because image generation can take a minute.
 
 ### Caching Strategy
 - **News service**: 5-minute TTL in-memory cache with lazy invalidation
@@ -74,7 +76,8 @@ Models set via env are tried first; the built-in defaults remain as fallbacks. R
 - Exponential backoff: `delay = baseDelay * 2^retryCount` (max 3 retries)
 - Special handling for 429 (rate limit) with extended backoff
 - Retryable errors: HTTP 429/500/502/503/504 + RATE_LIMIT_ERROR
-- Gemini: only 408/429/5xx and network failures are retried. 400/401/403 fail immediately with the API's own message; 404/NOT_FOUND triggers model fallback instead of a retry.
+- Gemini (server side, `api/_shared/gemini.js`): only 408/429/5xx and network failures are retried. 400/401/403 fail immediately with the API's own message; 404/NOT_FOUND triggers model fallback instead of a retry.
+- Gemini (browser side): the proxy client only retries network failures. HTTP errors from the proxy are surfaced as-is.
 - Gemini errors carry `details.userFacing: true`; `AppErrorHandler.getUserMessage()` shows those messages verbatim instead of the generic "could not generate" text.
 
 ### Image Generation Pipeline
@@ -122,7 +125,7 @@ Components dispatch store actions and derive UI from store state—no prop drill
 
 ### Debugging API Issues
 - **Gemini API**: Check verbose console logs with `[methodName]` prefixes
-- **API key**: Verify `import.meta.env.VITE_GOOGLE_API_KEY` is set
+- **API key**: Verify `GOOGLE_API_KEY` is set in the server environment (Vercel project env / `.env.local` for `dev-server.js`). A `GEMINI_API_KEY_MISSING` error from the proxy means it is not.
 - **Rate limiting**: Check `ImageGenerationRateLimiter` logs
 - **Response parsing**: Check `parseImageResponse()` and `parseScriptResponse()` methods
 - **Backend issues**: Check dev-server.js logs on port 3001

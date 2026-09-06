@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { server } from '../server';
-import { GEMINI_TEXT_URL, GEMINI_IMAGE_URL } from '../handlers';
+import { GEMINI_PROXY_URL } from '../handlers';
 import { http, HttpResponse } from 'msw';
 
 /**
@@ -88,183 +88,64 @@ describe('MSW API Handlers', () => {
     });
   });
 
-  describe('Gemini API Handlers', () => {
-    it('should return concept response from Gemini', async () => {
-      const response = await fetch(
-        GEMINI_TEXT_URL,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': 'test-key',
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    text: 'Generate concepts',
-                  },
-                ],
-              },
-            ],
-          }),
-        }
-      );
+  describe('Gemini proxy handlers', () => {
+    const post = (body: unknown) =>
+      fetch(GEMINI_PROXY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+    it('should return concept response for text requests', async () => {
+      const response = await post({ kind: 'text', prompt: 'Generate concepts' });
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.candidates).toBeDefined();
       expect(Array.isArray(data.candidates)).toBe(true);
       expect(data.candidates[0].content.parts[0].text).toBeDefined();
     });
 
-    it('should return 401 when API key is missing', async () => {
-      const response = await fetch(
-        GEMINI_TEXT_URL,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    text: 'Generate cartoon concepts',
-                  },
-                ],
-              },
-            ],
-          }),
-        }
-      );
+    it('should return 400 for a non-JSON body', async () => {
+      const response = await fetch(GEMINI_PROXY_URL, { method: 'POST', body: 'not json' });
       const data = await response.json();
 
-      expect(response.status).toBe(401);
-      expect(data.error).toBe('Missing API key');
+      expect(response.status).toBe(400);
+      expect(data.error.code).toBe('BAD_REQUEST');
     });
 
     it('should return 429 for rate limit simulation', async () => {
-      const response = await fetch(
-        GEMINI_TEXT_URL,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': 'test-key',
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    text: 'Please rate-limit this request',
-                  },
-                ],
-              },
-            ],
-          }),
-        }
-      );
+      const response = await post({ kind: 'text', prompt: 'Please rate-limit this request' });
       const data = await response.json();
 
       expect(response.status).toBe(429);
-      expect(data.error).toBe('Rate limit exceeded');
+      expect(data.error.code).toBe('GEMINI_RATE_LIMIT');
     });
 
-    it('should return script response from Gemini', async () => {
-      const response = await fetch(
-        GEMINI_TEXT_URL,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': 'test-key',
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    text: 'Generate comic script',
-                  },
-                ],
-              },
-            ],
-          }),
-        }
-      );
+    it('should return script response for script prompts', async () => {
+      const response = await post({ kind: 'text', prompt: 'Generate comic script' });
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.candidates).toBeDefined();
       expect(data.candidates[0].content.parts[0].text).toContain('Panel');
     });
 
-    it('should return image response from vision API', async () => {
-      const response = await fetch(
-        GEMINI_IMAGE_URL,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': 'test-key',
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    text: 'Generate image',
-                  },
-                ],
-              },
-            ],
-          }),
-        }
-      );
+    it('should return image response for image requests', async () => {
+      const response = await post({ kind: 'image', prompt: 'Generate image' });
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.candidates).toBeDefined();
-      expect(data.candidates[0].content.parts[0].inlineData).toBeDefined();
-      expect(data.candidates[0].content.parts[0].inlineData.mimeType).toBe(
-        'image/png'
-      );
+      expect(data.candidates[0].content.parts[0].inlineData.mimeType).toBe('image/png');
       expect(data.candidates[0].content.parts[0].inlineData.data).toBeDefined();
     });
 
     it('should return 400 for invalid image data', async () => {
-      const response = await fetch(
-        GEMINI_IMAGE_URL,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': 'test-key',
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    text: 'invalid image data',
-                  },
-                ],
-              },
-            ],
-          }),
-        }
-      );
+      const response = await post({ kind: 'image', prompt: 'invalid image data' });
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe('Invalid image data');
+      expect(data.error.message).toBe('Invalid image data');
     });
   });
-
   describe('Geolocation API Handler', () => {
     it('should return location data from IP API', async () => {
       const response = await fetch('https://ipapi.co/json/');

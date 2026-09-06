@@ -53,9 +53,9 @@ npm install
 cp .env.example .env.local
 ```
 
-2. Add your Google Gemini API key to `.env.local`:
+2. Add your Google Gemini API key to `.env.local`. It is read by the Express dev server / Vercel function only and is never bundled into the browser:
 ```env
-VITE_GOOGLE_API_KEY=your_google_api_key_here
+GOOGLE_API_KEY=your_google_api_key_here
 VITE_ENV=development
 ```
 

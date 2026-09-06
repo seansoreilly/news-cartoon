@@ -251,7 +251,7 @@ describe('GeminiService - Humor Scoring', () => {
       );
 
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('generativelanguage.googleapis.com'),
+        expect.stringContaining('/api/gemini/generate'),
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({

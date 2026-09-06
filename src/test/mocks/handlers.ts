@@ -1,9 +1,9 @@
 import { http, HttpResponse } from 'msw';
-import { buildModelUrl, DEFAULT_TEXT_MODELS, DEFAULT_IMAGE_MODELS } from '../../services/gemini/api';
+import { buildProxyUrl } from '../../services/gemini/api';
 
-// Mock the preferred (first) model of each list; fallback tests override these.
-export const GEMINI_TEXT_URL = buildModelUrl(DEFAULT_TEXT_MODELS[0]);
-export const GEMINI_IMAGE_URL = buildModelUrl(DEFAULT_IMAGE_MODELS[0]);
+// The browser talks to our own proxy; text and image share one endpoint and
+// are distinguished by `kind` in the JSON body.
+export const GEMINI_PROXY_URL = buildProxyUrl();
 
 /**
  * Mock Data Fixtures
@@ -131,76 +131,47 @@ export const handlers = [
     return HttpResponse.json(mockArticles);
   }),
 
-  // Gemini: Unified concept and script generation
-  http.post(
-    GEMINI_TEXT_URL,
-    async ({ request }) => {
-      // Check for authentication
-      if (!request.headers.get('x-goog-api-key')) {
-        return HttpResponse.json(
-          { error: 'Missing API key' },
-          { status: 401 }
-        );
-      }
-
-      // Parse body safely
-      try {
-        const body = await request.json() as Record<string, any>;
-        const text = body.contents?.[0]?.parts?.[0]?.text || '';
-
-        // Simulate rate limiting for specific prompts
-        if (text.includes('rate-limit')) {
-          return HttpResponse.json(
-            { error: 'Rate limit exceeded' },
-            { status: 429 }
-          );
-        }
-
-        // Return script response for script-related prompts
-        if (text.includes('comic script') || text.includes('Generate comic script')) {
-          return HttpResponse.json(mockGeminiScriptResponse);
-        }
-
-        // Default to concept response
-        return HttpResponse.json(mockGeminiConceptResponse);
-      } catch {
-        // Continue if body is not JSON
-        return HttpResponse.json(mockGeminiConceptResponse);
-      }
+  // Gemini proxy: concept/script (kind: 'text') and image (kind: 'image')
+  http.post(GEMINI_PROXY_URL, async ({ request }) => {
+    let body: Record<string, any> = {};
+    try {
+      body = (await request.json()) as Record<string, any>;
+    } catch {
+      return HttpResponse.json(
+        { error: { message: 'Request body must be a JSON object', statusCode: 400, code: 'BAD_REQUEST' } },
+        { status: 400 }
+      );
     }
-  ),
 
-  // Gemini: Image generation (vision API)
-  http.post(
-    GEMINI_IMAGE_URL,
-    async ({ request }) => {
-      if (!request.headers.get('x-goog-api-key')) {
+    const text: string = typeof body.prompt === 'string' ? body.prompt : '';
+
+    if (body.kind === 'image') {
+      // Simulate error for invalid image data
+      if (text.includes('invalid')) {
         return HttpResponse.json(
-          { error: 'Missing API key' },
-          { status: 401 }
+          { error: { message: 'Invalid image data', statusCode: 400, code: 'GEMINI_ERROR' } },
+          { status: 400 }
         );
       }
-
-      // Parse body safely to check for invalid data simulation
-      try {
-        const body = await request.json() as Record<string, any>;
-
-        // Simulate error for invalid image data
-        if (
-          (body.contents?.[0]?.parts?.[0]?.text || '').includes('invalid')
-        ) {
-          return HttpResponse.json(
-            { error: 'Invalid image data' },
-            { status: 400 }
-          );
-        }
-      } catch {
-        // Continue if body is not JSON
-      }
-
       return HttpResponse.json(mockGeminiImageResponse);
     }
-  ),
+
+    // Simulate rate limiting for specific prompts
+    if (text.includes('rate-limit')) {
+      return HttpResponse.json(
+        { error: { message: 'Gemini API quota or rate limit exceeded.', statusCode: 429, code: 'GEMINI_RATE_LIMIT' } },
+        { status: 429 }
+      );
+    }
+
+    // Return script response for script-related prompts
+    if (text.includes('comic script') || text.includes('Generate comic script')) {
+      return HttpResponse.json(mockGeminiScriptResponse);
+    }
+
+    // Default to concept response
+    return HttpResponse.json(mockGeminiConceptResponse);
+  }),
 
   // IP Geolocation API (for location detection)
   http.get('https://ipapi.co/json/', () => {
