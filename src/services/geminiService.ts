@@ -1,6 +1,7 @@
 import type { NewsArticle } from '../types/news';
 import type { CartoonConcept, CartoonData, ComicScript, CartoonImage } from '../types/cartoon';
 import { createCartoonError } from '../types/error';
+import type { IAppError } from '../types/error';
 import { ImageGenerationRateLimiter } from '../utils/rateLimiter';
 import { logger } from '../utils/logger';
 import { GeminiApiClient } from './gemini/api';
@@ -18,8 +19,34 @@ import {
   parseImageResponse,
   parseBatchAnalysisResponse,
   extractTextElements,
-  validateTextElements
+  validateTextElements,
+  getResponseText
 } from './gemini/parsers';
+
+const isAppError = (value: unknown): value is IAppError => {
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    typeof (value as IAppError).code === 'string' &&
+    typeof (value as IAppError).message === 'string'
+  );
+};
+
+/**
+ * Re-throw errors that already carry a user-facing explanation (API/parse
+ * errors) untouched; wrap anything else in a generic cartoon error so the
+ * original message is still available in `details`.
+ */
+const toCartoonError = (error: unknown, fallbackMessage: string): IAppError => {
+  if (isAppError(error) && error.details?.userFacing === true) {
+    return error;
+  }
+  const message = error instanceof Error ? error.message : String(error);
+  return createCartoonError(fallbackMessage, {
+    originalError: message,
+    stack: error instanceof Error ? error.stack : undefined,
+  });
+};
 
 class GeminiService {
   private apiClient: GeminiApiClient;
@@ -41,7 +68,10 @@ class GeminiService {
     const prompt = buildConceptPrompt(articles, location);
 
     try {
-      const response = await this.apiClient.callApi(prompt);
+      // Ask for JSON explicitly so the model doesn't wrap the array in prose.
+      const response = await this.apiClient.callApi(prompt, {
+        responseMimeType: 'application/json',
+      });
       const concepts = parseConceptResponse(response, location);
 
       return {
@@ -53,10 +83,8 @@ class GeminiService {
         generatedAt: Date.now(),
       };
     } catch (error) {
-      throw createCartoonError(
-        'Failed to generate cartoon concepts',
-        { originalError: String(error) }
-      );
+      logger.error('[generateCartoonConcepts] Failed:', error);
+      throw toCartoonError(error, 'Failed to generate cartoon concepts');
     }
   }
 
@@ -99,10 +127,7 @@ class GeminiService {
         stack: errorStack,
         error,
       });
-      throw createCartoonError(
-        'Failed to generate comic prompt',
-        { originalError: errorMessage, stack: errorStack }
-      );
+      throw toCartoonError(error, 'Failed to generate comic prompt');
     }
   }
 
@@ -177,10 +202,7 @@ class GeminiService {
       return cartoonImage;
     } catch (error) {
       logger.error('Image generation failed:', error);
-      throw createCartoonError(
-        'Failed to generate cartoon image',
-        { originalError: String(error) }
-      );
+      throw toCartoonError(error, 'Failed to generate cartoon image');
     }
   }
 
@@ -193,7 +215,7 @@ class GeminiService {
 
     try {
       const response = await this.apiClient.callApi(prompt);
-      const scoreText = response.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+      const scoreText = getResponseText(response);
       const score = parseInt(scoreText || '0', 10);
       return isNaN(score) ? 50 : Math.min(100, Math.max(1, score));
     } catch (error) {

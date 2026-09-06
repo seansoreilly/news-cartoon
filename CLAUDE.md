@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Three-layer architecture:**
 1. **Services** (`src/services/`): External API integration and business logic
    - `newsService`: Fetches news via Express backend proxy (port 3001) to Google News RSS, with 5-min TTL caching and exponential backoff
-   - `geminiService`: Three-step pipeline (concepts → script → image) using Gemini 3 Pro (text) and Gemini 3 Pro Image preview ("Nano Banana Pro")
+   - `geminiService`: Three-step pipeline (concepts → script → image) using Gemini 3.1 Pro (text) and Gemini 3 Pro Image ("Nano Banana Pro"). Each call walks an ordered model list (`DEFAULT_TEXT_MODELS` / `DEFAULT_IMAGE_MODELS` in `src/services/gemini/api.ts`) and falls back to the next model when Google reports the current one as not found, because Google retires preview models on a schedule.
    - `locationService`: Dual detection (GPS → OpenStreetMap, IP fallback via ipapi.co)
 
 2. **Stores** (`src/store/`): Zustand-based state management
@@ -51,8 +51,10 @@ npm run preview      # Preview production build locally
 **Optional:**
 - `VITE_API_BASE_URL`: Backend endpoint (defaults to localhost:3001 in dev)
 - `VITE_DEFAULT_NEWS_LIMIT`: Max articles to fetch (defaults to 10)
-- `VITE_GEMINI_TEXT_MODEL`: Override text model (defaults to `gemini-3-pro-preview`)
-- `VITE_GEMINI_IMAGE_MODEL`: Override image model (defaults to `gemini-3-pro-image-preview`)
+- `VITE_GEMINI_TEXT_MODEL`: Preferred text model, or a comma-separated priority list (defaults to `gemini-3.1-pro-preview`, then `gemini-3.8-flash`, `gemini-2.5-pro`, `gemini-2.5-flash`)
+- `VITE_GEMINI_IMAGE_MODEL`: Preferred image model, or a comma-separated priority list (defaults to `gemini-3-pro-image`, then `gemini-3.1-flash-image`, `gemini-2.5-flash-image`)
+
+Models set via env are tried first; the built-in defaults remain as fallbacks. Retired models return HTTP 404 and are skipped automatically for the rest of the session.
 
 ⚠️ **Never commit `.env.development` or `.env.production`** — they're in .gitignore for security.
 
@@ -72,6 +74,8 @@ npm run preview      # Preview production build locally
 - Exponential backoff: `delay = baseDelay * 2^retryCount` (max 3 retries)
 - Special handling for 429 (rate limit) with extended backoff
 - Retryable errors: HTTP 429/500/502/503/504 + RATE_LIMIT_ERROR
+- Gemini: only 408/429/5xx and network failures are retried. 400/401/403 fail immediately with the API's own message; 404/NOT_FOUND triggers model fallback instead of a retry.
+- Gemini errors carry `details.userFacing: true`; `AppErrorHandler.getUserMessage()` shows those messages verbatim instead of the generic "could not generate" text.
 
 ### Image Generation Pipeline
 1. Rate limiting check (2/min limit)

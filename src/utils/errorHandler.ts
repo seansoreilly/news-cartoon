@@ -99,6 +99,14 @@ export class AppErrorHandler {
       ERROR: 'An unexpected error occurred. Please try again.',
     };
 
+    // Errors raised by the Gemini layer with `details.userFacing` already
+    // carry a specific, actionable explanation (retired model, quota, blocked
+    // prompt, ...). Show it instead of the generic text so the user can
+    // actually act on it.
+    if (error.details?.userFacing === true && error.message) {
+      return error.message;
+    }
+
     return messageMap[error.code] || error.message;
   }
 
