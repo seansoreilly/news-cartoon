@@ -3,40 +3,121 @@ import type { CartoonConcept, ComicScriptPanel, ComicPanel, ComicScript } from '
 import { createCartoonError } from '../../types/error';
 import { logger } from '../../utils/logger';
 
-export const parseConceptResponse = (response: GeminiResponse, location: string): CartoonConcept[] => {
-    const text = response.candidates?.[0]?.content?.parts?.[0]?.text || '';
+/**
+ * Concatenate every text part of the first candidate, skipping "thought"
+ * parts emitted by thinking models. Older code read only parts[0].text, which
+ * is empty/irrelevant whenever the model returns multiple parts.
+ */
+export const getResponseText = (response: GeminiResponse): string => {
+    const parts = response.candidates?.[0]?.content?.parts ?? [];
+    return parts
+        .filter((part) => typeof part.text === 'string' && !part.thought)
+        .map((part) => part.text as string)
+        .join('')
+        .trim();
+};
 
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) {
-        throw createCartoonError('Could not parse cartoon concepts from API response');
+/**
+ * Explain why a response carries no usable text (safety block, token limit,
+ * empty candidate list) so the UI can show something more useful than
+ * "could not parse".
+ */
+export const describeEmptyResponse = (response: GeminiResponse): string => {
+    const blockReason = response.promptFeedback?.blockReason;
+    if (blockReason) {
+        return `The request was blocked by Gemini (${blockReason}).`;
     }
+    const finishReason = response.candidates?.[0]?.finishReason;
+    if (finishReason && finishReason !== 'STOP') {
+        return `Gemini stopped generating early (${finishReason}).`;
+    }
+    if (!response.candidates || response.candidates.length === 0) {
+        return 'Gemini returned no candidates.';
+    }
+    return 'Gemini returned an empty response.';
+};
 
-    try {
-        const parsed = JSON.parse(jsonMatch[0]) as Array<{
-            title?: string;
-            premise?: string;
-            why_funny?: string;
-        }>;
+/**
+ * Pull a JSON array out of free-form model output. Handles:
+ *  - a bare JSON array
+ *  - an array wrapped in ```json fences
+ *  - an object wrapper such as { "concepts": [ ... ] }
+ *  - prose before/after the array
+ */
+export const extractJsonArray = (text: string): unknown[] | null => {
+    const stripped = text
+        .replace(/```(?:json)?\s*/gi, '')
+        .replace(/```/g, '')
+        .trim();
 
-        return parsed.map((concept) => ({
-            title: concept.title || 'Untitled',
-            premise: concept.premise || 'A cartoon concept',
-            why_funny: concept.why_funny || 'Political commentary',
-            location,
-        }));
-    } catch (error) {
+    const tryParse = (candidate: string): unknown[] | null => {
+        try {
+            const parsed: unknown = JSON.parse(candidate);
+            if (Array.isArray(parsed)) return parsed;
+            if (parsed && typeof parsed === 'object') {
+                const firstArray = Object.values(parsed as Record<string, unknown>).find(Array.isArray);
+                if (firstArray) return firstArray as unknown[];
+            }
+        } catch {
+            // fall through
+        }
+        return null;
+    };
+
+    const direct = tryParse(stripped);
+    if (direct) return direct;
+
+    const start = stripped.indexOf('[');
+    const end = stripped.lastIndexOf(']');
+    if (start !== -1 && end > start) {
+        return tryParse(stripped.slice(start, end + 1));
+    }
+    return null;
+};
+
+export const parseConceptResponse = (response: GeminiResponse, location: string): CartoonConcept[] => {
+    const text = getResponseText(response);
+
+    if (!text) {
         throw createCartoonError(
-            'Failed to parse cartoon concepts JSON',
-            { parseError: String(error) }
+            `Could not generate cartoon concepts: ${describeEmptyResponse(response)}`,
+            { userFacing: true, response }
         );
     }
+
+    const parsed = extractJsonArray(text);
+    if (!parsed) {
+        logger.error('[parseConceptResponse] Unparseable response text:', text.slice(0, 500));
+        throw createCartoonError('Could not parse cartoon concepts from the Gemini response', {
+            userFacing: true,
+            responsePreview: text.slice(0, 500),
+        });
+    }
+
+    const concepts = parsed
+        .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
+        .map((concept) => ({
+            title: typeof concept.title === 'string' ? concept.title : 'Untitled',
+            premise: typeof concept.premise === 'string' ? concept.premise : 'A cartoon concept',
+            why_funny: typeof concept.why_funny === 'string' ? concept.why_funny : 'Political commentary',
+            location,
+        }));
+
+    if (concepts.length === 0) {
+        throw createCartoonError('Gemini returned no cartoon concepts', {
+            userFacing: true,
+            responsePreview: text.slice(0, 500),
+        });
+    }
+
+    return concepts;
 };
 
 export const parseComicScript = (response: GeminiResponse, expectedPanelCount: number = 4): ComicScriptPanel[] => {
     logger.debug('[parseComicScript] Starting to parse new JSON prompt format...');
     logger.debug('[parseComicScript] Expected panel count:', expectedPanelCount);
 
-    const text = response.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const text = getResponseText(response);
     logger.debug('[parseComicScript] Response text length:', text.length);
     logger.debug('[parseComicScript] Response text preview:', text.substring(0, 500));
 
@@ -198,7 +279,7 @@ export const parseImageResponse = (response: GeminiResponse): string => {
 };
 
 export const parseBatchAnalysisResponse = (response: GeminiResponse): Array<{ summary: string; humorScore: number }> => {
-    const responseText = response.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+    const responseText = getResponseText(response);
 
     // Clean the response text - remove markdown code block markers if present
     let cleanedResponse = responseText;

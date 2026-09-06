@@ -259,3 +259,27 @@ describe('AppErrorHandler', () => {
     });
   });
 });
+
+describe('AppErrorHandler.getUserMessage - user-facing details', () => {
+  it('shows the specific message when the error is flagged userFacing', () => {
+    const error: IAppError = {
+      code: 'CARTOON_ERROR',
+      message: 'Gemini model "gemini-3-pro-preview" is not available (it may have been retired).',
+      statusCode: 404,
+      details: { userFacing: true, modelNotFound: true },
+    };
+    expect(AppErrorHandler.getUserMessage(error)).toBe(error.message);
+  });
+
+  it('keeps the generic message when userFacing is not set', () => {
+    const error: IAppError = {
+      code: 'CARTOON_ERROR',
+      message: 'TypeError: x is undefined',
+      statusCode: 500,
+      details: { originalError: 'TypeError: x is undefined' },
+    };
+    expect(AppErrorHandler.getUserMessage(error)).toBe(
+      'We could not generate cartoon concepts. Please try again.'
+    );
+  });
+});

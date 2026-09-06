@@ -1,4 +1,9 @@
 import { http, HttpResponse } from 'msw';
+import { buildModelUrl, DEFAULT_TEXT_MODELS, DEFAULT_IMAGE_MODELS } from '../../services/gemini/api';
+
+// Mock the preferred (first) model of each list; fallback tests override these.
+export const GEMINI_TEXT_URL = buildModelUrl(DEFAULT_TEXT_MODELS[0]);
+export const GEMINI_IMAGE_URL = buildModelUrl(DEFAULT_IMAGE_MODELS[0]);
 
 /**
  * Mock Data Fixtures
@@ -128,7 +133,7 @@ export const handlers = [
 
   // Gemini: Unified concept and script generation
   http.post(
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent',
+    GEMINI_TEXT_URL,
     async ({ request }) => {
       // Check for authentication
       if (!request.headers.get('x-goog-api-key')) {
@@ -167,7 +172,7 @@ export const handlers = [
 
   // Gemini: Image generation (vision API)
   http.post(
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent',
+    GEMINI_IMAGE_URL,
     async ({ request }) => {
       if (!request.headers.get('x-goog-api-key')) {
         return HttpResponse.json(
