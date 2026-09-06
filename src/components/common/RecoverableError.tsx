@@ -31,7 +31,7 @@ const getActionForCode = (code: string, details?: Record<string, unknown>): Acti
     case 'CARTOON_ERROR':
       return { label: 'Try again', hint: 'You can pick a different concept if it keeps failing' };
     case 'GEMINI_API_KEY_MISSING':
-      return { label: 'Open settings', href: '/settings', hint: 'Add your Gemini API key' };
+      return { label: 'Try again', hint: 'The server is missing its GOOGLE_API_KEY environment variable' };
     case 'VALIDATION_ERROR':
       return null;
     default:

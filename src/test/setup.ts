@@ -79,7 +79,6 @@ Object.defineProperty(window, 'matchMedia', {
  */
 // Set default test environment variables
 Object.assign(import.meta.env, {
-  VITE_GOOGLE_API_KEY: import.meta.env.VITE_GOOGLE_API_KEY || 'test-key',
   VITE_GNEWS_API_KEY: import.meta.env.VITE_GNEWS_API_KEY || 'test-key',
   VITE_DEFAULT_NEWS_LIMIT: import.meta.env.VITE_DEFAULT_NEWS_LIMIT || '10',
 });
