@@ -5,6 +5,9 @@
   "functions": {
     "api/gemini/generate.js": {
       "maxDuration": 120
+    },
+    "api/gallery/index.js": {
+      "maxDuration": 30
     }
   },
   "headers": [
