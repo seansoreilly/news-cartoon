@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import MetaTags from '../components/common/MetaTags';
 import LocationDetector from '../components/location/LocationDetector';
 import NewsDisplay from '../components/news/NewsDisplay';
 import ConceptGenerator from '../components/cartoon/ConceptGenerator';
@@ -102,6 +103,12 @@ const HomePage: React.FC = () => {
 
   return (
     <>
+      <MetaTags
+        title="AI Editorial Cartoon Generator from News Headlines"
+        description="Turn any news headline into an original AI-generated editorial cartoon in minutes. Pick a story, choose an art style, and share the result instantly."
+        url="https://newscartoon.lol/"
+      />
+      <h1 className="sr-only">AI Editorial Cartoon Generator from News Headlines</h1>
       <WorkflowProgress onReset={handleReset} />
       {simpleMode ? <ExpressWorkflow /> : <CuratedCascade />}
     </>
