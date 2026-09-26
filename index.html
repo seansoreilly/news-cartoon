@@ -4,23 +4,43 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>News Cartoon</title>
-    <meta name="description" content="Generate editorial cartoons from news headlines using AI." />
+    <title>AI Editorial Cartoon Generator from News Headlines</title>
+    <meta name="description" content="Turn any news headline into an original AI-generated editorial cartoon in minutes. Pick a story, choose an art style, and share the result instantly." />
+    <link rel="canonical" href="https://newscartoon.lol/" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://newscartoon.lol/" />
-    <meta property="og:title" content="News Cartoon" />
-    <meta property="og:description" content="Generate editorial cartoons from news headlines using AI." />
-    <meta property="og:image" content="https://newscartoon.lol/og-image.jpg" />
+    <meta property="og:title" content="AI Editorial Cartoon Generator from News Headlines" />
+    <meta property="og:description" content="Turn any news headline into an original AI-generated editorial cartoon in minutes. Pick a story, choose an art style, and share the result instantly." />
+    <meta property="og:image" content="https://newscartoon.lol/header.jpg" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://newscartoon.lol/" />
-    <meta property="twitter:title" content="News Cartoon" />
-    <meta property="twitter:description" content="Generate editorial cartoons from news headlines using AI." />
-    <meta property="twitter:image" content="https://newscartoon.lol/og-image.jpg" />
+    <meta property="twitter:title" content="AI Editorial Cartoon Generator from News Headlines" />
+    <meta property="twitter:description" content="Turn any news headline into an original AI-generated editorial cartoon in minutes. Pick a story, choose an art style, and share the result instantly." />
+    <meta property="twitter:image" content="https://newscartoon.lol/header.jpg" />
 
+    <!-- Structured data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "News Cartoon",
+        "url": "https://newscartoon.lol/",
+        "description": "Turn any news headline into an original AI-generated editorial cartoon in minutes. Pick a story, choose an art style, and share the result instantly.",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "Any browser",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+
+    <link rel="preload" as="image" href="/header.jpg" fetchpriority="high">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,7 +56,15 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Static fallback for crawlers and no-JS visitors; React replaces it on load. -->
+      <main style="max-width:42rem;margin:0 auto;padding:3rem 1rem;font-family:system-ui,sans-serif;color:#1f2937">
+        <h1>AI Editorial Cartoon Generator from News Headlines</h1>
+        <p>News Cartoon turns real news headlines into original editorial cartoons using AI. Pick your location, choose a story, and generate a shareable cartoon concept in minutes.</p>
+        <p>Browse the gallery to see cartoons other people have generated, or adjust your preferences in Settings to speed up the workflow.</p>
+        <noscript><p>News Cartoon needs JavaScript to generate cartoons.</p></noscript>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

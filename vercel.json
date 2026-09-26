@@ -40,7 +40,15 @@
   ],
   "rewrites": [
     {
-      "source": "/((?!api|assets|vite\\.svg|graphic\\.png|.*\\.).*)",
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/settings",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/gallery",
       "destination": "/index.html"
     }
   ]

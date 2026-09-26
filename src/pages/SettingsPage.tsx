@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import MetaTags from '../components/common/MetaTags';
 import { useLocationStore } from '../store/locationStore';
 import { usePreferencesStore } from '../store/preferencesStore';
 import type { LocationData } from '../types';
@@ -44,7 +45,12 @@ const SettingsPage: React.FC = () => {
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-6">Settings</h2>
+      <MetaTags
+        title="Settings - News Cartoon"
+        description="Set your default location and adjust news and display preferences for News Cartoon's AI editorial cartoon generator."
+        url="https://newscartoon.lol/settings"
+      />
+      <h1 className="text-2xl font-semibold mb-6">Settings</h1>
 
       <div className="space-y-8">
         <div className="bg-gray-50 p-6 rounded-lg">
