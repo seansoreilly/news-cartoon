@@ -18,7 +18,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <header className="sticky top-0 z-0 backdrop-blur-md bg-white/70 border-b border-white/40 shadow-sm">
         <div className="container mx-auto max-w-[1000px] px-4 py-4 relative z-0">
           <img 
-            src="/header.jpg" 
+            src="/header.jpg"
+            width={1024}
+            height={434}
+            fetchPriority="high" 
             alt="NewsCartoon.lol" 
             className="w-full h-auto object-cover rounded-xl shadow-sm relative -z-10"
             style={{
