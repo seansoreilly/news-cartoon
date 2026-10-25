@@ -82,6 +82,7 @@ Or run them separately:
 ```bash
 npm run dev:vite    # Vite only
 npm run dev:server  # Backend only
+npm run dev:vercel  # Vercel functions locally (needs a global CLI: npm i -g vercel)
 ```
 
 ## 📦 Available Scripts
