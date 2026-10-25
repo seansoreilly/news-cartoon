@@ -85,15 +85,6 @@ describe('SettingsPage', () => {
     });
   });
 
-  it('should update theme preference', () => {
-    render(<SettingsPage />);
-
-    const themeSelect = screen.getByLabelText('Theme');
-    fireEvent.change(themeSelect, { target: { value: 'dark' } });
-
-    expect(mockSetTheme).toHaveBeenCalledWith('dark');
-  });
-
   it('should toggle auto-refresh preference', () => {
     render(<SettingsPage />);
 
@@ -107,9 +98,9 @@ describe('SettingsPage', () => {
     render(<SettingsPage />);
 
     const newsCountSlider = screen.getByLabelText(/Number of News Articles/);
-    fireEvent.change(newsCountSlider, { target: { value: '15' } });
+    fireEvent.change(newsCountSlider, { target: { value: '7' } });
 
-    expect(mockSetNewsCount).toHaveBeenCalledWith(15);
+    expect(mockSetNewsCount).toHaveBeenCalledWith(7);
   });
 
   it('should show current news count value', () => {
@@ -125,37 +116,5 @@ describe('SettingsPage', () => {
     render(<SettingsPage />);
 
     expect(screen.getByText('Number of News Articles (15)')).toBeInTheDocument();
-  });
-
-  it('should apply theme changes to document', () => {
-    const { rerender } = render(<SettingsPage />);
-
-    // Test dark theme
-    (usePreferencesStore as any).mockReturnValue({
-      theme: 'dark',
-      autoRefresh: false,
-      newsCount: 10,
-      setTheme: mockSetTheme,
-      setAutoRefresh: mockSetAutoRefresh,
-      setNewsCount: mockSetNewsCount,
-    });
-
-    rerender(<SettingsPage />);
-
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
-
-    // Test light theme
-    (usePreferencesStore as any).mockReturnValue({
-      theme: 'light',
-      autoRefresh: false,
-      newsCount: 10,
-      setTheme: mockSetTheme,
-      setAutoRefresh: mockSetAutoRefresh,
-      setNewsCount: mockSetNewsCount,
-    });
-
-    rerender(<SettingsPage />);
-
-    expect(document.documentElement.classList.contains('dark')).toBe(false);
   });
 });

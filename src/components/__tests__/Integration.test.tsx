@@ -31,7 +31,7 @@ describe('Component Integration Tests', () => {
       );
 
       expect(screen.getByTestId('test-child')).toBeInTheDocument();
-      expect(screen.getByText('News Cartoon')).toBeInTheDocument();
+      expect(screen.getByRole('img', { name: 'NewsCartoon.lol' })).toBeInTheDocument();
     });
 
     it('should display header and footer consistently', () => {
@@ -41,7 +41,7 @@ describe('Component Integration Tests', () => {
         </Layout>
       );
 
-      expect(screen.getByText('News Cartoon')).toBeInTheDocument();
+      expect(screen.getByRole('img', { name: 'NewsCartoon.lol' })).toBeInTheDocument();
 
       rerender(
         <Layout>
@@ -49,7 +49,7 @@ describe('Component Integration Tests', () => {
         </Layout>
       );
 
-      expect(screen.getByText('News Cartoon')).toBeInTheDocument();
+      expect(screen.getByRole('img', { name: 'NewsCartoon.lol' })).toBeInTheDocument();
     });
 
     it('should maintain layout structure across different children', () => {
@@ -148,7 +148,7 @@ describe('Component Integration Tests', () => {
       expect(screen.getByText('Set Location')).toBeInTheDocument();
       expect(screen.getByText('Select News')).toBeInTheDocument();
       expect(screen.getByText('Generate Concepts')).toBeInTheDocument();
-      expect(screen.getByText('Generate Image')).toBeInTheDocument();
+      expect(screen.getByText('Generate Cartoon')).toBeInTheDocument();
     });
   });
 
@@ -323,7 +323,7 @@ describe('Component Integration Tests', () => {
 
       rerender(<ProgressIndicator />);
 
-      expect(screen.getByText('Generate Image')).toBeInTheDocument();
+      expect(screen.getByText('Generate Cartoon')).toBeInTheDocument();
     });
   });
 

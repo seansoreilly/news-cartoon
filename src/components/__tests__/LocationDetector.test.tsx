@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import LocationDetector from '../location/LocationDetector';
 import { useLocationStore } from '../../store/locationStore';
@@ -43,8 +43,10 @@ describe('LocationDetector', () => {
     it('should display detection method buttons', () => {
       render(<LocationDetector />);
       expect(screen.getByRole('button', { name: /detect my location/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /gps/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /ip/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /set search keywords/i })).toBeInTheDocument();
+      // GPS/IP are no longer separate controls; detectLocation() tries GPS then IP internally
+      expect(screen.queryByRole('button', { name: /gps/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /ip address/i })).not.toBeInTheDocument();
     });
 
     it('should display manual location input form', () => {
@@ -58,68 +60,38 @@ describe('LocationDetector', () => {
     });
   });
 
-  describe('GPS Detection', () => {
-    it('should call GPS detection service when button clicked', async () => {
+  describe('Detection Errors and Loading', () => {
+    it('should show loading state during detection', async () => {
       const user = userEvent.setup();
-      const mockSetLocation = vi.fn();
-      (useLocationStore as any).mockReturnValue({
-        location: null,
-        setLocation: mockSetLocation,
-        clearLocation: vi.fn(),
-        setError: vi.fn(),
-      });
-
-      render(<LocationDetector />);
-      const gpsButton = screen.getByRole('button', { name: /gps/i });
-
-      await user.click(gpsButton);
-
-      await waitFor(() => {
-        expect(locationService.getLocationFromGPS).toHaveBeenCalled();
-      });
-    });
-
-    it('should set location on GPS success', async () => {
-      const user = userEvent.setup();
-      const mockSetLocation = vi.fn();
-      (useLocationStore as any).mockReturnValue({
-        location: null,
-        setLocation: mockSetLocation,
-        clearLocation: vi.fn(),
-        setError: vi.fn(),
-      });
-
-      render(<LocationDetector />);
-      const gpsButton = screen.getByRole('button', { name: /gps/i });
-
-      await user.click(gpsButton);
-
-      await waitFor(() => {
-        expect(mockSetLocation).toHaveBeenCalledWith(mockLocationData);
-      });
-    });
-
-    it('should show loading state during GPS detection', async () => {
-      const user = userEvent.setup();
-      (locationService.getLocationFromGPS as any).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve(mockLocationData), 100))
+      let resolveDetect: (value: typeof mockLocationData) => void = () => {};
+      (locationService.detectLocation as any).mockImplementation(
+        () => new Promise((resolve) => { resolveDetect = resolve; })
       );
 
       render(<LocationDetector />);
-      const gpsButton = screen.getByRole('button', { name: /gps/i });
+      const detectButton = screen.getByRole('button', { name: /detect my location/i });
 
-      await user.click(gpsButton);
+      await user.click(detectButton);
 
-      // Button should be disabled during loading
-      expect(gpsButton).toBeInTheDocument();
+      // Button should be disabled and busy during loading
+      expect(detectButton).toBeDisabled();
+      expect(detectButton).toHaveAttribute('aria-busy', 'true');
+      expect(screen.getByText(/detecting your location/i)).toBeInTheDocument();
+
+      resolveDetect(mockLocationData);
+
+      await waitFor(() => {
+        expect(detectButton).toBeEnabled();
+      });
+      expect(detectButton).toHaveAttribute('aria-busy', 'false');
     });
 
-    it('should handle GPS detection error', async () => {
+    it('should handle detection error', async () => {
       const user = userEvent.setup();
       const mockSetError = vi.fn();
-      const error = new Error('GPS not available');
+      const error = new Error('Could not detect location');
 
-      (locationService.getLocationFromGPS as any).mockRejectedValue(error);
+      (locationService.detectLocation as any).mockRejectedValue(error);
       (useLocationStore as any).mockReturnValue({
         location: null,
         setLocation: vi.fn(),
@@ -128,70 +100,13 @@ describe('LocationDetector', () => {
       });
 
       render(<LocationDetector />);
-      const gpsButton = screen.getByRole('button', { name: /gps/i });
-
-      await user.click(gpsButton);
+      await user.click(screen.getByRole('button', { name: /detect my location/i }));
 
       await waitFor(() => {
         expect(AppErrorHandler.handleError).toHaveBeenCalledWith(error);
       });
-    });
-  });
-
-  describe('IP Detection', () => {
-    it('should call IP detection service when button clicked', async () => {
-      const user = userEvent.setup();
-      render(<LocationDetector />);
-      const ipButton = screen.getByRole('button', { name: /ip/i });
-
-      await user.click(ipButton);
-
-      await waitFor(() => {
-        expect(locationService.getLocationFromIP).toHaveBeenCalled();
-      });
-    });
-
-    it('should set location on IP detection success', async () => {
-      const user = userEvent.setup();
-      const mockSetLocation = vi.fn();
-      (useLocationStore as any).mockReturnValue({
-        location: null,
-        setLocation: mockSetLocation,
-        clearLocation: vi.fn(),
-        setError: vi.fn(),
-      });
-
-      render(<LocationDetector />);
-      const ipButton = screen.getByRole('button', { name: /ip/i });
-
-      await user.click(ipButton);
-
-      await waitFor(() => {
-        expect(mockSetLocation).toHaveBeenCalledWith(mockLocationData);
-      });
-    });
-
-    it('should handle IP detection error', async () => {
-      const user = userEvent.setup();
-      const mockSetError = vi.fn();
-      const error = new Error('IP lookup failed');
-
-      (locationService.getLocationFromIP as any).mockRejectedValue(error);
-      (useLocationStore as any).mockReturnValue({
-        location: null,
-        setLocation: vi.fn(),
-        clearLocation: vi.fn(),
-        setError: mockSetError,
-      });
-
-      render(<LocationDetector />);
-      const ipButton = screen.getByRole('button', { name: /ip/i });
-
-      await user.click(ipButton);
-
-      await waitFor(() => {
-        expect(AppErrorHandler.handleError).toHaveBeenCalledWith(error);
-      });
+      expect(await screen.findByText(/could not detect location/i)).toBeInTheDocument();
+      expect(mockSetError).toHaveBeenCalledWith('Could not detect location');
     });
   });
 
@@ -291,11 +206,14 @@ describe('LocationDetector', () => {
     });
 
     it('should show error when submitting empty location', async () => {
-      const user = userEvent.setup();
       render(<LocationDetector />);
 
+      // Submit button is disabled while input is empty, so submit the form directly
       const submitButton = screen.getByRole('button', { name: /search/i });
-      await user.click(submitButton);
+      expect(submitButton).toBeDisabled();
+      const form = submitButton.closest('form');
+      if (!form) throw new Error('form not found');
+      fireEvent.submit(form);
 
       await waitFor(() => {
         expect(screen.getByText(/please enter search keywords/i)).toBeInTheDocument();
@@ -309,8 +227,12 @@ describe('LocationDetector', () => {
       const input = screen.getByPlaceholderText(/enter search keywords/i);
       await user.type(input, '   ');
 
+      // Submit button stays disabled for whitespace-only input, so submit the form directly
       const submitButton = screen.getByRole('button', { name: /search/i });
-      await user.click(submitButton);
+      expect(submitButton).toBeDisabled();
+      const form = submitButton.closest('form');
+      if (!form) throw new Error('form not found');
+      fireEvent.submit(form);
 
       await waitFor(() => {
         expect(screen.getByText(/please enter search keywords/i)).toBeInTheDocument();
@@ -342,7 +264,7 @@ describe('LocationDetector', () => {
 
       render(<LocationDetector />);
 
-      expect(screen.getByRole('button', { name: /change location/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /change search keywords/i })).toBeInTheDocument();
     });
 
     it('should clear location when change button clicked', async () => {
@@ -357,7 +279,7 @@ describe('LocationDetector', () => {
 
       render(<LocationDetector />);
 
-      const changeButton = screen.getByRole('button', { name: /change location/i });
+      const changeButton = screen.getByRole('button', { name: /change search keywords/i });
       await user.click(changeButton);
 
       expect(mockClearLocation).toHaveBeenCalled();
@@ -369,8 +291,8 @@ describe('LocationDetector', () => {
       const user = userEvent.setup();
       const mockSetError = vi.fn();
 
-      (locationService.getLocationFromGPS as any).mockRejectedValue(
-        new Error('GPS failed')
+      (locationService.detectLocation as any).mockRejectedValue(
+        new Error('Detection failed')
       );
       (useLocationStore as any).mockReturnValue({
         location: null,
@@ -381,8 +303,8 @@ describe('LocationDetector', () => {
 
       render(<LocationDetector />);
 
-      const gpsButton = screen.getByRole('button', { name: /gps/i });
-      await user.click(gpsButton);
+      const detectButton = screen.getByRole('button', { name: /detect my location/i });
+      await user.click(detectButton);
 
       await waitFor(() => {
         expect(mockSetError).toHaveBeenCalled();
@@ -401,8 +323,8 @@ describe('LocationDetector', () => {
 
       render(<LocationDetector />);
 
-      const gpsButton = screen.getByRole('button', { name: /gps/i });
-      await user.click(gpsButton);
+      const detectButton = screen.getByRole('button', { name: /detect my location/i });
+      await user.click(detectButton);
 
       await waitFor(() => {
         expect(mockSetError).toHaveBeenCalledWith(null);
@@ -424,11 +346,11 @@ describe('LocationDetector', () => {
       render(<LocationDetector />);
 
       // First attempt with error
-      (locationService.getLocationFromGPS as any).mockRejectedValueOnce(
+      (locationService.detectLocation as any).mockRejectedValueOnce(
         new Error('First error')
       );
-      const gpsButton = screen.getByRole('button', { name: /gps/i });
-      await user.click(gpsButton);
+      const detectButton = screen.getByRole('button', { name: /detect my location/i });
+      await user.click(detectButton);
 
       await waitFor(() => {
         expect(mockSetError).toHaveBeenCalled();
@@ -438,7 +360,7 @@ describe('LocationDetector', () => {
       vi.clearAllMocks();
 
       // Second attempt should reset error first
-      (locationService.getLocationFromGPS as any).mockResolvedValueOnce(mockLocationData);
+      (locationService.detectLocation as any).mockResolvedValueOnce(mockLocationData);
       (useLocationStore as any).mockReturnValue({
         location: null,
         setLocation: vi.fn(),
@@ -446,10 +368,10 @@ describe('LocationDetector', () => {
         setError: mockSetError,
       });
 
-      await user.click(gpsButton);
+      await user.click(detectButton);
 
       await waitFor(() => {
-        expect(locationService.getLocationFromGPS).toHaveBeenCalled();
+        expect(locationService.detectLocation).toHaveBeenCalled();
       });
     });
   });
@@ -459,8 +381,7 @@ describe('LocationDetector', () => {
       render(<LocationDetector />);
 
       expect(screen.getByRole('button', { name: /detect my location/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /gps/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /ip/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /set search keywords/i })).toBeInTheDocument();
     });
 
     it('should have accessible input', () => {
