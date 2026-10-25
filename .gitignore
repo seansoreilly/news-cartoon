@@ -67,6 +67,7 @@ logs
 
 # Claude
 .claude/settings.local.json
+.claude/worktrees/
 
 # Playwright
 test-results/
