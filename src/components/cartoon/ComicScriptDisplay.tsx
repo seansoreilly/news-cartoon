@@ -108,7 +108,7 @@ const ComicScriptDisplay: React.FC = () => {
           <span className="font-semibold">Panels:</span>
           <ul className="list-disc list-inside mt-2 space-y-1">
             {comicPrompt.panels.map((panel: string | ComicPanel | ComicScriptPanel, index: number) => {
-              let panelText = '';
+              let panelText: string;
               if (typeof panel === 'string') {
                 panelText = panel;
               } else if ('visualDescription' in panel) {
