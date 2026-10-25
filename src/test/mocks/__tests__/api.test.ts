@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { server } from '../server';
 import { GEMINI_PROXY_URL } from '../handlers';
 import { http, HttpResponse } from 'msw';
@@ -14,10 +14,7 @@ import { http, HttpResponse } from 'msw';
  */
 
 describe('MSW API Handlers', () => {
-  beforeEach(() => {
-    server.listen();
-  });
-
+  // server.listen() is called once in src/test/setup.ts; msw >=2.13 throws on a second listen()
   afterEach(() => {
     server.resetHandlers();
   });
