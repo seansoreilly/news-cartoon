@@ -33,25 +33,40 @@ describe('Accessibility Tests', () => {
     });
 
     it('should have proper heading hierarchy', () => {
+      // The brand is now a banner image; each page supplies its own single h1
       render(
         <Layout>
+          <h1>Page Title</h1>
           <h2>Subheading</h2>
         </Layout>
       );
 
-      const h1 = screen.getByRole('heading', { level: 1 });
-      expect(h1).toHaveTextContent('News Cartoon');
+      const h1s = screen.getAllByRole('heading', { level: 1 });
+      expect(h1s).toHaveLength(1);
+      expect(h1s[0]).toHaveTextContent('Page Title');
+      expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Subheading');
     });
 
-    it('should have sufficient color contrast', () => {
-      const { container } = render(
+    it('should provide a text alternative for the brand banner', () => {
+      render(
         <Layout>
           <div>Test</div>
         </Layout>
       );
 
-      const title = container.querySelector('h1');
-      expect(title).toHaveClass('text-white');
+      expect(screen.getByRole('img', { name: 'NewsCartoon.lol' })).toBeInTheDocument();
+    });
+
+    it('should have sufficient color contrast', () => {
+      render(
+        <Layout>
+          <div>Test</div>
+        </Layout>
+      );
+
+      // Brand text is now the footer copyright; slate-500 (not lighter) on the light panel
+      const copyright = screen.getByText(/News Cartoon\. All rights reserved/).closest('footer');
+      expect(copyright).toHaveClass('text-slate-500');
     });
 
     it('should be keyboard navigable', () => {
@@ -170,7 +185,7 @@ describe('Accessibility Tests', () => {
       expect(screen.getByText('Set Location')).toBeInTheDocument();
       expect(screen.getByText('Select News')).toBeInTheDocument();
       expect(screen.getByText('Generate Concepts')).toBeInTheDocument();
-      expect(screen.getByText('Generate Image')).toBeInTheDocument();
+      expect(screen.getByText('Generate Cartoon')).toBeInTheDocument();
     });
 
     it('should have proper numbering for steps', () => {
@@ -199,8 +214,8 @@ describe('Accessibility Tests', () => {
         </Layout>
       );
 
-      const title = screen.getByText('News Cartoon');
-      expect(title).toHaveClass('text-4xl');
+      const copyright = screen.getByText(/News Cartoon\. All rights reserved/).closest('footer');
+      expect(copyright).toHaveClass('text-sm');
     });
 
     it('should have responsive padding on main content', () => {
@@ -211,7 +226,7 @@ describe('Accessibility Tests', () => {
       );
 
       const main = container.querySelector('main');
-      expect(main).toHaveClass('p-6', 'md:p-8');
+      expect(main).toHaveClass('p-4', 'sm:p-6', 'md:p-8');
     });
 
     it('should use flexible layout containers', () => {
@@ -244,8 +259,8 @@ describe('Accessibility Tests', () => {
         </Layout>
       );
 
-      const title = screen.getByText('News Cartoon');
-      expect(title).toHaveClass('text-white');
+      const copyright = screen.getByText(/News Cartoon\. All rights reserved/).closest('footer');
+      expect(copyright).toHaveClass('text-slate-500');
     });
 
     it('should have sufficient contrast for error messages', () => {

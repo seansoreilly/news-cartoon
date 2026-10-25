@@ -82,6 +82,7 @@ Or run them separately:
 ```bash
 npm run dev:vite    # Vite only
 npm run dev:server  # Backend only
+npm run dev:vercel  # Vercel functions locally (needs a global CLI: npm i -g vercel)
 ```
 
 ## 📦 Available Scripts
@@ -169,7 +170,7 @@ See [TESTING.md](./TESTING.md) for detailed testing documentation.
 
 ## 🚢 Deployment
 
-The app is deployed on Netlify/Vercel with serverless functions:
+The app is deployed on Vercel, with serverless functions in `api/`:
 
 ```bash
 # Build for production

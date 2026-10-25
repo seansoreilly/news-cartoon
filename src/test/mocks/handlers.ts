@@ -157,7 +157,7 @@ export const handlers = [
 
   // Gemini proxy: concept/script (kind: 'text') and image (kind: 'image')
   http.post(GEMINI_PROXY_URL, async ({ request }) => {
-    let body: Record<string, any> = {};
+    let body: Record<string, any>;
     try {
       body = (await request.json()) as Record<string, any>;
     } catch {
@@ -203,7 +203,7 @@ export const handlers = [
   // Gallery proxy: publish. A title containing 'not-configured' simulates a
   // server without Supabase settings; 'too-large' simulates the size guard.
   http.post(GALLERY_URL, async ({ request }) => {
-    let body: Record<string, any> = {};
+    let body: Record<string, any>;
     try {
       body = (await request.json()) as Record<string, any>;
     } catch {
