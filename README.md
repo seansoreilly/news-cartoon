@@ -169,7 +169,7 @@ See [TESTING.md](./TESTING.md) for detailed testing documentation.
 
 ## 🚢 Deployment
 
-The app is deployed on Netlify/Vercel with serverless functions:
+The app is deployed on Vercel, with serverless functions in `api/`:
 
 ```bash
 # Build for production
