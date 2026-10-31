@@ -1,12 +1,5 @@
 import type { CartoonImage } from '../../types/cartoon';
 
-export interface GeminiGenerationConfig {
-    responseModalities?: string[];
-    responseMimeType?: string;
-    aspectRatio?: string;
-    temperature?: number;
-}
-
 export interface GenerateArticle {
     title: string;
     description?: string;
@@ -45,15 +38,6 @@ export type GenerateRequest =
       }
     | { task: 'humor-score'; title: string; description?: string }
     | { task: 'batch-analysis'; articles: GenerateArticle[] };
-
-export interface GeminiRequest {
-    contents: Array<{
-        parts: Array<{
-            text: string;
-        }>;
-    }>;
-    generationConfig?: GeminiGenerationConfig;
-}
 
 export interface GeminiResponsePart {
     text?: string;
