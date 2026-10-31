@@ -94,7 +94,7 @@ describe('MSW API Handlers', () => {
       });
 
     it('should return concept response for text requests', async () => {
-      const response = await post({ kind: 'text', prompt: 'Generate concepts' });
+      const response = await post({ task: 'concepts', articles: [{ title: 'Headline' }], location: 'Melbourne' });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -111,7 +111,7 @@ describe('MSW API Handlers', () => {
     });
 
     it('should return 429 for rate limit simulation', async () => {
-      const response = await post({ kind: 'text', prompt: 'Please rate-limit this request' });
+      const response = await post({ task: 'humor-score', title: 'Please rate-limit this request' });
       const data = await response.json();
 
       expect(response.status).toBe(429);
@@ -119,7 +119,7 @@ describe('MSW API Handlers', () => {
     });
 
     it('should return script response for script prompts', async () => {
-      const response = await post({ kind: 'text', prompt: 'Generate comic script' });
+      const response = await post({ task: 'comic-script', concept: { title: 'T', premise: 'P', location: 'L' }, articles: [] });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -127,7 +127,7 @@ describe('MSW API Handlers', () => {
     });
 
     it('should return image response for image requests', async () => {
-      const response = await post({ kind: 'image', prompt: 'Generate image' });
+      const response = await post({ task: 'cartoon-image', concept: { title: 'T', premise: 'P', location: 'L' }, script: { panels: ['p'] } });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -136,7 +136,7 @@ describe('MSW API Handlers', () => {
     });
 
     it('should return 400 for invalid image data', async () => {
-      const response = await post({ kind: 'image', prompt: 'invalid image data' });
+      const response = await post({ task: 'cartoon-image', concept: { title: 'invalid', premise: 'P', location: 'L' }, script: { panels: ['p'] } });
       const data = await response.json();
 
       expect(response.status).toBe(400);

@@ -155,7 +155,7 @@ export const handlers = [
     return HttpResponse.json(mockArticles);
   }),
 
-  // Gemini proxy: concept/script (kind: 'text') and image (kind: 'image')
+  // Gemini proxy: typed tasks (concepts / comic-script / humor-score / batch-analysis return text; cartoon-image returns an image)
   http.post(GEMINI_PROXY_URL, async ({ request }) => {
     let body: Record<string, any>;
     try {
@@ -167,9 +167,10 @@ export const handlers = [
       );
     }
 
-    const text: string = typeof body.prompt === 'string' ? body.prompt : '';
+    // Serialised body stands in for the prompt text (the server renders the real prompt).
+    const text: string = JSON.stringify(body);
 
-    if (body.kind === 'image') {
+    if (body.task === 'cartoon-image') {
       // Simulate error for invalid image data
       if (text.includes('invalid')) {
         return HttpResponse.json(
@@ -189,7 +190,7 @@ export const handlers = [
     }
 
     // Return script response for script-related prompts
-    if (text.includes('comic script') || text.includes('Generate comic script')) {
+    if (body.task === 'comic-script') {
       return HttpResponse.json(mockGeminiScriptResponse);
     }
 

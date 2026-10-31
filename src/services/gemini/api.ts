@@ -1,7 +1,7 @@
 import { createCartoonError } from '../../types/error';
 import type { ICartoonError } from '../../types/error';
 import { logger } from '../../utils/logger';
-import type { GeminiGenerationConfig, GeminiResponse } from './types';
+import type { GenerateRequest, GeminiResponse } from './types';
 
 /**
  * Browser-side Gemini client.
@@ -89,17 +89,14 @@ export class GeminiApiClient {
         return this.proxyUrl;
     }
 
-    async callApi(prompt: string, generationConfig?: GeminiGenerationConfig): Promise<GeminiResponse> {
-        return this.post({ kind: 'text', prompt, generationConfig }, 'callApi');
-    }
-
-    async callVisionApi(prompt: string): Promise<GeminiResponse> {
-        logger.debug('[callVisionApi] Requesting image via proxy', { promptLength: prompt.length });
-        return this.post({ kind: 'image', prompt }, 'callVisionApi');
+    /** POST a typed task; the server renders the prompt and picks text vs image. */
+    async generate(request: GenerateRequest): Promise<GeminiResponse> {
+        logger.debug(`[generate] Requesting task "${request.task}" via proxy`);
+        return this.post(request, `generate:${request.task}`);
     }
 
     private async post(
-        body: { kind: 'text' | 'image'; prompt: string; generationConfig?: GeminiGenerationConfig },
+        body: GenerateRequest,
         tag: string,
         retryCount = 0
     ): Promise<GeminiResponse> {

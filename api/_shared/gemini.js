@@ -2,8 +2,9 @@
  * Server-side Gemini client shared by the Vercel function
  * (api/gemini/generate.js) and the Express dev server (dev-server.js).
  *
- * The browser never talks to Google directly: it POSTs a prompt to
- * /api/gemini/generate and this module forwards it with the server-held key.
+ * The browser never talks to Google directly: it POSTs a typed task (never
+ * prompt text) to /api/gemini/generate; this module renders the server-owned
+ * prompt and forwards it with the server-held key.
  * That keeps the key out of the JS bundle and lets the model list change
  * without touching the client.
  *
@@ -13,6 +14,8 @@
  * reports the current one as not found. Keep at least one stable (GA) model
  * in each list.
  */
+
+import { buildGenerateRequest } from './generateRequest.js';
 
 export const DEFAULT_TEXT_MODELS = [
   'gemini-3.1-pro-preview',
@@ -30,9 +33,9 @@ export const DEFAULT_IMAGE_MODELS = [
 const DEFAULT_API_ROOT = 'https://generativelanguage.googleapis.com/v1beta/models';
 const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 1000;
-const MAX_PROMPT_CHARS = 60_000;
 
-// Only these generationConfig keys are forwarded from the browser.
+// Defence in depth: only these generationConfig keys ever reach Google (the
+// server sets them; the browser cannot).
 const ALLOWED_GENERATION_CONFIG_KEYS = ['responseMimeType', 'temperature', 'aspectRatio'];
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -248,27 +251,12 @@ export const createGeminiClientFromEnv = (env = process.env, overrides = {}) =>
   });
 
 /**
- * Validate the JSON body of a generate request.
+ * Validate the JSON body of a generate request and render the server-owned
+ * prompt. The body is { task, ...structured fields }; raw prompts are rejected.
+ * See generateRequest.js for the full contract.
  * @returns {{ ok: true, value: {kind, prompt, generationConfig} } | { ok: false, message: string }}
  */
-export const validateGenerateBody = (body) => {
-  if (!body || typeof body !== 'object') {
-    return { ok: false, message: 'Request body must be a JSON object' };
-  }
-  const kind = body.kind === 'image' ? 'image' : body.kind === 'text' || body.kind === undefined ? 'text' : null;
-  if (!kind) {
-    return { ok: false, message: 'kind must be "text" or "image"' };
-  }
-  if (typeof body.prompt !== 'string' || body.prompt.trim().length === 0) {
-    return { ok: false, message: 'prompt must be a non-empty string' };
-  }
-  if (body.prompt.length > MAX_PROMPT_CHARS) {
-    return { ok: false, message: `prompt exceeds ${MAX_PROMPT_CHARS} characters` };
-  }
-  const generationConfig =
-    body.generationConfig && typeof body.generationConfig === 'object' ? body.generationConfig : undefined;
-  return { ok: true, value: { kind, prompt: body.prompt, generationConfig } };
-};
+export const validateGenerateBody = (body) => buildGenerateRequest(body);
 
 // ---------------------------------------------------------------------------
 // Simple per-IP rate limit. In-memory, so it is per warm instance on Vercel

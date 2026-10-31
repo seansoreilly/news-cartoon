@@ -7,12 +7,12 @@ import { logger } from '../utils/logger';
 import { GeminiApiClient } from './gemini/api';
 import { ImageCacheService } from './gemini/cache';
 import {
-  buildConceptPrompt,
-  buildComicPrompt,
-  buildImagePrompt,
-  buildHumorScorePrompt,
-  buildBatchAnalysisPrompt
-} from './gemini/prompts';
+  conceptsRequest,
+  comicScriptRequest,
+  cartoonImageRequest,
+  humorScoreRequest,
+  batchAnalysisRequest,
+} from './gemini/requests';
 import {
   parseConceptResponse,
   parseComicScript,
@@ -65,13 +65,9 @@ class GeminiService {
       throw createCartoonError('No articles provided for concept generation');
     }
 
-    const prompt = buildConceptPrompt(articles, location);
-
     try {
-      // Ask for JSON explicitly so the model doesn't wrap the array in prose.
-      const response = await this.apiClient.callApi(prompt, {
-        responseMimeType: 'application/json',
-      });
+      // The server owns the prompt and asks for JSON so the model doesn't wrap the array in prose.
+      const response = await this.apiClient.generate(conceptsRequest(articles, location));
       const concepts = parseConceptResponse(response, location);
 
       return {
@@ -98,12 +94,10 @@ class GeminiService {
     logger.debug('[generateComicPrompt] Articles count:', articles.length);
     logger.debug('[generateComicPrompt] Panel count requested:', panelCount);
 
-    const prompt = buildComicPrompt(concept, articles, panelCount);
-    logger.debug('[generateComicPrompt] Prompt text length:', prompt.length);
 
     try {
       logger.debug('[generateComicPrompt] Calling Gemini API for prompt...');
-      const response = await this.apiClient.callApi(prompt);
+      const response = await this.apiClient.generate(comicScriptRequest(concept, articles, panelCount));
       logger.debug('[generateComicPrompt] Received response from Gemini');
 
       logger.debug('[generateComicPrompt] Parsing prompt response...');
@@ -172,13 +166,11 @@ class GeminiService {
     const textElements = extractTextElements(prompt);
     validateTextElements(textElements);
 
-    const imagePrompt = buildImagePrompt(concept, prompt, panelCount);
-    logger.debug('Image prompt length:', imagePrompt.length, 'characters');
 
     try {
       logger.debug('Calling Vision API...');
       onPhase?.('image');
-      const response = await this.apiClient.callVisionApi(imagePrompt);
+      const response = await this.apiClient.generate(cartoonImageRequest(concept, prompt, panelCount));
       logger.debug('Vision API response received');
 
       logger.debug('Parsing image response...');
@@ -211,10 +203,8 @@ class GeminiService {
   }
 
   async generateHumorScore(title: string, description?: string): Promise<number> {
-    const prompt = buildHumorScorePrompt(title, description);
-
     try {
-      const response = await this.apiClient.callApi(prompt);
+      const response = await this.apiClient.generate(humorScoreRequest(title, description));
       const scoreText = getResponseText(response);
       const score = parseInt(scoreText || '0', 10);
       return isNaN(score) ? 50 : Math.min(100, Math.max(1, score));
@@ -238,10 +228,8 @@ class GeminiService {
 
       logger.debug(`[batchAnalyzeArticles] Processing batch ${batchNumber}/${totalBatches} (articles ${i + 1}-${Math.min(i + BATCH_SIZE, articles.length)})`);
 
-      const prompt = buildBatchAnalysisPrompt(batch);
-
       try {
-        const response = await this.apiClient.callApi(prompt);
+        const response = await this.apiClient.generate(batchAnalysisRequest(batch));
         const batchResults = parseBatchAnalysisResponse(response);
 
         // Ensure we have the right number of results

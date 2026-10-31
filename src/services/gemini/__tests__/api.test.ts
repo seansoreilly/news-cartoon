@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { GeminiApiClient, buildProxyError, buildProxyUrl, resolveApiBaseUrl } from '../api';
+import type { GenerateRequest } from '../types';
 
 const jsonResponse = (body: unknown, status = 200, statusText = ''): Response =>
   new Response(JSON.stringify(body), {
@@ -24,43 +25,48 @@ describe('GeminiApiClient (browser proxy client)', () => {
     vi.useRealTimers();
   });
 
+  const HUMOR: GenerateRequest = { task: 'humor-score', title: 'Headline' };
+  const IMAGE: GenerateRequest = {
+    task: 'cartoon-image',
+    concept: { title: 'T', premise: 'P', location: 'L' },
+    script: { panels: ['panel'] },
+  };
+
   const requestBody = (n: number) => JSON.parse(String(mockFetch.mock.calls[n][1].body));
 
-  it('posts text requests to /api/gemini/generate with kind=text and generationConfig', async () => {
+  it('posts typed task requests to /api/gemini/generate (no prompt, no generationConfig)', async () => {
     const client = new GeminiApiClient({ baseUrl: 'http://backend/api' });
     mockFetch.mockResolvedValueOnce(okResponse('hello'));
 
-    const result = await client.callApi('prompt', { responseMimeType: 'application/json' });
+    const result = await client.generate(HUMOR);
 
     expect(result.candidates?.[0].content?.parts?.[0].text).toBe('hello');
     expect(String(mockFetch.mock.calls[0][0])).toBe('http://backend/api/gemini/generate');
     expect(mockFetch.mock.calls[0][1].method).toBe('POST');
-    expect(requestBody(0)).toEqual({
-      kind: 'text',
-      prompt: 'prompt',
-      generationConfig: { responseMimeType: 'application/json' },
-    });
+    expect(requestBody(0)).toEqual(HUMOR);
+    expect(requestBody(0)).not.toHaveProperty('prompt');
+    expect(requestBody(0)).not.toHaveProperty('generationConfig');
   });
 
   it('never sends an API key header', async () => {
     const client = new GeminiApiClient({ baseUrl: 'http://backend/api' });
     mockFetch.mockResolvedValueOnce(okResponse('x'));
 
-    await client.callApi('prompt');
+    await client.generate(HUMOR);
 
     const headers = mockFetch.mock.calls[0][1].headers as Record<string, string>;
     expect(Object.keys(headers).map((h) => h.toLowerCase())).not.toContain('x-goog-api-key');
   });
 
-  it('posts image requests with kind=image', async () => {
+  it('posts cartoon-image tasks', async () => {
     const client = new GeminiApiClient({ baseUrl: 'http://backend/api' });
     mockFetch.mockResolvedValueOnce(
       jsonResponse({ candidates: [{ content: { parts: [{ inlineData: { mimeType: 'image/png', data: 'abc' } }] } }] })
     );
 
-    const result = await client.callVisionApi('draw');
+    const result = await client.generate(IMAGE);
 
-    expect(requestBody(0)).toEqual({ kind: 'image', prompt: 'draw' });
+    expect(requestBody(0)).toEqual(IMAGE);
     expect(result.candidates?.[0].content?.parts?.[0].inlineData?.data).toBe('abc');
   });
 
@@ -82,7 +88,7 @@ describe('GeminiApiClient (browser proxy client)', () => {
       )
     );
 
-    await expect(client.callApi('prompt')).rejects.toMatchObject({
+    await expect(client.generate(HUMOR)).rejects.toMatchObject({
       code: 'CARTOON_ERROR',
       statusCode: 404,
       message: 'Gemini model "x" is not available (it may have been retired).',
@@ -97,7 +103,7 @@ describe('GeminiApiClient (browser proxy client)', () => {
       jsonResponse({ error: { message: 'Gemini API quota or rate limit exceeded.', statusCode: 429, code: 'GEMINI_RATE_LIMIT' } }, 429)
     );
 
-    await expect(client.callApi('prompt')).rejects.toMatchObject({ statusCode: 429 });
+    await expect(client.generate(HUMOR)).rejects.toMatchObject({ statusCode: 429 });
     expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 
@@ -105,7 +111,7 @@ describe('GeminiApiClient (browser proxy client)', () => {
     const client = new GeminiApiClient({ baseUrl: 'http://backend/api' });
     mockFetch.mockResolvedValueOnce(new Response('<html>timeout</html>', { status: 504, statusText: 'Gateway Timeout' }));
 
-    await expect(client.callApi('prompt')).rejects.toMatchObject({
+    await expect(client.generate(HUMOR)).rejects.toMatchObject({
       statusCode: 504,
       message: expect.stringContaining('timed out or is unavailable (HTTP 504)'),
     });
@@ -115,7 +121,7 @@ describe('GeminiApiClient (browser proxy client)', () => {
     const client = new GeminiApiClient({ baseUrl: 'http://backend/api' });
     mockFetch.mockRejectedValue(new TypeError('Failed to fetch'));
 
-    const promise = client.callApi('prompt');
+    const promise = client.generate(HUMOR);
     const assertion = expect(promise).rejects.toMatchObject({
       message: expect.stringContaining('Could not reach the cartoon server'),
     });
@@ -128,7 +134,7 @@ describe('GeminiApiClient (browser proxy client)', () => {
     const client = new GeminiApiClient({ baseUrl: 'http://backend/api' });
     mockFetch.mockResolvedValueOnce(jsonResponse({ error: { message: 'weird', status: 'INTERNAL' } }));
 
-    await expect(client.callApi('prompt')).rejects.toMatchObject({
+    await expect(client.generate(HUMOR)).rejects.toMatchObject({
       message: 'Gemini API error: weird',
     });
   });

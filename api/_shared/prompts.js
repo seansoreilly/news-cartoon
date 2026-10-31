@@ -1,17 +1,67 @@
-import type { NewsArticle } from '../../types/news';
-import type { CartoonConcept, ComicScript, ComicScriptPanel, ComicPanel } from '../../types/cartoon';
-import { extractTextElements } from './parsers';
-import { logger } from '../../utils/logger';
+/**
+ * Server-owned prompt templates for POST /api/gemini/generate.
+ *
+ * The browser never sends prompt text. It sends a typed task plus bounded
+ * structured data (see generateRequest.js) and the server renders the prompt
+ * below. That stops the endpoint being used as a general-purpose LLM proxy.
+ */
+
 
 /**
  * Create bracket-formatted spelling: "HELLO" -> "[H] [E] [L] [L] [O]"
  */
-const spellOutTextWithBrackets = (text: string): string => {
+const spellOutTextWithBrackets = (text) => {
     return text.split('').map(char => `[${char}]`).join(' ');
 };
 
-const getExampleScriptJson = (panelCount: number): string => {
-    const examples: Record<number, string> = {
+/**
+ * Extract and format text elements from comic script panels.
+ * Handles both the ComicScriptPanel format (explicit visibleText) and the
+ * legacy string / { description } formats.
+ */
+export const extractTextElements = (script) => {
+    const textElements = [];
+
+    script.panels.forEach((panel, index) => {
+        const panelNum = index + 1;
+
+        if (panel && typeof panel === 'object' && 'visibleText' in panel) {
+            if (Array.isArray(panel.visibleText)) {
+                panel.visibleText.forEach((textElem) => {
+                    if (textElem.content && textElem.content.trim()) {
+                        const cleaned = textElem.content.trim().toUpperCase();
+                        if (cleaned.split(' ').length <= 4) {
+                            textElements.push({ panel: panelNum, text: cleaned, type: textElem.type || 'sign' });
+                        }
+                    }
+                });
+            }
+        } else {
+            const panelText = typeof panel === 'string' ? panel : panel?.description || '';
+
+            const quotedText = panelText.match(/"([^"]+)"/g) || [];
+            quotedText.forEach((text) => {
+                const cleaned = text.replace(/"/g, '').toUpperCase().trim();
+                if (cleaned && cleaned.split(' ').length <= 4) {
+                    textElements.push({ panel: panelNum, text: cleaned, type: 'dialogue' });
+                }
+            });
+
+            const labelMatch = panelText.match(/\b(?:sign|label|text|caption):\s*([^,.!?]+)/gi) || [];
+            labelMatch.forEach((match) => {
+                const text = match.split(':')[1]?.trim().toUpperCase();
+                if (text && text.split(' ').length <= 3) {
+                    textElements.push({ panel: panelNum, text, type: 'label' });
+                }
+            });
+        }
+    });
+
+    return textElements;
+};
+
+const getExampleScriptJson = (panelCount) => {
+    const examples = {
         1: `[
 {
   "panelNumber": 1,
@@ -108,7 +158,7 @@ const getExampleScriptJson = (panelCount: number): string => {
     return examples[panelCount] || examples[4];
 };
 
-export const buildConceptPrompt = (articles: NewsArticle[], location: string): string => {
+export const buildConceptPrompt = (articles, location) => {
     const headlines = articles
         .map((a) => {
             const desc = a.description || '';
@@ -154,11 +204,7 @@ Generate exactly 5 concepts as JSON array with these fields:
 Focus on SHOWING the absurdity, not telling it.`;
 };
 
-export const buildComicPrompt = (
-    concept: CartoonConcept,
-    articles: NewsArticle[],
-    panelCount: number = 4
-): string => {
+export const buildComicPrompt = (concept, articles, panelCount = 4) => {
     const news_section = articles.length > 0 ? `
 NEWS STORIES BEING SATIRIZED:
 ${articles.slice(0, 3).map(a => `- ${a.title}\n  Summary: ${a.description || 'No description available'}`).join('\n')}
@@ -228,15 +274,9 @@ ${getExampleScriptJson(panelCount)}
 Generate the JSON array now:`;
 };
 
-export const buildImagePrompt = (concept: CartoonConcept, script: ComicScript, panelCount: number = 4): string => {
+export const buildImagePrompt = (concept, script, panelCount = 4) => {
     // Extract all text elements from the script
     const textElements = extractTextElements(script);
-
-    // Validate text before building prompt
-    logger.debug('[buildImagePrompt] Building image prompt with', textElements.length, 'text elements');
-    textElements.forEach(elem => {
-        logger.debug(`  - Panel ${elem.panel}: "${elem.text}" (${elem.type})`);
-    });
 
     // Build text manifest with letter-by-letter spelling format
     const textManifest = textElements.length > 0 ? `
@@ -262,8 +302,8 @@ Location: ${concept.location}
 VISUAL DESCRIPTION:
 ${script.panels.map((panel, i) => {
         if (typeof panel === 'string') return `Panel ${i + 1}: ${panel}`;
-        if ('visualDescription' in panel) return `Panel ${i + 1}: ${(panel as ComicScriptPanel).visualDescription}`;
-        return `Panel ${i + 1}: ${(panel as ComicPanel).description || 'Visual scene'}`;
+        if ('visualDescription' in panel) return `Panel ${i + 1}: ${panel.visualDescription}`;
+        return `Panel ${i + 1}: ${panel.description || 'Visual scene'}`;
     }).join('\n')}
 
 ${textManifest}
@@ -287,7 +327,7 @@ VISUAL STYLE:
 TEXT VERIFICATION: Render EXACTLY as shown in text list above. Every word must match perfectly.`;
 };
 
-export const buildHumorScorePrompt = (title: string, description?: string): string => {
+export const buildHumorScorePrompt = (title, description) => {
     return `You are a comedy analyst evaluating news for editorial cartoon potential.
 
 Title: ${title}
@@ -315,7 +355,7 @@ Consider these comedy goldmines:
 Respond with ONLY the total number (1-100).`;
 };
 
-export const buildBatchAnalysisPrompt = (batch: Array<{ title: string; description?: string; content?: string }>): string => {
+export const buildBatchAnalysisPrompt = (batch) => {
     return `You are an expert editorial cartoonist analyzing news articles for their cartoon potential.
 
 Analyze these ${batch.length} news articles and for each one provide:

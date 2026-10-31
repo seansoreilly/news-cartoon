@@ -204,15 +204,17 @@ describe('buildHttpError', () => {
 });
 
 describe('validateGenerateBody', () => {
-  it('accepts text and image kinds and defaults kind to text', () => {
-    expect(validateGenerateBody({ prompt: 'p' })).toEqual({ ok: true, value: { kind: 'text', prompt: 'p', generationConfig: undefined } });
-    expect(validateGenerateBody({ kind: 'image', prompt: 'p' }).value.kind).toBe('image');
+  it('renders a server-owned prompt for a valid task', () => {
+    const r = validateGenerateBody({ task: 'humor-score', title: 'Cat elected mayor' });
+    expect(r.ok).toBe(true);
+    expect(r.value.kind).toBe('text');
+    expect(r.value.prompt).toContain('Title: Cat elected mayor');
   });
-  it('rejects bad input', () => {
+  it('rejects raw prompts and bad input', () => {
     expect(validateGenerateBody(null).ok).toBe(false);
-    expect(validateGenerateBody({ kind: 'audio', prompt: 'p' }).ok).toBe(false);
-    expect(validateGenerateBody({ prompt: '' }).ok).toBe(false);
-    expect(validateGenerateBody({ prompt: 'x'.repeat(60_001) }).ok).toBe(false);
+    expect(validateGenerateBody({ prompt: 'p' }).ok).toBe(false);
+    expect(validateGenerateBody({ kind: 'image', prompt: 'p' }).ok).toBe(false);
+    expect(validateGenerateBody({ task: 'nope' }).ok).toBe(false);
   });
 });
 
@@ -230,6 +232,7 @@ describe('checkRateLimit', () => {
 });
 
 describe('handleGenerateRequest', () => {
+  const validBody = { task: 'humor-score', title: 'T' };
   const makeRes = () => {
     const res = { headers: {}, statusCode: 200, body: undefined };
     res.setHeader = (k, v) => { res.headers[k] = v; };
@@ -250,19 +253,19 @@ describe('handleGenerateRequest', () => {
   it('returns Gemini JSON unchanged and names the model in a header', async () => {
     const client = { generate: vi.fn().mockResolvedValue({ data: { candidates: [] }, model: 'm' }) };
     const res = makeRes();
-    await handleGenerateRequest(makeReq({ kind: 'text', prompt: 'p' }), res, client);
+    await handleGenerateRequest(makeReq(validBody), res, client);
 
     expect(res.statusCode).toBe(200);
     expect(res.body).toEqual({ candidates: [] });
     expect(res.headers['X-Gemini-Model']).toBe('m');
-    expect(client.generate).toHaveBeenCalledWith({ kind: 'text', prompt: 'p', generationConfig: undefined });
+    expect(client.generate).toHaveBeenCalledWith(expect.objectContaining({ kind: 'text', prompt: expect.stringContaining('Title: T') }));
   });
 
   it('maps GeminiApiError to its status and JSON shape', async () => {
     const err = new GeminiApiError('Gemini model "x" is not available', { statusCode: 404, model: 'x', modelNotFound: true, code: 'GEMINI_MODEL_NOT_FOUND' });
     const client = { generate: vi.fn().mockRejectedValue(err) };
     const res = makeRes();
-    await handleGenerateRequest(makeReq({ prompt: 'p' }), res, client);
+    await handleGenerateRequest(makeReq(validBody), res, client);
 
     expect(res.statusCode).toBe(404);
     expect(res.body.error).toMatchObject({ message: 'Gemini model "x" is not available', modelNotFound: true, code: 'GEMINI_MODEL_NOT_FOUND' });
@@ -276,12 +279,12 @@ describe('handleGenerateRequest', () => {
     expect(res.statusCode).toBe(405);
 
     res = makeRes();
-    await handleGenerateRequest(makeReq({ prompt: '' }), res, client);
+    await handleGenerateRequest(makeReq({ prompt: 'raw prompt' }), res, client);
     expect(res.statusCode).toBe(400);
 
     for (let i = 0; i < 30; i++) checkRateLimit('9.9.9.9');
     res = makeRes();
-    await handleGenerateRequest(makeReq({ prompt: 'p' }), res, client);
+    await handleGenerateRequest(makeReq(validBody), res, client);
     expect(res.statusCode).toBe(429);
     expect(res.body.error.code).toBe('PROXY_RATE_LIMIT');
 
@@ -291,7 +294,7 @@ describe('handleGenerateRequest', () => {
   it('hides unexpected errors behind a generic 500', async () => {
     const client = { generate: vi.fn().mockRejectedValue(new Error('boom')) };
     const res = makeRes();
-    await handleGenerateRequest(makeReq({ prompt: 'p' }), res, client);
+    await handleGenerateRequest(makeReq(validBody), res, client);
     expect(res.statusCode).toBe(500);
     expect(res.body.error.message).not.toContain('boom');
   });

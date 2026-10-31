@@ -43,9 +43,11 @@ describe('geminiService.generateCartoonConcepts (via proxy)', () => {
     expect(mockFetch).toHaveBeenCalledTimes(1);
     expect(String(mockFetch.mock.calls[0][0])).toBe(buildProxyUrl());
     const body = JSON.parse(String(mockFetch.mock.calls[0][1].body));
-    expect(body.kind).toBe('text');
-    expect(body.generationConfig.responseMimeType).toBe('application/json');
-    expect(body.prompt).toContain('rubber duck');
+    expect(body.task).toBe('concepts');
+    expect(body.location).toBe('Melbourne');
+    expect(JSON.stringify(body.articles)).toContain('rubber duck');
+    expect(body).not.toHaveProperty('prompt');
+    expect(body).not.toHaveProperty('generationConfig');
   });
 
   it('surfaces a retired-model error reported by the proxy', async () => {
