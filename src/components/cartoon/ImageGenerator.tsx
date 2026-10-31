@@ -5,6 +5,7 @@ import { geminiService } from '../../services/geminiService';
 import { useGeneratedImageUrl } from '../../hooks/useGeneratedImageUrl';
 import { useImageGeneration } from '../../hooks/useImageGeneration';
 import { useGalleryPublish } from '../../hooks/useGalleryPublish';
+import { track } from '../../utils/analytics';
 import ShareButtons from '../common/ShareButtons';
 import RecoverableError from '../common/RecoverableError';
 import HalftoneSpinner from '../common/HalftoneSpinner';
@@ -30,6 +31,7 @@ const ImageGenerator: React.FC = React.memo(() => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    track('cartoon_downloaded', { mode: 'wizard' });
   };
 
   const handleRegenerateImage = (): void => {

@@ -5,6 +5,7 @@ import { geminiService } from '../services/geminiService';
 import { ImageGenerationRateLimiter } from '../utils/rateLimiter';
 import { AppErrorHandler } from '../utils/errorHandler';
 import { addWatermark } from '../utils/imageUtils';
+import { classifyError, track } from '../utils/analytics';
 
 import type { GenerationPhase } from '../store/cartoonStore';
 
@@ -79,10 +80,16 @@ export function useImageGeneration(): UseImageGenerationResult {
       const imageUrl = `data:${cartoonImage.mimeType};base64,${cartoonImage.base64Data}`;
       const watermarkedUrl = await addWatermark(imageUrl);
       setImagePath(watermarkedUrl);
+      track('cartoon_generated', { mode: 'wizard' });
       setLocalError(null);
     } catch (err) {
       const appError = AppErrorHandler.handleError(err);
       const userMessage = AppErrorHandler.getUserMessage(appError);
+      track('cartoon_generation_failed', {
+        mode: 'wizard',
+        error_type: classifyError(appError),
+        failed_phase: 'image',
+      });
       setLocalError(userMessage);
       setError(userMessage);
     } finally {

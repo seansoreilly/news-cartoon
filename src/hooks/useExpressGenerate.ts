@@ -7,6 +7,7 @@ import { geminiService } from '../services/geminiService';
 import { ImageGenerationRateLimiter } from '../utils/rateLimiter';
 import { AppErrorHandler } from '../utils/errorHandler';
 import { addWatermark } from '../utils/imageUtils';
+import { classifyError, track } from '../utils/analytics';
 import { calculateHumorScore } from '../utils/textUtils';
 import type { NewsArticle, NewsData } from '../types';
 import type { CartoonConcept } from '../types/cartoon';
@@ -166,10 +167,16 @@ export function useExpressGenerate(): UseExpressGenerateResult {
       useCartoonStore.getState().setImagePath(watermarkedUrl);
 
       setPhase('done');
+      track('cartoon_generated', { mode: 'express' });
     } catch (err) {
       failedPhaseRef.current = currentPhase;
       const appError = AppErrorHandler.handleError(err);
       const userMessage = AppErrorHandler.getUserMessage(appError);
+      track('cartoon_generation_failed', {
+        mode: 'express',
+        error_type: classifyError(appError),
+        failed_phase: currentPhase,
+      });
       setError(userMessage);
     } finally {
       setIsRunning(false);

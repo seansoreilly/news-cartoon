@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { logger } from '../../utils/logger';
+import { track, type ShareMethod } from '../../utils/analytics';
 
 interface ShareButtonsProps {
   url: string;
@@ -21,9 +22,14 @@ const ShareButtons: React.FC<ShareButtonsProps> = ({ url, title, description = '
     linkedin: `https://www.linkedin.com/shareArticle?mini=true&url=${encodedUrl}&title=${encodedTitle}&summary=${encodedDescription}`,
   };
 
+  const trackShare = (method: ShareMethod): void => {
+    track('share', { method, content_type: 'cartoon' });
+  };
+
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(url);
+      trackShare('copy_link');
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -36,6 +42,7 @@ const ShareButtons: React.FC<ShareButtonsProps> = ({ url, title, description = '
       {/* Twitter / X */}
       <a
         href={shareLinks.twitter}
+        onClick={() => trackShare('twitter')}
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center justify-center w-10 h-10 rounded-full bg-black text-white hover:bg-gray-800 transition-colors"
@@ -50,6 +57,7 @@ const ShareButtons: React.FC<ShareButtonsProps> = ({ url, title, description = '
       {/* Facebook */}
       <a
         href={shareLinks.facebook}
+        onClick={() => trackShare('facebook')}
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center justify-center w-10 h-10 rounded-full bg-[#1877F2] text-white hover:bg-[#166fe5] transition-colors"
@@ -64,6 +72,7 @@ const ShareButtons: React.FC<ShareButtonsProps> = ({ url, title, description = '
       {/* LinkedIn */}
       <a
         href={shareLinks.linkedin}
+        onClick={() => trackShare('linkedin')}
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center justify-center w-10 h-10 rounded-full bg-[#0A66C2] text-white hover:bg-[#004182] transition-colors"
