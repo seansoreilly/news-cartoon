@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import LocationDetector from '../location/LocationDetector';
 import ExpressProgress from './ExpressProgress';
+import { track } from '../../utils/analytics';
 import ShareButtons from '../common/ShareButtons';
 import RecoverableError from '../common/RecoverableError';
 import HalftoneSpinner from '../common/HalftoneSpinner';
@@ -36,6 +37,7 @@ const ExpressWorkflow: React.FC = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    track('cartoon_downloaded', { mode: 'express' });
   };
 
   const handleRegenerate = (): void => {

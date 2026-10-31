@@ -3,6 +3,7 @@ import { useCartoonStore } from '../store/cartoonStore';
 import { useNewsStore } from '../store/newsStore';
 import { uploadToGallery } from '../services/galleryService';
 import { createAppError, type IAppError } from '../types/error';
+import { track } from '../utils/analytics';
 
 export type PublishStatus = 'idle' | 'success' | 'error';
 
@@ -47,7 +48,9 @@ export function useGalleryPublish(): UseGalleryPublishResult {
 
       if (result.success) {
         setPublishStatus('success');
+        track('gallery_published', {});
       } else {
+        track('gallery_publish_failed', {});
         setPublishStatus('error');
         setPublishError(
           createAppError(
@@ -59,6 +62,7 @@ export function useGalleryPublish(): UseGalleryPublishResult {
         );
       }
     } catch (err) {
+      track('gallery_publish_failed', {});
       setPublishStatus('error');
       setPublishError(
         createAppError('GALLERY_ERROR', err instanceof Error ? err.message : 'Unknown error occurred', 500, {
