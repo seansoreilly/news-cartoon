@@ -36,6 +36,10 @@ function getGitBranch() {
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Unit tests must be hermetic: never load developer .env / .env.development
+  // (e.g. VITE_API_BASE_URL changes resolveApiBaseUrl()). Under Vitest, point
+  // envDir at an empty directory so no env files are read.
+  envDir: process.env.VITEST ? './src/test/env' : undefined,
   plugins: [react()],
   define: {
     __GIT_HASH__: JSON.stringify(getGitHash()),
