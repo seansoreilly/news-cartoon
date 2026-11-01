@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { isPrivateAddress, safeFetch, assertSafeUrl, UnsafeUrlError } from '../safeFetch.js';
+import { isPrivateAddress, safeFetch, assertSafeUrl, UnsafeUrlError, createPinnedLookup, pinnedFetch } from '../safeFetch.js';
 import { handleArticleContentRequest } from '../articleContent.js';
 
 const publicLookup = vi.fn().mockResolvedValue([{ address: '93.184.216.34', family: 4 }]);
@@ -100,6 +100,49 @@ describe('safeFetch', () => {
     fetchImpl.mockResolvedValueOnce(page());
     const res = await safeFetch('https://example.com/', {}, { fetchImpl, lookup: publicLookup });
     expect(res.status).toBe(200);
+  });
+});
+
+describe('createPinnedLookup (connect-time validation)', () => {
+  const run = (lookup, opts = {}) => new Promise((resolve) => createPinnedLookup(lookup)('example.com', opts, (err, address, family) => resolve({ err, address, family })));
+
+  it('rejects when the connect-time lookup returns a private address', async () => {
+    const { err } = await run(vi.fn().mockResolvedValue([{ address: '10.0.0.5', family: 4 }]));
+    expect(err).toBeInstanceOf(UnsafeUrlError);
+  });
+
+  it('rejects when any record is private, including IPv4-mapped metadata', async () => {
+    expect((await run(vi.fn().mockResolvedValue([{ address: '93.184.216.34', family: 4 }, { address: '169.254.169.254', family: 4 }]))).err).toBeInstanceOf(UnsafeUrlError);
+    expect((await run(vi.fn().mockResolvedValue([{ address: '::ffff:169.254.169.254', family: 6 }]))).err).toBeInstanceOf(UnsafeUrlError);
+  });
+
+  it('fails closed on lookup errors and empty answers', async () => {
+    expect((await run(vi.fn().mockRejectedValue(new Error('ENOTFOUND')))).err).toBeInstanceOf(UnsafeUrlError);
+    expect((await run(vi.fn().mockResolvedValue([]))).err).toBeInstanceOf(UnsafeUrlError);
+  });
+
+  it('returns only the validated public address', async () => {
+    const r = await run(vi.fn().mockResolvedValue([{ address: '93.184.216.34', family: 4 }]));
+    expect(r).toEqual({ err: null, address: '93.184.216.34', family: 4 });
+  });
+
+  it('returns an array when the socket asks for all addresses', async () => {
+    const r = await run(vi.fn().mockResolvedValue([{ address: '93.184.216.34', family: 4 }]), { all: true });
+    expect(r.address).toEqual([{ address: '93.184.216.34', family: 4 }]);
+  });
+});
+
+describe('pinnedFetch (DNS rebinding)', () => {
+  it('rejects at connect time when DNS flips to a private IP after the pre-check', async () => {
+    const lookup = vi.fn().mockResolvedValueOnce([{ address: '93.184.216.34', family: 4 }]).mockResolvedValue([{ address: '127.0.0.1', family: 4 }]);
+    // safeFetch's pre-check sees the public answer; the real connection re-resolves and must still be blocked.
+    await expect(safeFetch('http://rebind.example.com:9/', {}, { lookup })).rejects.toThrow(UnsafeUrlError);
+    expect(lookup).toHaveBeenCalledTimes(2);
+  });
+
+  it('rejects a direct pinnedFetch whose lookup returns a private IP', async () => {
+    const lookup = vi.fn().mockResolvedValue([{ address: '192.168.1.1', family: 4 }]);
+    await expect(pinnedFetch('http://example.com:9/', {}, { lookup })).rejects.toThrow(UnsafeUrlError);
   });
 });
 

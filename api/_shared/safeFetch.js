@@ -11,12 +11,17 @@
  *  - resolves DNS and rejects if ANY result is private
  *  - follows redirects manually (max 5), re-validating every hop
  *
- * Residual risk: fetch() re-resolves DNS itself, so a rebinding attacker with
- * a very short TTL can still race the check. Closing that needs a pinned
- * dispatcher (undici) or an egress firewall.
+ * DNS rebinding: the default transport (pinnedFetch) uses node:http(s) with a
+ * custom `lookup` that resolves, validates every answer, and hands the socket
+ * only the validated address. Validation and connection therefore use the same
+ * IP; there is no second, unchecked resolution. TLS SNI and Host stay the
+ * original hostname.
  */
 import { lookup as dnsLookup } from 'node:dns/promises';
+import http from 'node:http';
+import https from 'node:https';
 import { isIPv4, isIPv6 } from 'node:net';
+import { Readable } from 'node:stream';
 
 export const MAX_REDIRECTS = 5;
 
@@ -137,10 +142,14 @@ export const assertSafeUrl = (rawUrl) => {
   return parsed;
 };
 
-/** Resolve the hostname and reject if any answer is private. */
+/** Resolve the hostname and reject if any answer is private (early, friendly failure). */
 const assertResolvedPublic = async (parsed, lookup) => {
   const hostname = parsed.hostname.replace(/^\[|\]$/g, '');
   if (isIPv4(hostname) || hostname.includes(':')) return; // literal, already checked
+  await resolvePublic(hostname, lookup);
+};
+
+const resolvePublic = async (hostname, lookup) => {
   let records;
   try {
     records = await lookup(hostname, { all: true });
@@ -151,20 +160,80 @@ const assertResolvedPublic = async (parsed, lookup) => {
   for (const { address } of records) {
     if (isPrivateAddress(address)) throw new UnsafeUrlError('URL resolves to a private or reserved address');
   }
+  return records;
 };
+
+/**
+ * Build a `net` compatible `lookup(hostname, options, cb)` that validates every
+ * resolved address and returns only a validated one, so the socket connects to
+ * exactly the address that was checked.
+ */
+export const createPinnedLookup = (lookup = dnsLookup) => (hostname, options, cb) => {
+  const callback = typeof options === 'function' ? options : cb;
+  const opts = typeof options === 'function' ? {} : options ?? {};
+  resolvePublic(hostname, lookup).then(
+    (records) => {
+      const chosen = records.map(({ address, family }) => ({ address, family: family ?? (isIPv4(address) ? 4 : 6) }));
+      if (opts.all) callback(null, chosen);
+      else callback(null, chosen[0].address, chosen[0].family);
+    },
+    (err) => callback(err)
+  );
+};
+
+/**
+ * fetch-like transport over node:http(s) whose connection is pinned to the
+ * validated IP via createPinnedLookup. Never follows redirects.
+ */
+export const pinnedFetch = (url, init = {}, { lookup = dnsLookup } = {}) =>
+  new Promise((resolve, reject) => {
+    let parsed;
+    try {
+      parsed = assertSafeUrl(url);
+    } catch (err) {
+      reject(err);
+      return;
+    }
+    const transport = parsed.protocol === 'https:' ? https : http;
+    const headers = Object.fromEntries(new Headers(init.headers ?? {}).entries());
+    const body = init.body ?? undefined;
+    const req = transport.request(
+      parsed,
+      {
+        method: init.method ?? 'GET',
+        headers,
+        lookup: createPinnedLookup(lookup),
+        signal: init.signal ?? undefined,
+        servername: isIPv4(parsed.hostname) || parsed.hostname.startsWith('[') ? undefined : parsed.hostname,
+      },
+      (res) => {
+        const responseHeaders = new Headers();
+        for (const [k, v] of Object.entries(res.headers)) {
+          if (Array.isArray(v)) v.forEach((x) => responseHeaders.append(k, x));
+          else if (v !== undefined) responseHeaders.set(k, v);
+        }
+        const status = res.statusCode ?? 200;
+        const nullBody = status === 204 || status === 205 || status === 304 || (status >= 300 && status < 400);
+        if (nullBody) res.resume();
+        resolve(new Response(nullBody ? null : Readable.toWeb(res), { status, statusText: res.statusMessage, headers: responseHeaders }));
+      }
+    );
+    req.on('error', reject);
+    req.end(body);
+  });
 
 /**
  * Guarded fetch: validates the URL and every redirect hop, follows up to
  * `maxRedirects` redirects manually. `fetchImpl` and `lookup` are injectable
- * for tests.
+ * for tests. The default transport pins the connection to the validated IP.
  */
-export const safeFetch = async (url, init = {}, { fetchImpl = globalThis.fetch, lookup = dnsLookup, maxRedirects = MAX_REDIRECTS } = {}) => {
+export const safeFetch = async (url, init = {}, { fetchImpl = pinnedFetch, lookup = dnsLookup, maxRedirects = MAX_REDIRECTS } = {}) => {
   let current = url;
   for (let hop = 0; hop <= maxRedirects; hop++) {
     const parsed = assertSafeUrl(current);
     await assertResolvedPublic(parsed, lookup);
 
-    const response = await fetchImpl(parsed.toString(), { ...init, redirect: 'manual' });
+    const response = await fetchImpl(parsed.toString(), { ...init, redirect: 'manual' }, { lookup });
 
     const location = response.headers.get('location');
     if (response.status >= 300 && response.status < 400 && location) {
