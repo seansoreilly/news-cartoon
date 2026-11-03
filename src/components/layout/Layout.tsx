@@ -46,6 +46,24 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <footer className="mt-12 text-center text-slate-500 text-sm font-medium">
           <p>&copy; {currentYear} News Cartoon. All rights reserved.</p>
           <p className="text-xs mt-2 text-slate-400">
+            Built by{' '}
+            <a
+              href="https://stepthrough.au/"
+              target="_blank"
+              rel="noopener"
+              className="underline hover:text-slate-600"
+            >
+              Stepthrough
+            </a>{' '}
+            ·{' '}
+            <a
+              href="mailto:contact@stepthrough.au"
+              className="underline hover:text-slate-600"
+            >
+              contact@stepthrough.au
+            </a>
+          </p>
+          <p className="text-xs mt-2 text-slate-400">
             {gitBranch}/{gitHash}
             {buildTime && (
               <span className="ml-2">
