@@ -1,7 +1,9 @@
 export const decodeHtmlEntities = (text: string): string => {
-  const div = document.createElement('div');
-  div.innerHTML = text;
-  return div.textContent || div.innerText || '';
+  // DOMParser builds an inert document: unlike assigning innerHTML on a live
+  // document's element, it never loads images or runs handlers (e.g. <img onerror>)
+  // from untrusted RSS text.
+  const doc = new DOMParser().parseFromString(text, 'text/html');
+  return doc.body.textContent || '';
 };
 
 export const stripHtmlTags = (html: string): string => {
