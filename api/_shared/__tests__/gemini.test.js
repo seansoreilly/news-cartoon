@@ -6,6 +6,7 @@ import {
   resolveModelList,
   validateGenerateBody,
   checkRateLimit,
+  checkImageRateLimit,
   resetRateLimits,
   handleGenerateRequest,
   GeminiApiError,
@@ -289,6 +290,87 @@ describe('handleGenerateRequest', () => {
     expect(res.body.error.code).toBe('PROXY_RATE_LIMIT');
 
     expect(client.generate).not.toHaveBeenCalled();
+  });
+
+  describe('image generation limits', () => {
+    const imageBody = {
+      task: 'cartoon-image',
+      concept: { title: 'Duck Hunt', premise: 'Ducks hunt humans', why_funny: 'role reversal', location: 'Melbourne' },
+      script: { panels: ['A duck says "HELLO"'] },
+    };
+    const okClient = () => ({ generate: vi.fn().mockResolvedValue({ data: {}, model: 'm' }) });
+
+    afterEach(() => {
+      delete process.env.IMAGE_RATE_MAX_PER_MIN;
+      delete process.env.IMAGE_DAILY_MAX;
+    });
+
+    it('allows 5 image calls per minute per IP then returns 429 IMAGE_RATE_LIMIT', async () => {
+      const client = okClient();
+      for (let i = 0; i < 5; i++) {
+        const res = makeRes();
+        await handleGenerateRequest(makeReq(imageBody), res, client);
+        expect(res.statusCode).toBe(200);
+      }
+      const res = makeRes();
+      await handleGenerateRequest(makeReq(imageBody), res, client);
+      expect(res.statusCode).toBe(429);
+      expect(res.body.error.code).toBe('IMAGE_RATE_LIMIT');
+      expect(Number(res.headers['Retry-After'])).toBeGreaterThan(0);
+      expect(client.generate).toHaveBeenCalledTimes(5);
+
+      // Text generation from the same IP is unaffected by the image cap.
+      const text = makeRes();
+      await handleGenerateRequest(makeReq(validBody), text, client);
+      expect(text.statusCode).toBe(200);
+    });
+
+    it('does not count invalid image bodies against the image limit', async () => {
+      const client = okClient();
+      for (let i = 0; i < 10; i++) {
+        await handleGenerateRequest(makeReq({ task: 'cartoon-image' }), makeRes(), client);
+      }
+      const res = makeRes();
+      await handleGenerateRequest(makeReq(imageBody), res, client);
+      expect(res.statusCode).toBe(200);
+    });
+
+    it('enforces the per-instance daily ceiling across IPs, configurable by env', async () => {
+      process.env.IMAGE_DAILY_MAX = '3';
+      const client = okClient();
+      for (let i = 0; i < 3; i++) {
+        const req = { ...makeReq(imageBody), headers: { 'x-forwarded-for': `10.0.0.${i}` } };
+        const res = makeRes();
+        await handleGenerateRequest(req, res, client);
+        expect(res.statusCode).toBe(200);
+      }
+      const req = { ...makeReq(imageBody), headers: { 'x-forwarded-for': '10.0.0.99' } };
+      const res = makeRes();
+      await handleGenerateRequest(req, res, client);
+      expect(res.statusCode).toBe(429);
+      expect(res.body.error.code).toBe('IMAGE_DAILY_LIMIT');
+      expect(client.generate).toHaveBeenCalledTimes(3);
+    });
+
+    it('checkImageRateLimit honours env overrides and resets after the window', () => {
+      const env = { IMAGE_RATE_MAX_PER_MIN: '2', IMAGE_DAILY_MAX: '100' };
+      const now = 1_000_000;
+      expect(checkImageRateLimit('a', now, env).allowed).toBe(true);
+      expect(checkImageRateLimit('a', now + 1, env).allowed).toBe(true);
+      const blocked = checkImageRateLimit('a', now + 2, env);
+      expect(blocked).toMatchObject({ allowed: false, scope: 'ip' });
+      expect(checkImageRateLimit('b', now + 2, env).allowed).toBe(true);
+      expect(checkImageRateLimit('a', now + 61_000, env).allowed).toBe(true);
+    });
+
+    it('does not spend daily budget on requests blocked by the per-IP limit', () => {
+      const env = { IMAGE_RATE_MAX_PER_MIN: '1', IMAGE_DAILY_MAX: '2' };
+      const now = 5_000_000;
+      expect(checkImageRateLimit('a', now, env).allowed).toBe(true);
+      for (let i = 1; i < 10; i++) expect(checkImageRateLimit('a', now + i, env).scope).toBe('ip');
+      expect(checkImageRateLimit('b', now + 20, env).allowed).toBe(true);
+      expect(checkImageRateLimit('c', now + 21, env)).toMatchObject({ allowed: false, scope: 'daily' });
+    });
   });
 
   it('hides unexpected errors behind a generic 500', async () => {

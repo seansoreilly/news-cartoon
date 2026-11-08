@@ -2,7 +2,6 @@ import { parseGoogleNewsRSS } from '../_shared/rssParser.js';
 
 export default async function handler(req, res) {
   // Enable CORS
-  res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader(
@@ -44,10 +43,9 @@ export default async function handler(req, res) {
       totalArticles: articles.length,
     });
   } catch (error) {
-    console.error('❌ Error fetching news:', error);
+    console.error('[news:search] fetch failed:', error);
     return res.status(500).json({
       error: 'Failed to fetch news',
-      details: error.message,
     });
   }
 }

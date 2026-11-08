@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { isPrivateAddress, safeFetch, assertSafeUrl, UnsafeUrlError, createPinnedLookup, pinnedFetch } from '../safeFetch.js';
-import { handleArticleContentRequest } from '../articleContent.js';
+import { handleArticleContentRequest, readTextCapped, MAX_BODY_BYTES } from '../articleContent.js';
 
 const publicLookup = vi.fn().mockResolvedValue([{ address: '93.184.216.34', family: 4 }]);
 const redirect = (location, status = 302) => new Response(null, { status, headers: { location } });
@@ -186,5 +186,30 @@ describe('handleArticleContentRequest', () => {
     await handleArticleContentRequest({ query: { url: 'https://example.com/a' } }, res, { fetchImpl, lookup: publicLookup });
     expect(res.statusCode).toBe(200);
     expect(res.body).toEqual({ content: 'Hello world', length: 11, url: 'https://example.com/a' });
+  });
+
+  it('caps how much of an upstream body is read', async () => {
+    let pulled = 0;
+    const chunk = new Uint8Array(512 * 1024).fill(97); // 'a'
+    const body = new ReadableStream({
+      pull(controller) {
+        pulled += chunk.byteLength;
+        controller.enqueue(chunk);
+      },
+    });
+    const text = await readTextCapped(new Response(body));
+    expect(text.length).toBe(MAX_BODY_BYTES);
+    expect(pulled).toBeLessThanOrEqual(MAX_BODY_BYTES + 2 * chunk.byteLength);
+  });
+
+  it('does not leak upstream error text to the client', async () => {
+    const fetchImpl = vi.fn().mockRejectedValue(new Error('connect ECONNREFUSED 10.1.2.3:443 secret-detail'));
+    const res = makeRes();
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await handleArticleContentRequest({ query: { url: 'https://example.com/a' } }, res, { fetchImpl, lookup: publicLookup });
+    spy.mockRestore();
+    expect(res.statusCode).toBe(500);
+    expect(JSON.stringify(res.body)).not.toContain('secret-detail');
+    expect(res.body.details).toBeUndefined();
   });
 });

@@ -19,7 +19,7 @@ const MAX_URL_CHARS = 2000;
 const MAX_SOURCE_CHARS = 200;
 
 const NOT_CONFIGURED_MESSAGE =
-  'The gallery is not set up on this server yet. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in the server environment.';
+  'The gallery is not set up on this server yet. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SECRET_KEY) in the server environment. Anon/publishable keys are not accepted for gallery writes.';
 
 const firstDefined = (...values) => values.find((v) => typeof v === 'string' && v.trim() !== '')?.trim();
 
@@ -28,8 +28,11 @@ const firstDefined = (...values) => values.find((v) => typeof v === 'string' && 
  * the client expects: { error: { message, statusCode, code } }.
  */
 export class GalleryApiError extends Error {
-  constructor(message, { statusCode = 500, code = 'GALLERY_ERROR', upstreamStatus = 0 } = {}) {
+  // `message` may include upstream (Supabase) detail and is for server logs only.
+  // `publicMessage`, when set, is what clients see instead.
+  constructor(message, { statusCode = 500, code = 'GALLERY_ERROR', upstreamStatus = 0, publicMessage } = {}) {
     super(message);
+    this.publicMessage = publicMessage;
     this.name = 'GalleryApiError';
     this.statusCode = statusCode;
     this.code = code;
@@ -37,24 +40,21 @@ export class GalleryApiError extends Error {
   }
 
   toJSON() {
-    return { error: { message: this.message, statusCode: this.statusCode, code: this.code } };
+    return { error: { message: this.publicMessage ?? this.message, statusCode: this.statusCode, code: this.code } };
   }
 }
 
 /**
  * Read the Supabase settings from the environment. Several names are accepted
- * so the Vercel Supabase integration (SUPABASE_URL / SUPABASE_*_KEY) and the
- * legacy VITE_* names both work without a settings change.
+ * so the Vercel Supabase integration and the legacy VITE_* URL names both work.
+ * The key fails closed: only a privileged server key is accepted, never an
+ * anon/publishable key, because the anon write policies are removed in Supabase.
  */
 export const resolveGalleryConfig = (env = process.env) => {
   const url = firstDefined(env.SUPABASE_URL, env.VITE_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_URL);
   const key = firstDefined(
     env.SUPABASE_SERVICE_ROLE_KEY,
-    env.SUPABASE_SECRET_KEY,
-    env.SUPABASE_ANON_KEY,
-    env.VITE_SUPABASE_ANON_KEY,
-    env.VITE_SUPABASE_PUBLISHABLE_API_KEY,
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    env.SUPABASE_SECRET_KEY
   );
   return {
     url: url ? url.replace(/\/+$/, '') : undefined,
@@ -105,6 +105,17 @@ export const decodeImage = (input) => {
 
 const cleanText = (value, max) => (typeof value === 'string' ? value.trim().slice(0, max) : '');
 
+/** Returns the normalised URL if `value` parses as http(s), otherwise undefined. */
+export const toHttpUrl = (value) => {
+  if (typeof value !== 'string') return undefined;
+  try {
+    const parsed = new URL(value.trim());
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.toString() : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 export const validatePublishBody = (body) => {
   if (!body || typeof body !== 'object') {
     return { ok: false, message: 'Request body must be a JSON object' };
@@ -117,7 +128,7 @@ export const validatePublishBody = (body) => {
     return { ok: false, message: 'image must be a base64 string' };
   }
   const newsUrl = cleanText(body.newsUrl, MAX_URL_CHARS);
-  if (newsUrl !== '' && !/^https?:\/\//i.test(newsUrl)) {
+  if (newsUrl !== '' && !toHttpUrl(newsUrl)) {
     return { ok: false, message: 'newsUrl must be an http(s) URL' };
   }
   const newsSource = cleanText(body.newsSource, MAX_SOURCE_CHARS);
@@ -140,6 +151,7 @@ const upstreamError = async (response, action) => {
   if (response.status === 401 || response.status === 403) {
     return new GalleryApiError(`Supabase rejected the server's key while trying to ${action}: ${detail}`, {
       statusCode: 502,
+      publicMessage: 'The gallery storage rejected the server credentials.',
       code: 'GALLERY_ACCESS_DENIED',
       upstreamStatus: response.status,
     });
@@ -147,12 +159,14 @@ const upstreamError = async (response, action) => {
   if (response.status === 404) {
     return new GalleryApiError(`Supabase could not find the gallery bucket or table while trying to ${action}: ${detail}`, {
       statusCode: 502,
+      publicMessage: 'The gallery storage bucket or table was not found.',
       code: 'GALLERY_NOT_FOUND',
       upstreamStatus: response.status,
     });
   }
   return new GalleryApiError(`Supabase failed to ${action} (HTTP ${response.status}): ${detail}`, {
     statusCode: 502,
+    publicMessage: `The gallery storage failed to ${action}.`,
     code: 'GALLERY_UPSTREAM_ERROR',
     upstreamStatus: response.status,
   });
@@ -196,7 +210,8 @@ export const createGalleryClient = ({ url, key, bucket = DEFAULT_BUCKET, table =
     if (!Array.isArray(rows)) {
       throw new GalleryApiError('Supabase returned an unexpected gallery payload', { statusCode: 502, code: 'GALLERY_UPSTREAM_ERROR' });
     }
-    return rows.map((row) => ({ ...row, public_url: row.image_path ? publicUrl(row.image_path) : undefined }));
+    // Rows written before validation existed may hold non-http(s) URLs; never hand those to browsers.
+    return rows.map((row) => ({ ...row, ...('news_url' in row ? { news_url: toHttpUrl(row.news_url) ?? null } : {}), public_url: row.image_path ? publicUrl(row.image_path) : undefined }));
   };
 
   const removeObject = async (imagePath) => {
