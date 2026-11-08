@@ -291,7 +291,63 @@ export const checkRateLimit = (ip, now = Date.now()) => {
   return { allowed: true, retryAfterMs: 0 };
 };
 
-export const resetRateLimits = () => rateBuckets.clear();
+// ---------------------------------------------------------------------------
+// Image generation limits (stricter, because image calls are the costly ones).
+//
+// IMPORTANT: both limits are in-memory, so they apply PER WARM INSTANCE only.
+// Vercel runs many instances and recycles them, so total spend is not bounded
+// by these numbers. They only blunt casual abuse and runaway loops. The real
+// backstop is a budget/quota cap on the Google API key (Google Cloud billing
+// budget + Generative Language API quota), which the project owner must set.
+//
+// Env (read per call): IMAGE_RATE_MAX_PER_MIN (default 5, per IP),
+// IMAGE_DAILY_MAX (default 200, per instance, rolling 24h window).
+// ---------------------------------------------------------------------------
+const IMAGE_DAY_MS = 24 * 60 * 60 * 1000;
+const DEFAULT_IMAGE_RATE_MAX = 5;
+const DEFAULT_IMAGE_DAILY_MAX = 200;
+const imageBuckets = new Map();
+let imageDaily = { count: 0, resetAt: 0 };
+
+const envLimit = (name, fallback, env = process.env) => {
+  const n = Number.parseInt(env[name] ?? '', 10);
+  return Number.isFinite(n) && n >= 0 ? n : fallback;
+};
+
+/**
+ * @returns {{ allowed: boolean, retryAfterMs: number, scope?: 'ip'|'daily' }}
+ */
+export const checkImageRateLimit = (ip, now = Date.now(), env = process.env) => {
+  const perMin = envLimit('IMAGE_RATE_MAX_PER_MIN', DEFAULT_IMAGE_RATE_MAX, env);
+  const dailyMax = envLimit('IMAGE_DAILY_MAX', DEFAULT_IMAGE_DAILY_MAX, env);
+
+  if (now >= imageDaily.resetAt) imageDaily = { count: 0, resetAt: now + IMAGE_DAY_MS };
+  if (imageDaily.count >= dailyMax) {
+    return { allowed: false, retryAfterMs: imageDaily.resetAt - now, scope: 'daily' };
+  }
+
+  const key = ip || 'unknown';
+  const recent = (imageBuckets.get(key) || []).filter((t) => now - t < RATE_WINDOW_MS);
+  if (recent.length >= perMin) {
+    imageBuckets.set(key, recent);
+    return { allowed: false, retryAfterMs: RATE_WINDOW_MS - (now - recent[0]), scope: 'ip' };
+  }
+  recent.push(now);
+  imageBuckets.set(key, recent);
+  imageDaily.count += 1;
+  if (imageBuckets.size > 5000) {
+    for (const [k, v] of imageBuckets) {
+      if (v.every((t) => now - t >= RATE_WINDOW_MS)) imageBuckets.delete(k);
+    }
+  }
+  return { allowed: true, retryAfterMs: 0 };
+};
+
+export const resetRateLimits = () => {
+  rateBuckets.clear();
+  imageBuckets.clear();
+  imageDaily = { count: 0, resetAt: 0 };
+};
 
 const clientIp = (req) => {
   const forwarded = req.headers?.['x-forwarded-for'];
@@ -345,6 +401,24 @@ export const handleGenerateRequest = async (req, res, client = getDefaultClient(
   }
 
   const { kind, prompt, generationConfig } = validation.value;
+
+  if (kind === 'image') {
+    const imageLimit = checkImageRateLimit(clientIp(req));
+    if (!imageLimit.allowed) {
+      res.setHeader('Retry-After', String(Math.ceil(imageLimit.retryAfterMs / 1000)));
+      res.status(429).json({
+        error: {
+          message: imageLimit.scope === 'daily'
+            ? 'Daily image generation limit reached. Please try again later.'
+            : 'Too many image requests. Please wait a minute and try again.',
+          statusCode: 429,
+          code: imageLimit.scope === 'daily' ? 'IMAGE_DAILY_LIMIT' : 'IMAGE_RATE_LIMIT',
+        },
+      });
+      return;
+    }
+  }
+
   const startedAt = Date.now();
   try {
     const { data, model } = await client.generate({ kind, prompt, generationConfig });
