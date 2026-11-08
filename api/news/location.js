@@ -42,9 +42,9 @@ export default async function handler(req, res) {
       topic: `Local News - ${location}`,
     });
   } catch (error) {
+    console.error('[news:location] fetch failed:', error);
     return res.status(500).json({
       error: 'Failed to fetch news',
-      details: error.message,
     });
   }
 }

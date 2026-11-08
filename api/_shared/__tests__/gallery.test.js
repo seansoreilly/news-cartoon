@@ -140,6 +140,7 @@ describe('validatePublishBody', () => {
 
   it('rejects a non-http news URL but allows it to be blank', () => {
     expect(validatePublishBody({ image: PNG_DATA_URL, title: 'x', newsUrl: 'javascript:alert(1)' }).message).toMatch(/http/);
+    expect(validatePublishBody({ image: PNG_DATA_URL, title: 'x', newsUrl: 'http://' }).message).toMatch(/http/);
     expect(validatePublishBody({ image: PNG_DATA_URL, title: 'x', newsUrl: '' }).ok).toBe(true);
   });
 
@@ -208,6 +209,18 @@ describe('gallery client', () => {
 
     expect(item.id).toBe('9');
     expect(item.public_url).toContain('/storage/v1/object/public/cartoons/');
+  });
+
+  it('drops non-http(s) news_url values from stored rows', async () => {
+    fetchImpl.mockResolvedValueOnce(
+      jsonResponse([
+        { id: '1', image_path: 'a.png', news_url: 'javascript:alert(1)' },
+        { id: '2', image_path: 'b.png', news_url: 'https://example.com/x' },
+      ])
+    );
+    const items = await client.list();
+    expect(items[0].news_url).toBeNull();
+    expect(items[1].news_url).toBe('https://example.com/x');
   });
 
   it('maps a rejected key to GALLERY_ACCESS_DENIED with Supabase\'s message', async () => {
@@ -343,6 +356,16 @@ describe('handleGalleryRequest', () => {
     await handleGalleryRequest({ method: 'POST', headers: {}, body: { image: PNG_DATA_URL, title: 'T' } }, res, client);
     expect(res.statusCode).toBe(502);
     expect(res.body.error).toEqual({ message: 'bucket missing', statusCode: 502, code: 'GALLERY_NOT_FOUND' });
+  });
+
+  it('does not return Supabase detail to the client but keeps it for logs', async () => {
+    const err = new GalleryApiError('Supabase rejected the key: relation "cartoons" secret-detail', {
+      statusCode: 502,
+      code: 'GALLERY_ACCESS_DENIED',
+      publicMessage: 'The gallery storage rejected the server credentials.',
+    });
+    expect(err.message).toContain('secret-detail');
+    expect(JSON.stringify(err.toJSON())).not.toContain('secret-detail');
   });
 
   it('hides unexpected errors behind a generic 500', async () => {

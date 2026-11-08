@@ -44,10 +44,9 @@ export default async function handler(req, res) {
       totalArticles: articles.length,
     });
   } catch (error) {
-    console.error('❌ Error fetching news:', error);
+    console.error('[news:search] fetch failed:', error);
     return res.status(500).json({
       error: 'Failed to fetch news',
-      details: error.message,
     });
   }
 }

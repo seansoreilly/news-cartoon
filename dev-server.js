@@ -253,7 +253,6 @@ app.get('/api/news/search', async (req, res) => {
     console.error(`[NewsSearch] Error:`, error.message);
     return res.status(500).json({
       error: 'Failed to fetch news',
-      details: error.message,
     });
   }
 });

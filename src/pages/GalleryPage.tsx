@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import ShareButtons from '../components/common/ShareButtons';
 import MetaTags from '../components/common/MetaTags';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import { toSafeHttpUrl } from '../utils/safeUrl';
 
 const GalleryPage: React.FC = () => {
   const [items, setItems] = useState<GalleryItem[]>([]);
@@ -88,9 +89,9 @@ const GalleryPage: React.FC = () => {
               </h3>
               <div className="text-xs text-gray-500 flex justify-between items-center">
                 <span>{new Date(item.created_at).toLocaleDateString()}</span>
-                {item.news_url && (
+                {toSafeHttpUrl(item.news_url) && (
                   <a
-                    href={item.news_url}
+                    href={toSafeHttpUrl(item.news_url)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:underline"

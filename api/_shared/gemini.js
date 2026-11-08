@@ -60,8 +60,11 @@ export const buildModelUrl = (model, apiRoot = DEFAULT_API_ROOT) => `${apiRoot}/
  * expects: { error: { message, statusCode, apiStatus, model, modelNotFound, code } }.
  */
 export class GeminiApiError extends Error {
-  constructor(message, { statusCode = 500, apiStatus = '', apiMessage = '', model = '', modelNotFound = false, code = 'GEMINI_ERROR' } = {}) {
+  // `message` and `apiMessage` may contain upstream text and are for server logs only;
+  // `publicMessage`, when set, is what clients see.
+  constructor(message, { statusCode = 500, apiStatus = '', apiMessage = '', model = '', modelNotFound = false, code = 'GEMINI_ERROR', publicMessage } = {}) {
     super(message);
+    this.publicMessage = publicMessage;
     this.name = 'GeminiApiError';
     this.statusCode = statusCode;
     this.apiStatus = apiStatus;
@@ -74,7 +77,7 @@ export class GeminiApiError extends Error {
   toJSON() {
     return {
       error: {
-        message: this.message,
+        message: this.publicMessage ?? this.message,
         statusCode: this.statusCode,
         apiStatus: this.apiStatus,
         model: this.model,
@@ -119,7 +122,9 @@ export const buildHttpError = (status, statusText, bodyText, model) => {
     message = `Gemini API error ${status}${statusText ? ` ${statusText}` : ''}${apiMessage ? `: ${apiMessage}` : ''}`;
   }
 
-  return new GeminiApiError(message, { statusCode: status, apiStatus, apiMessage, model, modelNotFound, code });
+  // Clients get the message without Google's free-text detail (it can echo request content).
+  const publicMessage = apiMessage ? message.replace(apiMessage, '').replace(/:\s*$/, '').trim() : message;
+  return new GeminiApiError(message, { statusCode: status, apiStatus, apiMessage, model, modelNotFound, code, publicMessage });
 };
 
 const isRetryableStatus = (status) => status === 429 || status === 408 || (status >= 500 && status < 600);
@@ -177,6 +182,7 @@ export const createGeminiClient = ({
     const data = await response.json();
     if (data?.error) {
       throw new GeminiApiError(`Gemini API error: ${data.error.message}`, {
+        publicMessage: 'Gemini API returned an error.',
         statusCode: 502,
         apiStatus: data.error.status || '',
         model,
