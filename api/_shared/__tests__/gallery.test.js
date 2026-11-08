@@ -62,14 +62,26 @@ describe('resolveGalleryConfig', () => {
     expect(config.table).toBe('cartoons');
   });
 
-  it('falls back to the legacy VITE_* names and honours bucket/table overrides', () => {
+  it('falls back to the legacy VITE_* URL and SUPABASE_SECRET_KEY, and honours bucket/table overrides', () => {
     const config = resolveGalleryConfig({
       VITE_SUPABASE_URL: 'https://legacy.supabase.co',
-      VITE_SUPABASE_ANON_KEY: 'anon',
+      SUPABASE_SECRET_KEY: 'secret',
       SUPABASE_GALLERY_BUCKET: 'images',
       SUPABASE_GALLERY_TABLE: 'gallery',
     });
-    expect(config).toEqual({ url: 'https://legacy.supabase.co', key: 'anon', bucket: 'images', table: 'gallery' });
+    expect(config).toEqual({ url: 'https://legacy.supabase.co', key: 'secret', bucket: 'images', table: 'gallery' });
+  });
+
+  it('never accepts anon/publishable keys for the write key (fails closed)', () => {
+    const config = resolveGalleryConfig({
+      SUPABASE_URL: 'https://abc.supabase.co',
+      SUPABASE_ANON_KEY: 'anon',
+      VITE_SUPABASE_ANON_KEY: 'anon',
+      VITE_SUPABASE_PUBLISHABLE_API_KEY: 'pub',
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: 'anon',
+    });
+    expect(config.key).toBeUndefined();
+    expect(createGalleryClientFromEnv({ SUPABASE_URL: 'https://abc.supabase.co', SUPABASE_ANON_KEY: 'anon' }).configured).toBe(false);
   });
 
   it('reports not configured when nothing is set', () => {

@@ -19,7 +19,7 @@ const MAX_URL_CHARS = 2000;
 const MAX_SOURCE_CHARS = 200;
 
 const NOT_CONFIGURED_MESSAGE =
-  'The gallery is not set up on this server yet. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in the server environment.';
+  'The gallery is not set up on this server yet. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SECRET_KEY) in the server environment. Anon/publishable keys are not accepted for gallery writes.';
 
 const firstDefined = (...values) => values.find((v) => typeof v === 'string' && v.trim() !== '')?.trim();
 
@@ -46,18 +46,15 @@ export class GalleryApiError extends Error {
 
 /**
  * Read the Supabase settings from the environment. Several names are accepted
- * so the Vercel Supabase integration (SUPABASE_URL / SUPABASE_*_KEY) and the
- * legacy VITE_* names both work without a settings change.
+ * so the Vercel Supabase integration and the legacy VITE_* URL names both work.
+ * The key fails closed: only a privileged server key is accepted, never an
+ * anon/publishable key, because the anon write policies are removed in Supabase.
  */
 export const resolveGalleryConfig = (env = process.env) => {
   const url = firstDefined(env.SUPABASE_URL, env.VITE_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_URL);
   const key = firstDefined(
     env.SUPABASE_SERVICE_ROLE_KEY,
-    env.SUPABASE_SECRET_KEY,
-    env.SUPABASE_ANON_KEY,
-    env.VITE_SUPABASE_ANON_KEY,
-    env.VITE_SUPABASE_PUBLISHABLE_API_KEY,
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    env.SUPABASE_SECRET_KEY
   );
   return {
     url: url ? url.replace(/\/+$/, '') : undefined,
