@@ -7,6 +7,7 @@ import { parseGoogleNewsRSS } from './api/_shared/rssParser.js';
 import { handleGenerateRequest } from './api/_shared/gemini.js';
 import { handleGalleryRequest } from './api/_shared/gallery.js';
 import { handleArticleContentRequest } from './api/_shared/articleContent.js';
+import { isAllowedOrigin } from './api/_shared/requestGuards.js';
 
 // Load environment variables
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -155,8 +156,10 @@ const filterWeatherSources = (articles) => {
   });
 };
 
-// Enable CORS for requests from the frontend
-app.use(cors());
+// CORS only for the allowlisted origins (localhost dev + the production site).
+// An open policy would let any web page the developer visits drive this server
+// (and its Gemini key) from their browser.
+app.use(cors({ origin: (origin, cb) => cb(null, !origin || isAllowedOrigin(origin)) }));
 // 6mb so a base64 cartoon can be published to the gallery.
 app.use(express.json({ limit: '6mb' }));
 
@@ -190,18 +193,23 @@ app.get('/api/news/search', async (req, res) => {
     scoring = 'r' // default to relevance/authority ranking
   } = req.query;
 
-  if (!q) {
-    return res.status(400).json({ error: 'Query parameter "q" is required' });
+  if (!q || typeof q !== 'string' || q.length > 500) {
+    return res.status(400).json({ error: 'Query parameter "q" is required (max 500 characters)' });
   }
+  const maxArticles = Math.min(Math.max(parseInt(max, 10) || 10, 1), 50);
+  const scoringParam = scoring === 'd' ? 'd' : 'r';
 
   try {
     // Resolve location to country/language codes
     let countryCode, languageCode;
 
-    if (glOverride || hlOverride) {
+    // Overrides are interpolated into the upstream URL, so accept only well-formed codes.
+    const validGl = typeof glOverride === 'string' && /^[A-Za-z]{2}$/.test(glOverride) ? glOverride.toUpperCase() : undefined;
+    const validHl = typeof hlOverride === 'string' && /^[a-z]{2}(-[A-Za-z]{2})?$/.test(hlOverride) ? hlOverride : undefined;
+    if (validGl || validHl) {
       // Use explicit overrides if provided
-      countryCode = glOverride || 'US';
-      languageCode = hlOverride || 'en-US';
+      countryCode = validGl || 'US';
+      languageCode = validHl || 'en-US';
       console.log(`[NewsSearch] Using explicit overrides: gl=${countryCode}, hl=${languageCode}`);
     } else if (location) {
       // Resolve location to config
@@ -218,7 +226,7 @@ app.get('/api/news/search', async (req, res) => {
     // Construct Google News RSS URL with location parameters
     const encodedQuery = encodeURIComponent(q);
     const ceid = `${countryCode}:${languageCode.split('-')[0]}`;
-    const rssUrl = `https://news.google.com/rss/search?q=${encodedQuery}&hl=${languageCode}&gl=${countryCode}&ceid=${ceid}&scoring=${scoring}`;
+    const rssUrl = `https://news.google.com/rss/search?q=${encodedQuery}&hl=${languageCode}&gl=${countryCode}&ceid=${ceid}&scoring=${scoringParam}`;
 
     console.log(`[NewsSearch] Fetching: ${rssUrl}`);
 
@@ -233,12 +241,12 @@ app.get('/api/news/search', async (req, res) => {
     const threeDaysAgo = new Date();
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
     const parsedArticles = await parseGoogleNewsRSS(xmlText, {
-      limit: parseInt(max, 10) * 2,
+      limit: maxArticles * 2,
       since: threeDaysAgo,
     });
 
     // Apply weather source filter (Subtask 1.3)
-    const articles = filterWeatherSources(parsedArticles).slice(0, parseInt(max, 10));
+    const articles = filterWeatherSources(parsedArticles).slice(0, maxArticles);
 
     console.log(`[NewsSearch] Returning ${articles.length} articles for query="${q}", location="${location || 'default'}"`);
 

@@ -6,6 +6,7 @@ import {
   decodeImage,
   validatePublishBody,
   checkPublishRateLimit,
+  checkPublishDailyLimit,
   resetPublishRateLimits,
   handleGalleryRequest,
   GalleryApiError,
@@ -410,5 +411,19 @@ describe('handleGalleryRequest', () => {
     await handleGalleryRequest({ method: 'DELETE', headers: {} }, del, configuredClient());
     expect(del.statusCode).toBe(405);
     expect(del.headers.Allow).toBe('GET, POST');
+  });
+});
+
+describe('checkPublishDailyLimit', () => {
+  beforeEach(() => resetPublishRateLimits());
+
+  it('caps total publishes per instance per day and resets after 24h', () => {
+    const env = { GALLERY_DAILY_MAX: '2' };
+    expect(checkPublishDailyLimit(1000, env).allowed).toBe(true);
+    expect(checkPublishDailyLimit(1001, env).allowed).toBe(true);
+    const blocked = checkPublishDailyLimit(1002, env);
+    expect(blocked.allowed).toBe(false);
+    expect(blocked.retryAfterMs).toBeGreaterThan(0);
+    expect(checkPublishDailyLimit(1000 + 24 * 60 * 60 * 1000 + 1, env).allowed).toBe(true);
   });
 });

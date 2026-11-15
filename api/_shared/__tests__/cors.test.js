@@ -20,10 +20,18 @@ describe('CORS headers on public handlers', () => {
     ['news/location', locationHandler],
     ['news/search', searchHandler],
     ['article/content', contentHandler],
-  ])('%s does not send Allow-Credentials alongside a wildcard origin', async (_name, handler) => {
-    const res = makeRes();
-    await handler({ method: 'OPTIONS', query: {}, headers: {} }, res);
-    expect(res.headers['Access-Control-Allow-Origin']).toBe('*');
-    expect(res.headers).not.toHaveProperty('Access-Control-Allow-Credentials');
+  ])('%s reflects only allowlisted origins and never sends credentials', async (_name, handler) => {
+    const ok = makeRes();
+    await handler({ method: 'OPTIONS', query: {}, headers: { origin: 'https://newscartoon.lol' } }, ok);
+    expect(ok.headers['Access-Control-Allow-Origin']).toBe('https://newscartoon.lol');
+    expect(ok.headers).not.toHaveProperty('Access-Control-Allow-Credentials');
+
+    const evil = makeRes();
+    await handler({ method: 'OPTIONS', query: {}, headers: { origin: 'https://evil.example' } }, evil);
+    expect(evil.headers).not.toHaveProperty('Access-Control-Allow-Origin');
+
+    const none = makeRes();
+    await handler({ method: 'OPTIONS', query: {}, headers: {} }, none);
+    expect(none.headers).not.toHaveProperty('Access-Control-Allow-Origin');
   });
 });
