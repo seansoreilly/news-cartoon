@@ -1,5 +1,6 @@
 import React from 'react';
 import type { NewsArticle } from '../../types';
+import { toSafeHttpUrl } from '../../utils/safeUrl';
 import { cleanDescription, isTitleDuplicate } from '../../utils/textUtils';
 import LoadingSkeleton from '../common/LoadingSkeleton';
 import { HumorScore } from './HumorScore';
@@ -87,7 +88,7 @@ export const NewsCard: React.FC<NewsCardProps> = ({ article, selected, onSelect 
             </div>
             
             <a
-              href={article.url}
+              href={toSafeHttpUrl(article.url)}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
