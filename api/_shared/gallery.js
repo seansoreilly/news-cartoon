@@ -8,6 +8,8 @@
  * Supabase over its plain REST / Storage HTTP APIs with fetch (no SDK needed).
  */
 
+import { clientIp } from './requestGuards.js';
+
 const DEFAULT_BUCKET = 'cartoons';
 const DEFAULT_TABLE = 'cartoons';
 const MAX_ITEMS = 50;
@@ -296,12 +298,24 @@ export const checkPublishRateLimit = (ip, now = Date.now()) => {
   return { allowed: true, retryAfterMs: 0 };
 };
 
-export const resetPublishRateLimits = () => publishBuckets.clear();
+// Per-instance daily cap on total publishes, so rotating IPs cannot fill the
+// shared bucket unboundedly from one warm instance. Not durable (see PR notes).
+const PUBLISH_DAY_MS = 24 * 60 * 60 * 1000;
+const DEFAULT_PUBLISH_DAILY_MAX = 300;
+let publishDaily = { count: 0, resetAt: 0 };
 
-const clientIp = (req) => {
-  const forwarded = req.headers?.['x-forwarded-for'];
-  if (typeof forwarded === 'string' && forwarded.length > 0) return forwarded.split(',')[0].trim();
-  return req.socket?.remoteAddress || req.ip || 'unknown';
+export const checkPublishDailyLimit = (now = Date.now(), env = process.env) => {
+  const parsed = Number.parseInt(env.GALLERY_DAILY_MAX ?? '', 10);
+  const max = Number.isFinite(parsed) && parsed >= 0 ? parsed : DEFAULT_PUBLISH_DAILY_MAX;
+  if (now >= publishDaily.resetAt) publishDaily = { count: 0, resetAt: now + PUBLISH_DAY_MS };
+  if (publishDaily.count >= max) return { allowed: false, retryAfterMs: publishDaily.resetAt - now };
+  publishDaily.count += 1;
+  return { allowed: true, retryAfterMs: 0 };
+};
+
+export const resetPublishRateLimits = () => {
+  publishBuckets.clear();
+  publishDaily = { count: 0, resetAt: 0 };
 };
 
 let defaultClient = null;
@@ -371,6 +385,15 @@ export const handleGalleryRequest = async (req, res, client = getDefaultClient()
   const validation = validatePublishBody(req.body);
   if (!validation.ok) {
     res.status(400).json({ error: { message: validation.message, statusCode: 400, code: 'BAD_REQUEST' } });
+    return;
+  }
+
+  const daily = checkPublishDailyLimit();
+  if (!daily.allowed) {
+    res.setHeader('Retry-After', String(Math.ceil(daily.retryAfterMs / 1000)));
+    res.status(429).json({
+      error: { message: 'The gallery has reached its daily publish limit. Please try again later.', statusCode: 429, code: 'GALLERY_DAILY_LIMIT' },
+    });
     return;
   }
 

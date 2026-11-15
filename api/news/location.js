@@ -1,18 +1,18 @@
+import { applyCors, createRateLimiter, rejectIfLimited } from '../_shared/requestGuards.js';
 import { parseGoogleNewsRSS } from '../_shared/rssParser.js';
 
+// Best effort (per warm instance); the Vercel WAF rule is the durable control.
+const limiter = createRateLimiter({ windowMs: 60_000, max: 30 });
+
 export default async function handler(req, res) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
+  applyCors(req, res, 'GET,OPTIONS');
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
+
+  if (rejectIfLimited(limiter, req, res)) return;
 
   const { location, max = process.env.VITE_DEFAULT_NEWS_LIMIT || '10' } = req.query;
 

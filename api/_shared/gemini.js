@@ -16,6 +16,7 @@
  */
 
 import { buildGenerateRequest } from './generateRequest.js';
+import { clientIp } from './requestGuards.js';
 
 export const DEFAULT_TEXT_MODELS = [
   'gemini-3.1-pro-preview',
@@ -347,12 +348,6 @@ export const resetRateLimits = () => {
   rateBuckets.clear();
   imageBuckets.clear();
   imageDaily = { count: 0, resetAt: 0 };
-};
-
-const clientIp = (req) => {
-  const forwarded = req.headers?.['x-forwarded-for'];
-  if (typeof forwarded === 'string' && forwarded.length > 0) return forwarded.split(',')[0].trim();
-  return req.socket?.remoteAddress || req.ip || 'unknown';
 };
 
 let defaultClient = null;
