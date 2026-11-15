@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import LocationDetector from '../location/LocationDetector';
 import ExpressProgress from './ExpressProgress';
 import { track } from '../../utils/analytics';
+import { toSafeHttpUrl } from '../../utils/safeUrl';
 import ShareButtons from '../common/ShareButtons';
 import RecoverableError from '../common/RecoverableError';
 import HalftoneSpinner from '../common/HalftoneSpinner';
@@ -165,9 +166,9 @@ const ExpressWorkflow: React.FC = () => {
                         <span className="text-amber-600 font-bold flex-shrink-0 mt-0.5" aria-hidden="true">
                           ◦
                         </span>
-                        {article.url ? (
+                        {toSafeHttpUrl(article.url) ? (
                           <a
-                            href={article.url}
+                            href={toSafeHttpUrl(article.url)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="hover:text-amber-700 hover:underline line-clamp-2"
